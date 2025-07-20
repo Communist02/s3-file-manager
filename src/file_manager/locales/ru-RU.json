@@ -23,6 +23,7 @@
   "maxUploadSize": "Максимальный размер загрузки:",
   "dragFileToUpload": "Перетащите файлы для загрузки",
   "chooseFile": "Выбрать файл",
+  "chooseFolder": "Выбрать папку",
   "uploadFail": "Загрузка не удалась.",
   "uploading": "Загрузка",
   "uploaded": "Загружено",

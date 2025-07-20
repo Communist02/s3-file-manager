@@ -94,9 +94,9 @@ function App() {
       }
     }
     if (operationType === "copy") {
-      const response = await copyItemAPI(copiedFiles, destinationFolder.path);
+      const response = await copyItemAPI(copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
     } else {
-      const response = await moveItemAPI(copiedFiles, destinationFolder.path);
+      const response = await moveItemAPI(copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
     }
     await getFiles();
   };

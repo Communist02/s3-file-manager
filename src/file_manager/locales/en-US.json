@@ -23,6 +23,7 @@
   "maxUploadSize": "Maximum upload size is",
   "dragFileToUpload": "Drag files to upload",
   "chooseFile": "Choose File",
+  "chooseFolder": "Choose Folder",
   "uploadFail": "Upload failed.",
   "uploading": "Uploading",
   "uploaded": "Uploaded",

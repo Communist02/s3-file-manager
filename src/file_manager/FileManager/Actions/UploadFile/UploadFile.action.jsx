@@ -81,6 +81,11 @@ const UploadFileAction = ({
     setSelectedFiles(choosenFiles);
   };
 
+  const handleChooseFolder = (e) => {
+    const choosenFiles = Array.from(e.target.files);
+    setSelectedFiles(choosenFiles);
+  };
+
   const handleFileRemove = (index) => {
     setFiles((prev) => {
       const newFiles = prev.map((file, i) => {
@@ -127,6 +132,19 @@ const UploadFileAction = ({
               multiple
               accept={acceptedFileTypes}
             />
+          </Button>
+
+          <Button padding="0">
+            <label htmlFor="chooseFolder">{t("chooseFolder")}</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              id="chooseFolder"
+              className="choose-file-input"
+              onChange={handleChooseFolder}
+              accept={acceptedFileTypes}
+              webkitdirectory="true"
+            directory/>
           </Button>
         </div>
       </div>

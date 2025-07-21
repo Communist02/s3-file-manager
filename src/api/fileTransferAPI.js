@@ -1,8 +1,8 @@
 import { api } from "./api";
 
-export const copyItemAPI = async (sourcePaths, destinationPath) => {
+export const copyItemAPI = async (bucket, sourcePaths, destinationPath) => {
   try {
-    const response = await api.post("/copy", { sourcePaths, destinationPath });
+    const response = await api.post("/copy", { sourcePaths, destinationPath, bucket });
     return response;
   } catch (error) {
     console.log(error);
@@ -10,9 +10,9 @@ export const copyItemAPI = async (sourcePaths, destinationPath) => {
   }
 };
 
-export const moveItemAPI = async (sourcePaths, destinationPath) => {
+export const moveItemAPI = async (bucket, sourcePaths, destinationPath) => {
   try {
-    const response = await api.put("/move", { sourcePaths, destinationPath });
+    const response = await api.put("/move", { sourcePaths, destinationPath, bucket });
     return response;
   } catch (error) {
     console.log(error);

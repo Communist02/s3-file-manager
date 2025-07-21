@@ -1,8 +1,8 @@
 import { api } from "./api";
 
-export const getAllFilesAPI = async (bucket) => {
+export const getBucketsAPI = async () => {
   try {
-    const response = await api.get('?bucket=' + bucket);
+    const response = await api.get('/buckets');
     return response;
   } catch (error) {
     console.log(error);

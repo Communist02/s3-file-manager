@@ -7,47 +7,72 @@ import { deleteAPI } from './api/deleteAPI'
 import { copyItemAPI, moveItemAPI } from "./api/fileTransferAPI";
 import { renameAPI } from "./api/renameAPI";
 import { createFolderAPI } from "./api/createFolderAPI";
+import { getBucketsAPI } from "./api/getBucketsAPI";
 
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState([]);
+  const [buckets, setBuckets] = useState([]);
+  const [currentBucket, setCurrentBucket] = useState('');
 
-  useEffect(() => { getFiles(); }, []);
+  useEffect(() => {
+    const fun = async () => {
+      const buckets = await getBuckets();
+      setCurrentBucket(buckets[0]);
+      await getFiles(buckets[0]);
+    }
+    fun();
+  }, []);
 
-  const getFiles = async () => {
+  const getFiles = async (bucket) => {
     setIsLoading(true);
-    const response = await getAllFilesAPI();
+    const response = await getAllFilesAPI(bucket);
     if (response.status === 200) {
-      if (response.data != '[]') setFiles(JSON.parse(response.data));
-      else {
+      if (response.data != '[]') {
+        setFiles(JSON.parse(response.data));
+      } else {
         setFiles([{}]);
       };
     }
     setIsLoading(false);
   };
 
+  const getBuckets = async () => {
+    setIsLoading(true);
+    let result = [''];
+    const response = await getBucketsAPI();
+    if (response.status === 200) {
+      if (response.data != '[]') {
+        result = JSON.parse(response.data);
+      }
+    }
+    setBuckets(result);
+    setIsLoading(false);
+    return result;
+  }
+
   // Refresh Files
   const handleRefresh = () => {
-    getFiles();
+    getFiles(currentBucket);
   };
 
   const handleDownload = async (files) => {
-    await downloadFile(files);
+    await downloadFile(files, currentBucket);
   };
 
   // File Upload Handlers
   const handleFileUploading = (file, parentFolder) => {
     console.log(file)
     // console.log(parentFolder)
-    return { path: parentFolder !== null ? parentFolder.path : '/' };
+    return { bucket: currentBucket, path: parentFolder !== null ? parentFolder.path : '/' };
   };
 
   const handleFileUploaded = async (response) => {
     console.log(response)
     // const uploadedFile = JSON.parse(response);
     // setFiles((prev) => [...prev, uploadedFile]);
-    await getFiles()
+    await getFiles(currentBucket)
   };
 
   const handleError = (error, file) => {
@@ -57,9 +82,9 @@ function App() {
   // Delete File/Folder
   const handleDelete = async (files) => {
     setIsLoading(true);
-    const response = await deleteAPI(files);
+    const response = await deleteAPI(currentBucket, files);
     if (response.status === 200) {
-      await getFiles();
+      await getFiles(currentBucket);
     } else {
       setIsLoading(false);
     }
@@ -67,16 +92,16 @@ function App() {
 
   const handleRename = async (file, newName) => {
     setIsLoading(true);
-    await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName);
-    await getFiles();
+    await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket);
+    await getFiles(currentBucket);
   };
 
   // Create Folder
   const handleCreateFolder = async (name, parentFolder) => {
     setIsLoading(true);
-    const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/');
+    const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket);
     if (response.status === 200 || response.status === 201) {
-      getFiles()
+      getFiles(currentBucket)
     } else {
       console.error(response.data);
     }
@@ -94,17 +119,37 @@ function App() {
       }
     }
     if (operationType === "copy") {
-      const response = await copyItemAPI(copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
+      const response = await copyItemAPI(currentBucket, copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
     } else {
       const response = await moveItemAPI(copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
     }
-    await getFiles();
+    await getFiles(currentBucket);
   };
+
+  const handleBucket = async (e) => {
+    setCurrentBucket(e.target.value);
+    await getFiles(e.target.value);
+  }
+
+  function SelectList({ items, value }) {
+    return (
+      <select value={value} className='select-bucket' onChange={handleBucket} >
+        {items.map((item, index) => (
+          <option key={index} value={item}>
+            {item}
+          </option>
+        ))}
+      </select>
+    );
+  }
 
   return (
     <>
       <div className='header'>
         <h1>S3 File Manager</h1>
+        <div className='header-left'>
+          <SelectList items={buckets} value={currentBucket} />
+        </div>
       </div>
       <FileManager
         files={files}

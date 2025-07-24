@@ -1,8 +1,8 @@
 import { api } from "./api";
 
-export const copyItemAPI = async (bucket, sourcePaths, destinationPath) => {
+export const copyItemAPI = async (bucket, sourcePaths, destinationPath, token) => {
   try {
-    const response = await api.post("/copy", { sourcePaths, destinationPath, bucket });
+    const response = await api.post("/copy", { sourcePaths, destinationPath, bucket, token });
     return response;
   } catch (error) {
     console.log(error);

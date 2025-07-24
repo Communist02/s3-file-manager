@@ -156,3 +156,8 @@
 .fm-upload-file .btn-choose-file {
   gap: 10px;
 }
+
+.header-left {
+  display: flex;
+  gap: 5px;
+}

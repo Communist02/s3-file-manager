@@ -83,54 +83,54 @@ const UploadFileAction = ({
     }
   };
 
-  const traverseFileTree = (item) => {
-    return new Promise((resolve) => {
-      if (item.isFile) {
-        item.file((file) => resolve([file]));
-      } else if (item.isDirectory) {
-        const dirReader = item.createReader();
-        const entries = [];
+  // const traverseFileTree = (item) => {
+  //   return new Promise((resolve) => {
+  //     if (item.isFile) {
+  //       item.file((file) => resolve([file]));
+  //     } else if (item.isDirectory) {
+  //       const dirReader = item.createReader();
+  //       const entries = [];
 
-        const readEntries = () => {
-          dirReader.readEntries(async (results) => {
-            if (!results.length) {
-              const nestedFiles = await Promise.all(
-                entries.map((entry) => traverseFileTree(entry))
-              );
-              resolve(nestedFiles.flat());
-            } else {
-              entries.push(...results);
-              readEntries();
-            }
-          });
-        };
+  //       const readEntries = () => {
+  //         dirReader.readEntries(async (results) => {
+  //           if (!results.length) {
+  //             const nestedFiles = await Promise.all(
+  //               entries.map((entry) => traverseFileTree(entry))
+  //             );
+  //             resolve(nestedFiles.flat());
+  //           } else {
+  //             entries.push(...results);
+  //             readEntries();
+  //           }
+  //         });
+  //       };
 
-        readEntries();
-      } else {
-        resolve([]);
-      }
-    });
-  };
+  //       readEntries();
+  //     } else {
+  //       resolve([]);
+  //     }
+  //   });
+  // };
 
   // Todo: Also validate allowed file extensions on drop
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const droppedItems = Array.from(e.dataTransfer.items);
-    const filePromises = [];
+  // const handleDrop = (e) => {
+  //   e.preventDefault();
+  //   setIsDragging(false);
+  //   const droppedItems = Array.from(e.dataTransfer.items);
+  //   const filePromises = [];
 
-    droppedItems.forEach((item) => {
-      const entry = item.webkitGetAsEntry?.();
-      if (entry) {
-        filePromises.push(traverseFileTree(entry));
-      }
-    });
+  //   droppedItems.forEach((item) => {
+  //     const entry = item.webkitGetAsEntry?.();
+  //     if (entry) {
+  //       filePromises.push(traverseFileTree(entry));
+  //     }
+  //   });
 
-    Promise.all(filePromises).then((nestedFiles) => {
-      const flatFiles = nestedFiles.flat();
-      setSelectedFiles(flatFiles);
-    });
-  };
+  //   Promise.all(filePromises).then((nestedFiles) => {
+  //     const flatFiles = nestedFiles.flat();
+  //     setSelectedFiles(flatFiles);
+  //   });
+  // };
 
   const handleChooseFile = (e) => {
     const choosenFiles = Array.from(e.target.files);
@@ -151,7 +151,7 @@ const UploadFileAction = ({
       <div className="select-files">
         <div
           className={`draggable-file-input ${isDragging ? "dragging" : ""}`}
-          onDrop={handleDrop}
+          // onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           onDragEnter={() => setIsDragging(true)}
           onDragLeave={() => setIsDragging(false)}

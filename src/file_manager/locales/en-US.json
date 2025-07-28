@@ -52,5 +52,6 @@
   "folderExists": "This destination already contains a folder named \"{{renameFile}}\".",
   "collapseNavigationPane": "Collapse Navigation Pane",
   "expandNavigationPane": "Expand Navigation Pane",
-  "hide": "Hide"
+  "hide": "Hide",
+  "dragAndDropFilesHere": "Drag and drop files here"
 }

@@ -4,7 +4,7 @@ import { useFilesPersist } from "../../contexts/FilesPersistContext";
 import { getFileExtension } from "../../utils/getFileExtension";
 import { getDataSize } from "../../utils/getDataSize";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
-import UploadItem from "../Actions/UploadFile/UploadItem";
+import { useTranslation } from "../../contexts/TranslationProvider";
 
 const traverseFileTree = (item) => {
   return new Promise((resolve) => {
@@ -33,11 +33,12 @@ const traverseFileTree = (item) => {
   });
 };
 
-const GlobalDropZone = ({ onFileUploading, acceptedFileTypes, maxFileSize }) => {
+const GlobalDropZone = ({ onFileUploading, acceptedFileTypes, maxFileSize, triggerAction }) => {
   const [dragging, setDragging] = useState(false);
-  let dragCounter = 0;
+  const dragCounter = useRef(0);
   const { currentFolder } = useFileNavigation();
-  const { files, addFiles } = useFilesPersist();
+  const { addFiles } = useFilesPersist();
+  const t = useTranslation();
 
   const checkFileError = (file) => {
     if (acceptedFileTypes) {
@@ -45,25 +46,16 @@ const GlobalDropZone = ({ onFileUploading, acceptedFileTypes, maxFileSize }) => 
       if (extError) return t("fileTypeNotAllowed");
     }
 
-    // const fileExists = currentPathFiles.some(
-    //   (item) => item.name.toLowerCase() === file.name.toLowerCase() && !item.isDirectory
-    // );
-    // if (fileExists) return t("fileAlreadyExist");
-
     const sizeError = maxFileSize && file.size > maxFileSize;
     if (sizeError) return `${t("maxUploadSize")} ${getDataSize(maxFileSize, 0)}.`;
   };
 
   const onFilesDrop = (files) => {
     setSelectedFiles(files);
+    triggerAction.show("uploadFile");
   }
 
   const setSelectedFiles = (selectedFiles) => {
-    // selectedFiles = selectedFiles.filter(
-    //   (item) =>
-    //     !files.some((fileData) => fileData.file.name.toLowerCase() === item.name.toLowerCase())
-    // );
-
     if (selectedFiles.length > 0) {
       const newFiles = selectedFiles.map((file) => {
         const appendData = onFileUploading(file, currentFolder);
@@ -81,25 +73,21 @@ const GlobalDropZone = ({ onFileUploading, acceptedFileTypes, maxFileSize }) => 
           uploadProgress: 0,
         };
       });
-      files.map((fileData, index) =>
-        !fileData.hidden ? (
-          UploadItem(key = { index }, index = { index }, fileData = { fileData }, fileUploadConfig = { fileUploadConfig }, onFileUploaded = { onFileUploaded })
-        ) : null
-      )
+      addFiles(newFiles);
     }
   };
 
   useEffect(() => {
     const handleDragEnter = (e) => {
       e.preventDefault();
-      dragCounter++;
+      dragCounter.current++;
       setDragging(true);
     };
 
     const handleDragLeave = (e) => {
       e.preventDefault();
-      dragCounter--;
-      if (dragCounter === 0) setDragging(false);
+      dragCounter.current--;
+      if (dragCounter.current === 0) setDragging(false);
     };
 
     const handleDragOver = (e) => {
@@ -108,7 +96,7 @@ const GlobalDropZone = ({ onFileUploading, acceptedFileTypes, maxFileSize }) => 
 
     const handleDrop = async (e) => {
       e.preventDefault();
-      dragCounter = 0;
+      dragCounter.current = 0;
       setDragging(false);
 
       const items = Array.from(e.dataTransfer.items);
@@ -139,7 +127,7 @@ const GlobalDropZone = ({ onFileUploading, acceptedFileTypes, maxFileSize }) => 
   return (
     dragging && (
       <div className="global-drop-overlay">
-        <p>📁 {`Перетащите файлы или папку сюда...`}</p>
+        {/* <p>📁 {t("dragAndDropFilesHere")}</p> */}
       </div>
     )
   );

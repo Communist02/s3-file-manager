@@ -195,13 +195,13 @@ const FileItem = ({
       onContextMenu={handleItemContextMenu}
       onMouseOver={handleMouseOver}
       onMouseLeave={handleMouseLeave}
-      draggable={fileSelected && draggable}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragEnter={handleDragEnterOver}
-      onDragOver={handleDragEnterOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      // draggable={fileSelected && draggable}
+      // onDragStart={handleDragStart}
+      // onDragEnd={handleDragEnd}
+      // onDragEnter={handleDragEnterOver}
+      // onDragOver={handleDragEnterOver}
+      // onDragLeave={handleDragLeave}
+      // onDrop={handleDrop}
     >
       <div className="file-item">
         {!file.isEditing && (

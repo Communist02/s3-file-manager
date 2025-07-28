@@ -52,5 +52,6 @@
   "folderExists": "В этом местоположении уже существует папка с именем \"{{renameFile}}\".",
   "collapseNavigationPane": "Свернуть панель навигации",
   "expandNavigationPane": "Развернуть панель навигации",
-  "hide": "Скрыть"
+  "hide": "Скрыть",
+  "dragAndDropFilesHere": "Перетаскивайте файлы сюда"
 }

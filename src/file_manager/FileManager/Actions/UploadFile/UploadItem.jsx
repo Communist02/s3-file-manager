@@ -103,7 +103,7 @@ const UploadItem = ({
   };
 
   useEffect(() => {
-    if (!xhrRef.current && !fileData.uploaded && !fileData.uploading && !fileData.error) {
+    if (!xhrRef.current && !fileData.uploaded && !fileData.uploading && !fileData.error && !fileData.canceled) {
       fileUpload(fileData);
     }
   }, []);
@@ -144,7 +144,16 @@ const UploadItem = ({
             <span className="file-size">{getDataSize(fileData.file?.size)}</span>
           </div>
           {fileData.uploaded ? (
-            <FaRegCheckCircle title={t("uploaded")} className="upload-success" />
+            <>
+              <div
+                className="rm-file"
+                title={t("hide")}
+                onClick={() => updateFile(index, { hidden: true })}
+              >
+                <AiOutlineClose />
+              </div>
+              <FaRegCheckCircle title={t("uploaded")} className="upload-success" />
+            </>
           ) : fileData.canceled || fileData.error ? (
             <IoMdRefresh className="retry-upload" title="Retry" onClick={handleRetry} />
           ) : (

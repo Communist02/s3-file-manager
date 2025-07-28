@@ -161,3 +161,7 @@
   display: flex;
   gap: 5px;
 }
+
+.fm-upload-file .files-progress ul {
+  height: 300px !important;
+}

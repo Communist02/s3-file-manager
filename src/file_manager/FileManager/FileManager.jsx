@@ -18,6 +18,7 @@ import { useMemo, useState } from "react";
 import { defaultPermissions } from "../constants";
 import "./FileManager.scss";
 import { FilesPersistProvider } from "../contexts/FilesPersistContext";
+// import GlobalDropZone from "./GlobalDropZone/GlobalDropZone";
 
 
 const FileManager = ({
@@ -140,6 +141,13 @@ const FileManager = ({
                       triggerAction={triggerAction}
                       permissions={permissions}
                     />
+                    {/* {permissions.upload && (
+                      <GlobalDropZone
+                        onFileUploading={onFileUploading}
+                        acceptedFileTypes={acceptedFileTypes}
+                        maxFileSize={maxFileSize}
+                      />
+                    )} */}
                   </LayoutProvider>
                 </ClipBoardProvider>
               </SelectionProvider>

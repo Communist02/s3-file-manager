@@ -56,10 +56,10 @@ const UploadFileAction = ({
   };
 
   const setSelectedFiles = (selectedFiles) => {
-    selectedFiles = selectedFiles.filter(
-      (item) =>
-        !files.some((fileData) => fileData.file.name.toLowerCase() === item.name.toLowerCase())
-    );
+    // selectedFiles = selectedFiles.filter(
+    //   (item) =>
+    //     !files.some((fileData) => fileData.file.name.toLowerCase() === item.name.toLowerCase())
+    // );
 
     if (selectedFiles.length > 0) {
       const newFiles = selectedFiles.map((file) => {
@@ -75,6 +75,7 @@ const UploadFileAction = ({
           uploaded: false,
           uploading: false,
           canceled: false,
+          hidden: false,
           uploadProgress: 0,
         };
       });
@@ -82,12 +83,53 @@ const UploadFileAction = ({
     }
   };
 
+  const traverseFileTree = (item) => {
+    return new Promise((resolve) => {
+      if (item.isFile) {
+        item.file((file) => resolve([file]));
+      } else if (item.isDirectory) {
+        const dirReader = item.createReader();
+        const entries = [];
+
+        const readEntries = () => {
+          dirReader.readEntries(async (results) => {
+            if (!results.length) {
+              const nestedFiles = await Promise.all(
+                entries.map((entry) => traverseFileTree(entry))
+              );
+              resolve(nestedFiles.flat());
+            } else {
+              entries.push(...results);
+              readEntries();
+            }
+          });
+        };
+
+        readEntries();
+      } else {
+        resolve([]);
+      }
+    });
+  };
+
   // Todo: Also validate allowed file extensions on drop
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    setSelectedFiles(droppedFiles);
+    const droppedItems = Array.from(e.dataTransfer.items);
+    const filePromises = [];
+
+    droppedItems.forEach((item) => {
+      const entry = item.webkitGetAsEntry?.();
+      if (entry) {
+        filePromises.push(traverseFileTree(entry));
+      }
+    });
+
+    Promise.all(filePromises).then((nestedFiles) => {
+      const flatFiles = nestedFiles.flat();
+      setSelectedFiles(flatFiles);
+    });
   };
 
   const handleChooseFile = (e) => {
@@ -143,7 +185,7 @@ const UploadFileAction = ({
               onChange={handleChooseFolder}
               accept={acceptedFileTypes}
               webkitdirectory="true"
-              directory />
+            />
           </Button>
         </div>
       </div>
@@ -160,18 +202,17 @@ const UploadFileAction = ({
             )}
           </div>
           <ul>
-            {files.map((fileData, index) => (
-              <UploadItem
-                index={index}
-                key={index}
-                fileData={fileData}
-                setFiles={setFiles}
-                fileUploadConfig={fileUploadConfig}
-                setIsUploading={setIsUploading}
-                onFileUploaded={onFileUploaded}
-                handleFileRemove={handleFileRemove}
-              />
-            ))}
+            {files.map((fileData, index) =>
+              !fileData.hidden ? (
+                <UploadItem
+                  key={index}
+                  index={index}
+                  fileData={fileData}
+                  fileUploadConfig={fileUploadConfig}
+                  onFileUploaded={onFileUploaded}
+                />
+              ) : null
+            )}
           </ul>
         </div>
       )}

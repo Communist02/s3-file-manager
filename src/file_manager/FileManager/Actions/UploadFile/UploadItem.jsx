@@ -3,37 +3,27 @@ import Progress from "../../../components/Progress/Progress";
 import { getFileExtension } from "../../../utils/getFileExtension";
 import { useFileIcons } from "../../../hooks/useFileIcons";
 import { FaRegFile } from "react-icons/fa6";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { getDataSize } from "../../../utils/getDataSize";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { IoMdRefresh } from "react-icons/io";
 import { useFiles } from "../../../contexts/FilesContext";
 import { useTranslation } from "../../../contexts/TranslationProvider";
+import { useFilesPersist } from "../../../contexts/FilesPersistContext";
 
 const UploadItem = ({
   index,
   fileData,
-  setFiles,
-  setIsUploading,
   fileUploadConfig,
   onFileUploaded,
-  handleFileRemove,
 }) => {
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploaded, setIsUploaded] = useState(false);
-  const [isCanceled, setIsCanceled] = useState(false);
-  const [uploadFailed, setUploadFailed] = useState(false);
+  const { updateFile, removeFile } = useFilesPersist();
   const fileIcons = useFileIcons(33);
   const xhrRef = useRef();
   const { onError } = useFiles();
   const t = useTranslation();
 
   const handleUploadError = (xhr) => {
-    setUploadProgress(0);
-    setIsUploading((prev) => ({
-      ...prev,
-      [index]: false,
-    }));
     const error = {
       type: "upload",
       message: t("uploadFail"),
@@ -44,19 +34,12 @@ const UploadItem = ({
       },
     };
 
-    setFiles((prev) =>
-      prev.map((file, i) => {
-        if (index === i) {
-          return {
-            ...file,
-            error: error.message,
-          };
-        }
-        return file;
-      })
-    );
-
-    setUploadFailed(true);
+    updateFile(index, {
+      uploadProgress: 0,
+      uploading: false,
+      error: error.message,
+      uploaded: false,
+    });
 
     onError(error, fileData.file);
   };
@@ -67,26 +50,28 @@ const UploadItem = ({
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhrRef.current = xhr;
-      setIsUploading((prev) => ({
-        ...prev,
-        [index]: true,
-      }));
+
+      updateFile(index, {
+        uploading: true,
+        uploadProgress: 0,
+        error: null,
+      });
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
           const progress = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(progress);
+          updateFile(index, { uploadProgress: progress });
         }
       };
 
       xhr.onload = () => {
-        setIsUploading((prev) => ({
-          ...prev,
-          [index]: false,
-        }));
+        updateFile(index, { uploading: false });
         if (xhr.status === 200 || xhr.status === 201) {
-          setIsUploaded(true);
-          onFileUploaded(xhr.response);
+          updateFile(index, {
+            uploaded: true,
+            uploadProgress: 100,
+          });
+          onFileUploaded?.(xhr.response);
           resolve(xhr.response);
         } else {
           reject(xhr.statusText);
@@ -118,8 +103,7 @@ const UploadItem = ({
   };
 
   useEffect(() => {
-    // Prevent double uploads with strict mode
-    if (!xhrRef.current) {
+    if (!xhrRef.current && !fileData.uploaded && !fileData.uploading && !fileData.error) {
       fileUpload(fileData);
     }
   }, []);
@@ -127,39 +111,24 @@ const UploadItem = ({
   const handleAbortUpload = () => {
     if (xhrRef.current) {
       xhrRef.current.abort();
-      setIsUploading((prev) => ({
-        ...prev,
-        [index]: false,
-      }));
-      setIsCanceled(true);
-      setUploadProgress(0);
+      updateFile(index, {
+        uploading: false,
+        canceled: true,
+        uploadProgress: 0,
+      });
     }
   };
 
   const handleRetry = () => {
-    if (fileData?.file) {
-      setFiles((prev) =>
-        prev.map((file, i) => {
-          if (index === i) {
-            return {
-              ...file,
-              error: false,
-            };
-          }
-          return file;
-        })
-      );
-      fileUpload({ ...fileData, error: false });
-      setIsCanceled(false);
-      setUploadFailed(false);
-    }
+    updateFile(index, {
+      error: null,
+      canceled: false,
+      uploaded: false,
+    });
+    fileUpload({ ...fileData, error: null });
   };
 
-  // File was removed by the user beacuse it was unsupported or exceeds file size limit.
-  if (!!fileData.removed) {
-    return null;
-  }
-  //
+  if (fileData.removed) return null;
 
   return (
     <li>
@@ -174,24 +143,24 @@ const UploadItem = ({
             </span>
             <span className="file-size">{getDataSize(fileData.file?.size)}</span>
           </div>
-          {isUploaded ? (
+          {fileData.uploaded ? (
             <FaRegCheckCircle title={t("uploaded")} className="upload-success" />
-          ) : isCanceled || uploadFailed ? (
+          ) : fileData.canceled || fileData.error ? (
             <IoMdRefresh className="retry-upload" title="Retry" onClick={handleRetry} />
           ) : (
             <div
               className="rm-file"
-              title={`${!!fileData.error ? t("Remove") : t("abortUpload")}`}
-              onClick={!!fileData.error ? () => handleFileRemove(index) : handleAbortUpload}
+              title={fileData.error ? t("Remove") : t("abortUpload")}
+              onClick={fileData.error ? () => removeFile(index) : handleAbortUpload}
             >
               <AiOutlineClose />
             </div>
           )}
         </div>
         <Progress
-          percent={uploadProgress}
-          isCanceled={isCanceled}
-          isCompleted={isUploaded}
+          percent={fileData.uploadProgress || 0}
+          isCanceled={fileData.canceled}
+          isCompleted={fileData.uploaded}
           error={fileData.error}
         />
       </div>

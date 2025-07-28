@@ -9,6 +9,7 @@ import { getDataSize } from "../../../utils/getDataSize";
 import { useFiles } from "../../../contexts/FilesContext";
 import { useTranslation } from "../../../contexts/TranslationProvider";
 import "./UploadFile.action.scss";
+import { useFilesPersist } from "../../../contexts/FilesPersistContext";
 
 const UploadFileAction = ({
   fileUploadConfig,
@@ -17,7 +18,14 @@ const UploadFileAction = ({
   onFileUploading,
   onFileUploaded,
 }) => {
-  const [files, setFiles] = useState([]);
+  const {
+    files,
+    setFiles,
+    updateFile,
+    removeFile,
+    resetFiles,
+    addFiles
+  } = useFilesPersist();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState({});
   const { currentFolder, currentPathFiles } = useFileNavigation();
@@ -38,10 +46,10 @@ const UploadFileAction = ({
       if (extError) return t("fileTypeNotAllowed");
     }
 
-    const fileExists = currentPathFiles.some(
-      (item) => item.name.toLowerCase() === file.name.toLowerCase() && !item.isDirectory
-    );
-    if (fileExists) return t("fileAlreadyExist");
+    // const fileExists = currentPathFiles.some(
+    //   (item) => item.name.toLowerCase() === file.name.toLowerCase() && !item.isDirectory
+    // );
+    // if (fileExists) return t("fileAlreadyExist");
 
     const sizeError = maxFileSize && file.size > maxFileSize;
     if (sizeError) return `${t("maxUploadSize")} ${getDataSize(maxFileSize, 0)}.`;
@@ -59,12 +67,18 @@ const UploadFileAction = ({
         const error = checkFileError(file);
         error && onError({ type: "upload", message: error }, file);
         return {
-          file: file,
-          appendData: appendData,
-          ...(error && { error: error }),
+          file,
+          appendData,
+          error: error || null,
+          restored: false,
+          removed: false,
+          uploaded: false,
+          uploading: false,
+          canceled: false,
+          uploadProgress: 0,
         };
       });
-      setFiles((prev) => [...prev, ...newFiles]);
+      addFiles(newFiles);
     }
   };
 
@@ -87,22 +101,7 @@ const UploadFileAction = ({
   };
 
   const handleFileRemove = (index) => {
-    setFiles((prev) => {
-      const newFiles = prev.map((file, i) => {
-        if (index === i) {
-          return {
-            ...file,
-            removed: true,
-          };
-        }
-        return file;
-      });
-
-      // If every file is removed, empty files array
-      if (newFiles.every((file) => !!file.removed)) return [];
-
-      return newFiles;
-    });
+    removeFile(index);
   };
 
   return (
@@ -144,7 +143,7 @@ const UploadFileAction = ({
               onChange={handleChooseFolder}
               accept={acceptedFileTypes}
               webkitdirectory="true"
-            directory/>
+              directory />
           </Button>
         </div>
       </div>

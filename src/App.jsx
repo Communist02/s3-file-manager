@@ -22,7 +22,7 @@ function App() {
     const fun = async () => {
       const token = await authAPI(localStorage.getItem('token'))
       setTokenAuth(token);
-      const buckets = await getBuckets();
+      const buckets = await getBuckets(token);
       setCurrentBucket(buckets[0]);
       await getFiles(buckets[0], token);
     }
@@ -42,10 +42,10 @@ function App() {
     setIsLoading(false);
   };
 
-  const getBuckets = async () => {
+  const getBuckets = async (token) => {
     setIsLoading(true);
     let result = [''];
-    const response = await getBucketsAPI();
+    const response = await getBucketsAPI(token);
     if (response.status === 200) {
       if (response.data != '[]') {
         result = JSON.parse(response.data);
@@ -170,7 +170,7 @@ function App() {
         fileUploadConfig={{ url: 'http://127.0.0.1:8000', method: 'PUT' }}
         defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
         collapsibleNav={true}
-        filePreviewPath={'http://127.0.0.1:8000/download?bucket=' + currentBucket + '&file='}
+        filePreviewPath={'http://127.0.0.1:8000/download?bucket=' + currentBucket + '&token=' + tokenAuth + '&file='}
         primaryColor='SteelBlue'
         permissions={{ create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }}
       />

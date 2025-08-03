@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import { getAllFilesAPI } from './api/getAllFilesAPI'
@@ -9,6 +9,7 @@ import { renameAPI } from './api/renameAPI';
 import { createFolderAPI } from './api/createFolderAPI';
 import { getBucketsAPI } from './api/getBucketsAPI';
 import { authAPI, checkTokenAPI } from './api/authAPI';
+import ControlPanel from './control_panel/ControlPanel'
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
   const [tokenAuth, setTokenAuth] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showControlPanel, setShowControlPanel] = useState(false);
 
   useEffect(() => {
     const fun = async () => {
@@ -36,6 +38,7 @@ function App() {
   const getFiles = async (bucket, token) => {
     setIsLoading(true);
     const response = await getAllFilesAPI(bucket, token);
+    setIsLoading(false);
     if (response.status === 200) {
       if (response.data != '[]') {
         setFiles(JSON.parse(response.data));
@@ -43,20 +46,21 @@ function App() {
         setFiles([{}]);
       };
     }
-    setIsLoading(false);
   };
 
   const getBuckets = async (token) => {
-    setIsLoading(true);
     let result = [''];
+    setIsLoading(true);
     const response = await getBucketsAPI(token);
+    setIsLoading(false);
     if (response.status === 200) {
       if (response.data != '[]') {
         result = JSON.parse(response.data);
       }
+    } else if (response.status === 500) {
+      window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
     }
     setBuckets(result);
-    setIsLoading(false);
     return result;
   }
 
@@ -90,10 +94,11 @@ function App() {
   const handleDelete = async (files) => {
     setIsLoading(true);
     const response = await deleteAPI(currentBucket, files, tokenAuth);
+    setIsLoading(false);
     if (response.status === 200) {
       await getFiles(currentBucket, tokenAuth);
-    } else {
-      setIsLoading(false);
+    } else if (response.status === 500) {
+      window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
     }
   };
 
@@ -140,17 +145,27 @@ function App() {
 
   const auth = async (event) => {
     event.preventDefault();
-    const token = await authAPI(username, password);
-    if (token !== null && token != '') {
-      setTokenAuth(token);
-      const buckets = await getBuckets(token);
-      setCurrentBucket(buckets[0]);
-      await getFiles(buckets[0], token);
+    const response = await authAPI(username, password);
+    console.log(response);
+    if (response.status === 200) {
+      localStorage.setItem('token', response.data.token)
+      const token = response.data.token;
+      if (token !== null && token != '') {
+        setTokenAuth(token);
+        const buckets = await getBuckets(token);
+        setCurrentBucket(buckets[0]);
+        await getFiles(buckets[0], token);
+      }
+    } else if (response.status === 401) {
+      window.alert("Неверно введен логин или пароль!")
+    } else if (response.status === 500) {
+      window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
     }
   }
 
   const outAccount = async () => {
     localStorage.setItem('token', '')
+    setShowControlPanel(false);
     setTokenAuth('');
   }
 
@@ -165,77 +180,99 @@ function App() {
       </select>
     );
   }
-  console.log(tokenAuth)
-  return (
-    tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '' ?
-      <>
-        <div className='header'>
-          <h1>S3 File Manager</h1>
-          <div className='header-left'>
-            <SelectList items={buckets} value={currentBucket} />
-            <button onClick={outAccount}>Выход</button>
-          </div>
-        </div>
-        <FileManager
-          files={files}
-          language='ru'
-          isLoading={isLoading}
-          onRefresh={handleRefresh}
-          onError={handleError}
-          onDownload={handleDownload}
-          onDelete={handleDelete}
-          onPaste={handlePaste}
-          onRename={handleRename}
-          onFileUploading={handleFileUploading}
-          onFileUploaded={handleFileUploaded}
-          onCreateFolder={handleCreateFolder}
-          fileUploadConfig={{ url: 'http://127.0.0.1:8000', method: 'PUT' }}
-          defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
-          collapsibleNav={true}
-          filePreviewPath={'http://127.0.0.1:8000/download?bucket=' + currentBucket + '&token=' + tokenAuth + '&file='}
-          primaryColor='SteelBlue'
-          permissions={{ create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }}
-        />
-      </>
-      :
-      <div className='auth-page'>
-        <div className="auth-container">
-          <div className="auth-header">
-            <h2>Вход в систему</h2>
-          </div>
 
-          <form onSubmit={auth}>
-            <div className="form-group">
-              <label htmlFor="username">Имя пользователя</label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                required
-                placeholder="Введите ваш логин"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)} // Обновляем состояние при вводе
-              />
+  function showCtrlPanel() {
+    setShowControlPanel(!showControlPanel);
+  }
+
+  let page = 'auth';
+  if (!(tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '')) {
+    page = 'auth';
+  } else if (showControlPanel) {
+    page = 'controlPanel';
+  } else {
+    page = 'fileManager';
+  }
+
+  switch (page) {
+    case 'auth':
+      return (
+        <div className='auth-page'>
+          <div className="auth-container">
+            <div className="auth-header">
+              <h2>Вход в систему</h2>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="password">Пароль</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                required
-                placeholder="Введите ваш пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)} // Обновляем состояние при вводе
-              />
-            </div>
+            <form onSubmit={auth}>
+              <div className="form-group">
+                <label htmlFor="username">Имя пользователя</label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  required
+                  placeholder="Введите ваш логин"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)} // Обновляем состояние при вводе
+                />
+              </div>
 
-            <button type="submit" className="auth-button">Войти</button>
-          </form>
+              <div className="form-group">
+                <label htmlFor="password">Пароль</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  required
+                  placeholder="Введите ваш пароль"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)} // Обновляем состояние при вводе
+                />
+              </div>
+
+              <button type="submit" className="auth-button">Войти</button>
+            </form>
+          </div>
         </div>
-      </div>
-  )
+      );
+    case 'fileManager':
+      return (
+        <>
+          <div className='header'>
+            <h1>S3 File Manager</h1>
+            <div className='header-left'>
+              <SelectList items={buckets} value={currentBucket} />
+              <button onClick={outAccount}>Выход</button>
+              <button onClick={showCtrlPanel}>Панель упраления</button>
+            </div>
+          </div>
+          <FileManager
+            files={files}
+            language='ru'
+            isLoading={isLoading}
+            onRefresh={handleRefresh}
+            onError={handleError}
+            onDownload={handleDownload}
+            onDelete={handleDelete}
+            onPaste={handlePaste}
+            onRename={handleRename}
+            onFileUploading={handleFileUploading}
+            onFileUploaded={handleFileUploaded}
+            onCreateFolder={handleCreateFolder}
+            fileUploadConfig={{ url: 'http://127.0.0.1:8000', method: 'PUT' }}
+            defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
+            collapsibleNav={true}
+            filePreviewPath={'http://127.0.0.1:8000/download?bucket=' + currentBucket + '&token=' + tokenAuth + '&file='}
+            primaryColor='SteelBlue'
+            permissions={{ create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }}
+          />
+        </>
+      );
+    case 'controlPanel':
+      return ControlPanel(outAccount, showCtrlPanel);
+  }
+
+
 }
 
 export default App

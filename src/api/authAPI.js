@@ -8,14 +8,12 @@ export const authAPI = async (username, password) => {
                 password: password
             }
         });
-        if (response.status === 200) {
-            localStorage.setItem('token', response.data.token)
-            return response.data.token;
-        }
-        return null;
+        return response;
     } catch (error) {
-        console.log(error);
-        return null;
+        if (error.code === "ERR_NETWORK") {
+            window.alert('Не получилось подключится к серверу\nКод ошибки: ' + error.code);
+        }
+        return error;
     }
 };
 

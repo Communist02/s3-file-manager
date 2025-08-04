@@ -152,6 +152,7 @@ function App() {
       const token = response.data.token;
       if (token !== null && token != '') {
         setTokenAuth(token);
+        console.log(response.data.user_id);
         const buckets = await getBuckets(token);
         setCurrentBucket(buckets[0]);
         await getFiles(buckets[0], token);
@@ -250,6 +251,7 @@ function App() {
             files={files}
             language='ru'
             isLoading={isLoading}
+            layout={'list'}
             onRefresh={handleRefresh}
             onError={handleError}
             onDownload={handleDownload}

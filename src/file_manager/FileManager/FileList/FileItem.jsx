@@ -28,7 +28,7 @@ const FileItem = ({
   draggable,
 }) => {
   const [fileSelected, setFileSelected] = useState(false);
-  const [lastClickTime, setLastClickTime] = useState(0);
+
   const [checkboxClassName, setCheckboxClassName] = useState("hidden");
   const [dropZoneClass, setDropZoneClass] = useState("");
   const [tooltipPosition, setTooltipPosition] = useState(null);
@@ -92,12 +92,10 @@ const FileItem = ({
 
     handleFileRangeSelection(e.shiftKey, e.ctrlKey);
 
-    const currentTime = new Date().getTime();
-    if (currentTime - lastClickTime < 300) {
+    if (e.detail == 2) {
       handleFileAccess();
       return;
     }
-    setLastClickTime(currentTime);
   };
 
   const handleOnKeyDown = (e) => {

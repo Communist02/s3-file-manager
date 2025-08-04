@@ -95,7 +95,7 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions) =
     {
       title: t("view"),
       icon: activeLayout === "grid" ? <BsGrid size={18} /> : <FaListUl size={18} />,
-      onClick: () => {},
+      onClick: () => { },
       children: [
         {
           title: t("grid"),
@@ -238,10 +238,12 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions) =
 
   const handleContextMenu = (e, isSelection = false) => {
     e.preventDefault();
-    setClickPosition({ clickX: e.clientX, clickY: e.clientY });
-    setIsSelectionCtx(isSelection);
-    !isSelection && unselectFiles();
-    setVisible(true);
+    if (e.which = 3) {
+      setClickPosition({ clickX: e.clientX, clickY: e.clientY });
+      setIsSelectionCtx(isSelection);
+      !isSelection && unselectFiles();
+      setVisible(true);
+    }
   };
 
   useEffect(() => {

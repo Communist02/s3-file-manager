@@ -8,6 +8,7 @@ import useFileList from "./useFileList";
 import FilesHeader from "./FilesHeader";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./FileList.scss";
+import { FixedSizeList as List } from 'react-window';
 
 const FileList = ({
   onCreateFolder,
@@ -38,6 +39,28 @@ const FileList = ({
 
   const contextMenuRef = useDetectOutsideClick(() => setVisible(false));
 
+  function getItem(value) {
+    const file = currentPathFiles[value.index];
+    return <div style={value.style}>
+      <FileItem
+        key={value.index}
+        index={value.index}
+        file={file}
+        onCreateFolder={onCreateFolder}
+        onRename={onRename}
+        onFileOpen={onFileOpen}
+        enableFilePreview={enableFilePreview}
+        triggerAction={triggerAction}
+        filesViewRef={filesViewRef}
+        selectedFileIndexes={selectedFileIndexes}
+        handleContextMenu={handleContextMenu}
+        setVisible={setVisible}
+        setLastSelectedFile={setLastSelectedFile}
+        draggable={permissions.move}
+      />
+    </div>
+  }
+
   return (
     <div
       ref={filesViewRef}
@@ -48,26 +71,15 @@ const FileList = ({
       {activeLayout === "list" && <FilesHeader unselectFiles={unselectFiles} />}
 
       {currentPathFiles?.length > 0 ? (
-        <>
-          {currentPathFiles.map((file, index) => (
-            <FileItem
-              key={index}
-              index={index}
-              file={file}
-              onCreateFolder={onCreateFolder}
-              onRename={onRename}
-              onFileOpen={onFileOpen}
-              enableFilePreview={enableFilePreview}
-              triggerAction={triggerAction}
-              filesViewRef={filesViewRef}
-              selectedFileIndexes={selectedFileIndexes}
-              handleContextMenu={handleContextMenu}
-              setVisible={setVisible}
-              setLastSelectedFile={setLastSelectedFile}
-              draggable={permissions.move}
-            />
-          ))}
-        </>
+        <List
+          className="virtual-list"
+          height={window.outerHeight}
+          itemCount={currentPathFiles.length}
+          itemSize={43}
+          // width={300}
+        >
+          {getItem}
+        </List>
       ) : (
         <div className="empty-folder">{t("folderEmpty")}</div>
       )}

@@ -27,9 +27,9 @@ const FileItem = ({
   setLastSelectedFile,
   draggable,
 }) => {
-  const [fileSelected, setFileSelected] = useState(false);
+  const [fileSelected, setFileSelected] = useState(selectedFileIndexes.includes(index));
 
-  const [checkboxClassName, setCheckboxClassName] = useState("hidden");
+  const [checkboxClassName, setCheckboxClassName] = useState(selectedFileIndexes.includes(index) ? "visible" : "hidden");
   const [dropZoneClass, setDropZoneClass] = useState("");
   const [tooltipPosition, setTooltipPosition] = useState(null);
 
@@ -175,11 +175,6 @@ const FileItem = ({
     setDropZoneClass((prev) => (prev ? "" : prev));
     setTooltipPosition(null);
   };
-
-  useEffect(() => {
-    setFileSelected(selectedFileIndexes.includes(index));
-    setCheckboxClassName(selectedFileIndexes.includes(index) ? "visible" : "hidden");
-  }, [selectedFileIndexes]);
 
   return (
     <div

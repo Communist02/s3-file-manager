@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
-import { getAllFilesAPI } from './api/getAllFilesAPI'
-import { downloadFile } from './api/downloadFileAPI'
-import { deleteAPI } from './api/deleteAPI'
-import { copyItemAPI, moveItemAPI } from './api/fileTransferAPI';
-import { renameAPI } from './api/renameAPI';
-import { createFolderAPI } from './api/createFolderAPI';
-import { getBucketsAPI } from './api/getBucketsAPI';
-import { authAPI, checkTokenAPI } from './api/authAPI';
-import ControlPanel from './control_panel/ControlPanel'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI, authAPI, checkTokenAPI } from './api/api'
+import ControlPanel from './control_panel/ControlPanel';
+import { ConfigProvider } from 'antd';
+import ruRU from 'antd/locale/ru_RU';
 
 
 function App() {
@@ -28,8 +23,10 @@ function App() {
       setTokenAuth(token);
       if (token !== null) {
         const buckets = await getBuckets(token);
-        setCurrentBucket(buckets[0]);
-        await getFiles(buckets[0], token);
+        if (buckets.length > 0) {
+          setCurrentBucket(buckets[0].name);
+          await getFiles(buckets[0].name, token);
+        }
       }
     }
     fun();
@@ -49,7 +46,7 @@ function App() {
   };
 
   const getBuckets = async (token) => {
-    let result = [''];
+    let result = [];
     setIsLoading(true);
     const response = await getBucketsAPI(token);
     setIsLoading(false);
@@ -174,8 +171,8 @@ function App() {
     return (
       <select value={value} className='select-bucket' onChange={handleBucket} >
         {items.map((item, index) => (
-          <option key={index} value={item}>
-            {item}
+          <option key={index} value={item.name}>
+            {item.name + ' (' + item.type + ')'}
           </option>
         ))}
       </select>
@@ -242,7 +239,7 @@ function App() {
           <div className='header'>
             <h1>S3 File Manager</h1>
             <div className='header-left'>
-              <SelectList items={buckets} value={currentBucket} />
+              {buckets.length > 0 && <SelectList items={buckets} value={currentBucket} />}
               <button onClick={outAccount}>Выход</button>
               <button onClick={showCtrlPanel}>Панель упраления</button>
             </div>
@@ -271,10 +268,12 @@ function App() {
         </>
       );
     case 'controlPanel':
-      return ControlPanel(outAccount, showCtrlPanel);
+      return (
+        <ConfigProvider locale={ruRU}>
+          <ControlPanel outAccount={outAccount} showCtrlPanel={showCtrlPanel} collections={buckets} token={tokenAuth} getCollections={getBuckets} />
+        </ConfigProvider>
+      );
   }
-
-
 }
 
 export default App

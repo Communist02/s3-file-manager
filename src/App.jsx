@@ -19,7 +19,7 @@ function App() {
 
   useEffect(() => {
     const fun = async () => {
-      const token = await checkTokenAPI(localStorage.getItem('token'))
+      const token = await checkTokenAPI(localStorage.getItem('token'));
       setTokenAuth(token);
       if (token !== null) {
         const buckets = await getBuckets(token);
@@ -37,8 +37,8 @@ function App() {
     const response = await getAllFilesAPI(bucket, token);
     setIsLoading(false);
     if (response.status === 200) {
-      if (response.data != '[]') {
-        setFiles(JSON.parse(response.data));
+      if (response.data.length > 0) {
+        setFiles(response.data);
       } else {
         setFiles([{}]);
       };
@@ -51,8 +51,11 @@ function App() {
     const response = await getBucketsAPI(token);
     setIsLoading(false);
     if (response.status === 200) {
-      if (response.data != '[]') {
-        result = JSON.parse(response.data);
+      result = response.data;
+      if (response.data.length > 0) {
+        if (currentBucket === '') {
+          setCurrentBucket(result[0].name)
+        }
       }
     } else if (response.status === 500) {
       window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
@@ -151,8 +154,8 @@ function App() {
         setTokenAuth(token);
         console.log(response.data.user_id);
         const buckets = await getBuckets(token);
-        setCurrentBucket(buckets[0]);
-        await getFiles(buckets[0], token);
+        setCurrentBucket(buckets[0].name);
+        await getFiles(buckets[0].name, token);
       }
     } else if (response.status === 401) {
       window.alert("Неверно введен логин или пароль!")

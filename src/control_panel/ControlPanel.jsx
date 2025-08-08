@@ -8,16 +8,18 @@ import { createCollection, getGroups, createGroup } from '../api/api';
 const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollections }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModalOpenCreateGroup, setIsModalOpenCreateGroup] = useState(false);
+    const [newCollectionName, setNewCollectionName] = useState('');
     const [groups, setGroups] = useState([]);
-    const newCollectionName = useRef('');
     const newGroupTitle = useRef('');
     const newGroupDescription = useRef('');
     const [currentCollection, setCurrentCollection] = useState(-1);
 
     useEffect(() => {
         const get = async () => {
-            const responce = await getGroups(token);
-            setGroups(JSON.parse(responce.data));
+            const response = await getGroups(token);
+            if (response.status === 200) {
+                setGroups(response.data);
+            }
         }
         get();
     }, []);
@@ -25,15 +27,17 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
     const showModal = () => setIsModalOpen(true);
     const showModalCreateGroup = () => setIsModalOpenCreateGroup(true);
     const handleOk = async () => {
-        await createCollection(newCollectionName.current, token);
+        await createCollection(newCollectionName, token);
         await getCollections(token);
-        newCollectionName.current = '';
+        setNewCollectionName('');
         setIsModalOpen(false);
     };
     const handleOkCreateGroup = async () => {
         await createGroup(newGroupTitle.current, newGroupDescription.current, token);
-        const responce = await getGroups(token);
-        setGroups(JSON.parse(responce.data));
+        const response = await getGroups(token);
+        if (response.status === 200) {
+            setGroups(response.data);
+        }
         newGroupTitle.current = '';
         newGroupDescription.current = '';
         setIsModalOpenCreateGroup(false);
@@ -42,7 +46,7 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
     const handleCancelCreateGroup = () => setIsModalOpenCreateGroup(false);
 
     function onChangeNewNameCollection(e) {
-        newCollectionName.current = e.target.value;
+        setNewCollectionName(e.target.value);
     }
 
     function onChangeNewGroupTitle(e) {
@@ -124,7 +128,7 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
             children: (
                 <Layout>
                     <Layout.Sider>
-                        <Menu
+                        <Menu style={{ overflow: 'auto', height: 'calc(100vh - 170px)' }}
                             defaultOpenKeys={['person']}
                             mode="inline"
                             items={getCollectionItems()}
@@ -136,11 +140,11 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
                         icon={<FolderAddOutlined />}
                         onClick={showModal}
                         style={{ insetInlineEnd: 50, width: 150, height: 60 }}
-                        description='Добавить новую коллекцию'
+                        description='Создать новую коллекцию'
                         shape='square'
                     />
-                    <Layout.Content>
-                        <CollectionPage index={currentCollection} collections={collections}></CollectionPage>
+                    <Layout.Content style={{ margin: '10px 10px 0', overflow: 'auto' }}>
+                        <CollectionPage index={currentCollection} collections={collections} getCollections={getCollections} token={token}></CollectionPage>
                     </Layout.Content>
                 </Layout>
             ),
@@ -150,18 +154,19 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
             label: 'Группы',
             children:
                 <Layout>
-                    <Menu
-                        style={{ width: 256 }}
-                        defaultOpenKeys={['admin']}
-                        mode="inline"
-                        items={getGroupItems()}
-                    />
+                    <Layout.Sider>
+                        <Menu
+                            defaultOpenKeys={['admin']}
+                            mode="inline"
+                            items={getGroupItems()}
+                        />
+                    </Layout.Sider>
                     <FloatButton
                         type="primary"
                         icon={<UsergroupAddOutlined />}
                         onClick={showModalCreateGroup}
                         style={{ insetInlineEnd: 50, width: 150, height: 60 }}
-                        description='Добавить новую группу'
+                        description='Создать новую группу'
                         shape='square'
                     />
                 </Layout>,
@@ -183,15 +188,16 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
                 </div>
             </div>
             <div className="control-panel-main">
-                <Tabs defaultActiveKey="1" items={tabItems} />
+                <Tabs defaultActiveKey="1" items={tabItems} style={{ margin: 0 }} />
                 <Modal
                     title="Создание коллекции"
                     open={isModalOpen}
                     onOk={handleOk}
                     onCancel={handleCancel}
+                    okButtonProps={{ disabled: newCollectionName.length < 3 }}
                 >
                     <p>Имя коллекции</p>
-                    <Input placeholder="Имя" count={{ show: true, max: 63 }} onChange={onChangeNewNameCollection} />
+                    <Input placeholder="Имя" value={newCollectionName} count={{ show: true, max: 63 }} onChange={onChangeNewNameCollection} />
                 </Modal>
                 <Modal
                     title="Создание группы"

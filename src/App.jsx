@@ -266,6 +266,7 @@ function App() {
             collapsibleNav={true}
             filePreviewPath={'http://127.0.0.1:8000/download?bucket=' + currentBucket + '&token=' + tokenAuth + '&file='}
             primaryColor='SteelBlue'
+            initialPath='/'
             permissions={{ create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }}
           />
         </>

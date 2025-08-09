@@ -143,7 +143,7 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
                         description='Создать новую коллекцию'
                         shape='square'
                     />
-                    <Layout.Content style={{ margin: '10px 10px 0', overflow: 'auto' }}>
+                    <Layout.Content style={{ padding: '10px 10px 0', overflow: 'auto', height: 'calc(100vh - 180px)' }}>
                         <CollectionPage index={currentCollection} collections={collections} getCollections={getCollections} token={token}></CollectionPage>
                     </Layout.Content>
                 </Layout>

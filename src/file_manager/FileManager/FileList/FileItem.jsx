@@ -28,11 +28,10 @@ const FileItem = ({
   draggable,
 }) => {
   const [fileSelected, setFileSelected] = useState(selectedFileIndexes.includes(index));
-
   const [checkboxClassName, setCheckboxClassName] = useState(selectedFileIndexes.includes(index) ? "visible" : "hidden");
   const [dropZoneClass, setDropZoneClass] = useState("");
   const [tooltipPosition, setTooltipPosition] = useState(null);
-
+  const lastClickTime = useRef(new Date().getTime());
   const { activeLayout } = useLayout();
   const iconSize = activeLayout === "grid" ? 48 : 20;
   const fileIcons = useFileIcons(iconSize);
@@ -90,12 +89,16 @@ const FileItem = ({
     e.stopPropagation();
     if (file.isEditing) return;
 
-    handleFileRangeSelection(e.shiftKey, e.ctrlKey);
+    if (e.shiftKey || e.ctrlKey || !fileSelected) {
+      handleFileRangeSelection(e.shiftKey, e.ctrlKey);
+    }
 
-    if (e.detail == 2) {
+    const currentTime = new Date().getTime();
+    if (fileSelected && (currentTime - lastClickTime.current < 300)) {
       handleFileAccess();
       return;
     }
+    lastClickTime.current = currentTime;
   };
 
   const handleOnKeyDown = (e) => {
@@ -178,9 +181,7 @@ const FileItem = ({
 
   return (
     <div
-      className={`file-item-container ${dropZoneClass} ${
-        fileSelected || !!file.isEditing ? "file-selected" : ""
-      } ${isFileMoving ? "file-moving" : ""}`}
+      className={`file-item-container ${dropZoneClass} ${fileSelected || !!file.isEditing ? "file-selected" : ""} ${isFileMoving ? "file-moving" : ""}`}
       tabIndex={0}
       title={file.name}
       onClick={handleFileSelection}
@@ -188,13 +189,13 @@ const FileItem = ({
       onContextMenu={handleItemContextMenu}
       onMouseOver={handleMouseOver}
       onMouseLeave={handleMouseLeave}
-      // draggable={fileSelected && draggable}
-      // onDragStart={handleDragStart}
-      // onDragEnd={handleDragEnd}
-      // onDragEnter={handleDragEnterOver}
-      // onDragOver={handleDragEnterOver}
-      // onDragLeave={handleDragLeave}
-      // onDrop={handleDrop}
+    // draggable={fileSelected && draggable}
+    // onDragStart={handleDragStart}
+    // onDragEnd={handleDragEnd}
+    // onDragEnter={handleDragEnterOver}
+    // onDragOver={handleDragEnterOver}
+    // onDragLeave={handleDragLeave}
+    // onDrop={handleDrop}
     >
       <div className="file-item">
         {!file.isEditing && (

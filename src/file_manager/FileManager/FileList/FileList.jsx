@@ -8,7 +8,7 @@ import useFileList from "./useFileList";
 import FilesHeader from "./FilesHeader";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./FileList.scss";
-import { FixedSizeList as List } from 'react-window';
+import { FixedSizeList, FixedSizeGrid } from 'react-window';
 
 const FileList = ({
   onCreateFolder,
@@ -38,13 +38,22 @@ const FileList = ({
   } = useFileList(onRefresh, enableFilePreview, triggerAction, permissions);
 
   const contextMenuRef = useDetectOutsideClick(() => setVisible(false));
-
+  const viewElement = document.getElementsByClassName('files')[0];
   function getItem(value) {
-    const file = currentPathFiles[value.index];
+    let index;
+    if (activeLayout === "list") {
+      index = value.index;
+    } else {
+      index = value.columnIndex + value.rowIndex * ~~(viewElement.offsetWidth / 140);
+      if (index >= currentPathFiles.length) {
+        return;
+      }
+    }
+    const file = currentPathFiles[index];
     return <div style={value.style}>
       <FileItem
-        key={value.index}
-        index={value.index}
+        key={index}
+        index={index}
         file={file}
         onCreateFolder={onCreateFolder}
         onRename={onRename}
@@ -71,15 +80,28 @@ const FileList = ({
       {activeLayout === "list" && <FilesHeader unselectFiles={unselectFiles} />}
 
       {currentPathFiles?.length > 0 ? (
-        <List
-          className="virtual-list"
-          height={window.outerHeight}
-          itemCount={currentPathFiles.length}
-          itemSize={43}
+        activeLayout === "list" ?
+          <FixedSizeList
+            className="virtual-list"
+            height={window.outerHeight}
+            itemCount={currentPathFiles.length}
+            itemSize={43}
           // width={300}
-        >
-          {getItem}
-        </List>
+          >
+            {getItem}
+          </FixedSizeList> :
+          <FixedSizeGrid
+            className="virtual-grid"
+            columnCount={~~(viewElement.offsetWidth / 140)}
+            columnWidth={140}
+            height={viewElement.offsetHeight}
+            width={viewElement.offsetWidth}
+            itemCount={currentPathFiles.length}
+            rowHeight={118}
+            rowCount={currentPathFiles.length / ~~(viewElement.offsetWidth / 140)}
+          >
+            {getItem}
+          </FixedSizeGrid>
       ) : (
         <div className="empty-folder">{t("folderEmpty")}</div>
       )}

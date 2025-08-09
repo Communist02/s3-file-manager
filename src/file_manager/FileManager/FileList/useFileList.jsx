@@ -232,8 +232,10 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions) =
   };
 
   const unselectFiles = () => {
-    setSelectedFileIndexes([]);
-    setSelectedFiles((prev) => (prev.length > 0 ? [] : prev));
+    if (selectedFileIndexes.length > 0) {
+      setSelectedFileIndexes([]);
+      setSelectedFiles((prev) => (prev.length > 0 ? [] : prev));
+    }
   };
 
   const handleContextMenu = (e, isSelection = false) => {

@@ -1,15 +1,32 @@
-import { useState, useRef, useEffect } from 'react';
-import { Button, Flex, Modal, Select, Segmented } from 'antd';
-import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection } from '../api/api';
+import { useState, useRef } from 'react';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message } from 'antd';
+import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection } from '../api/api';
 
 function CollectionPage({ index, collections, getCollections, token }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
     const [isModalOpenAccess, setIsModalOpenAccess] = useState(false);
     const [users, setUsers] = useState([]);
+    const [access, setAccess] = useState([]);
     const [groups, setGroups] = useState([]);
     const [accessId, setAccessId] = useState('');
     const [groupMode, setGroupMode] = useState(false);
+    const [messageApi, contextHolder] = message.useMessage();
+    const lastUpdateIndex = useRef(-1);
+
+    const getAccess = async () => {
+        const response = await getAccessToCollection(collections[index].id, token);
+        if (response.status === 200) {
+            setAccess(response.data);
+        }
+    }
+
+    if (index !== -1 & lastUpdateIndex.current !== index) {
+        lastUpdateIndex.current = index;
+        getAccess();
+    }
+
     const showModalRemove = () => setIsModalOpenRemove(true);
+
     async function showModalAccess() {
         let response = await getOtherUsers(token);
         if (response.status === 200) {
@@ -37,30 +54,85 @@ function CollectionPage({ index, collections, getCollections, token }) {
         }
         setIsModalOpenAccess(true);
     }
+
     const handleCancelRemove = () => setIsModalOpenRemove(false);
     const handleCancelAccess = () => setIsModalOpenAccess(false);
+
     const handleOkRemove = async () => {
-        await removeCollection(collections[index].name, token);
-        await getCollections(token);
-        setIsModalOpenRemove(false);
-    };
-    const handleOkAccess = async () => {
-        if (!groupMode) {
-            await giveAccessUserToCollection(collections[index].id, accessId, token);
+        const response = await removeCollection(collections[index].name, token);
+        if (response.status === 200) {
+            messageApi.success('Коллекция успешно удалена!');
+            await getCollections(token);
+            setIsModalOpenRemove(false);
+        } else if (response.status === 406) {
+            messageApi.error('Коллекция не является пустой, удалите все файлы!');
+        } else {
+            messageApi.error('Произошла ошибка! ' + response);
         }
-        setIsModalOpenAccess(false);
     };
+
+    const handleOkAccess = async () => {
+        let response;
+        if (!groupMode) {
+            response = await giveAccessUserToCollection(collections[index].id, accessId, token);
+        } else {
+            response = await giveAccessGroupToCollection(collections[index].id, accessId, token);
+        }
+        if (response.status === 200) {
+            messageApi.success('Доступ успешно предоставлен!');
+            setAccessId('');
+            await getAccess();
+            setIsModalOpenAccess(false);
+        } else {
+            messageApi.error('Произошла ошибка! ' + response);
+        }
+    };
+
+    async function handleDeleteAccess(access_id) {
+        const response = await deleteAccessToCollection(access_id, token);
+        if (response.status === 200) {
+            messageApi.success('Доступ успешно удален!');
+            await getAccess();
+        } else {
+            messageApi.error('Произошла ошибка! ' + response);
+        }
+    };
+
     function handleChange(value) {
         setAccessId(value);
     }
+
+    const columns = [
+        {
+            title: 'ID доступа',
+            dataIndex: 'id',
+        },
+        {
+            title: 'Тип цели',
+            dataIndex: 'target_type',
+        },
+        {
+            title: 'Имя цели',
+            dataIndex: 'target_name',
+        },
+        {
+            title: 'Действие',
+            render: (_, record) =>
+                <Popconfirm title="Вы действительно хотите удалить доступ?" okText="Удалить" onConfirm={() => handleDeleteAccess(record.id)}>
+                    <a>Удалить</a>
+                </Popconfirm>
+        },
+    ];
+
     if (index !== -1 && index < collections.length) {
         const collection = collections[index]
         return (
             <>
                 <Flex vertical gap="small" style={{ width: '100%' }}>
+                    {contextHolder}
                     <Button color="danger" variant="outlined" onClick={showModalRemove}>Удалить коллекцию {collection.name}</Button>
                     <Button color="cyan" variant="solid" onClick={showModalAccess}>Предоставить доступ к коллекции</Button>
-                    {/* <p>{collection.name}</p> */}
+                    <Table pagination={{ position: ['bottomLeft'] }} rowKey="id" columns={columns} dataSource={access} />
                 </Flex>
                 <Modal
                     title="Удаление коллекции"
@@ -71,6 +143,7 @@ function CollectionPage({ index, collections, getCollections, token }) {
                     onCancel={handleCancelRemove}
                 >
                     <p>Вы действительно хотите удалить {collection.name} ?</p>
+                    <p>Для удаления требуется, чтобы коллекция была пустая!</p>
                 </Modal>
                 <Modal
                     title={"Предоставление доступа для коллекции " + collection.name}

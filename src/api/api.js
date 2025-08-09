@@ -187,3 +187,33 @@ export const giveAccessUserToCollection = async (collection_id, user_id, token) 
     return error;
   }
 };
+
+export const giveAccessGroupToCollection = async (collection_id, group_id, token) => {
+  try {
+    const response = await api.post('/give_access_group_to_collection', { token, collection_id, group_id });
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const getAccessToCollection = async (collection_id, token) => {
+  try {
+    const response = await api.get('/get_access_to_collection' + '?token=' + token + '&collection_id=' + collection_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const deleteAccessToCollection = async (access_id, token) => {
+  try {
+    const response = await api.delete('/delete_access_to_collection' + '?token=' + token + '&access_id=' + access_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};

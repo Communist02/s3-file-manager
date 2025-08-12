@@ -100,7 +100,7 @@
 }
 
 .fm-modal.dialog:has(.file-previewer) {
-  width: auto !important;
+  width: fit-content !important;
 }
 
 .fm-modal.dialog>.file-previewer {

@@ -3,9 +3,10 @@ import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI, authAPI, checkTokenAPI } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
-import { ConfigProvider } from 'antd';
+import { Button, ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
-
+import { Avatar, Dropdown, Select } from 'antd';
+import { SettingOutlined, LogoutOutlined } from '@ant-design/icons';
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +21,9 @@ function App() {
   useEffect(() => {
     const fun = async () => {
       const token = await checkTokenAPI(localStorage.getItem('token'));
+      const login = localStorage.getItem('login');
       setTokenAuth(token);
+      setUsername(login);
       if (token !== null) {
         const buckets = await getBuckets(token);
         if (buckets.length > 0) {
@@ -105,7 +108,7 @@ function App() {
   const handleRename = async (file, newName) => {
     setIsLoading(true);
     await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket, tokenAuth);
-    await getFiles(currentBucket);
+    await getFiles(currentBucket, tokenAuth);
   };
 
   // Create Folder
@@ -138,21 +141,22 @@ function App() {
     await getFiles(currentBucket, tokenAuth);
   };
 
-  const handleBucket = async (e) => {
-    setCurrentBucket(e.target.value);
-    await getFiles(e.target.value, tokenAuth);
+  const handleBucket = async (value) => {
+    setCurrentBucket(value);
+    document.querySelector('.breadcrumb > div:nth-child(3) > span:nth-child(1)').click();
+    await getFiles(value, tokenAuth);
   }
 
   const auth = async (event) => {
     event.preventDefault();
     const response = await authAPI(username, password);
-    console.log(response);
     if (response.status === 200) {
       localStorage.setItem('token', response.data.token)
+      localStorage.setItem('login', response.data.login)
       const token = response.data.token;
-      if (token !== null && token != '') {
+      if (token !== null && token !== '') {
         setTokenAuth(token);
-        console.log(response.data.user_id);
+        setUsername(response.data.login);
         const buckets = await getBuckets(token);
         setCurrentBucket(buckets[0].name);
         await getFiles(buckets[0].name, token);
@@ -164,27 +168,75 @@ function App() {
     }
   }
 
-  const outAccount = async () => {
+  const outAccount = () => {
     localStorage.setItem('token', '')
     setShowControlPanel(false);
     setTokenAuth('');
   }
 
-  function SelectList({ items, value }) {
-    return (
-      <select value={value} className='select-bucket' onChange={handleBucket} >
-        {items.map((item, index) => (
-          <option key={index} value={item.name}>
-            {item.name + ' (' + item.type + ')'}
-          </option>
-        ))}
-      </select>
-    );
+  function onClickLogin(e) {
+    switch (e.key) {
+      case '1':
+        setShowControlPanel(!showControlPanel);
+        break;
+      case '2':
+        outAccount();
+        break;
+    }
   }
 
   function showCtrlPanel() {
     setShowControlPanel(!showControlPanel);
   }
+
+  function getCollectionItems() {
+    const personItems = [];
+    const accessItems = [];
+    const groupItems = [];
+    const collections = buckets;
+
+    for (let i = 0; i < collections.length; i++) {
+      const item = {
+        label: collections[i].name || collection[i].id,
+        value: collections[i].name,
+      };
+
+      switch (collections[i].type) {
+        case 'person': personItems.push(item); break;
+        case 'access': accessItems.push(item); break;
+        case 'group': groupItems.push(item); break;
+      }
+    }
+
+    const result = [];
+    if (personItems.length > 0) {
+      result.push({ label: 'Персональные', options: personItems });
+    }
+    if (accessItems.length > 0) {
+      result.push({ label: 'Получен доступ', options: accessItems });
+    }
+    if (groupItems.length > 0) {
+      result.push({ label: 'Групповые', options: groupItems });
+    }
+
+    return result;
+  }
+
+  const items = [
+    {
+      key: '1',
+      label: 'Панель управления',
+      icon: <SettingOutlined />,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: '2',
+      label: 'Выход',
+      icon: <LogoutOutlined />,
+    },
+  ];
 
   let page = 'auth';
   if (!(tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '')) {
@@ -242,9 +294,12 @@ function App() {
           <div className='header'>
             <h1>S3 File Manager</h1>
             <div className='header-left'>
-              {buckets.length > 0 && <SelectList items={buckets} value={currentBucket} />}
-              <button onClick={outAccount}>Выход</button>
-              <button onClick={showCtrlPanel}>Панель упраления</button>
+              {buckets.length > 0 && <Select style={{ width: '200px' }} value={currentBucket} onChange={handleBucket} options={getCollectionItems()} />}
+              <Dropdown menu={{ items, onClick: onClickLogin }}>
+                <Button type="text" shape="circle">
+                  <Avatar size={40} style={{ backgroundColor: 'SteelBlue' }}>{username}</Avatar>
+                </Button>
+              </Dropdown>
             </div>
           </div>
           <FileManager
@@ -266,7 +321,6 @@ function App() {
             collapsibleNav={true}
             filePreviewPath={'http://127.0.0.1:8000/download?bucket=' + currentBucket + '&token=' + tokenAuth + '&file='}
             primaryColor='SteelBlue'
-            initialPath='/'
             permissions={{ create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }}
           />
         </>

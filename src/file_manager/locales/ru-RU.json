@@ -53,5 +53,6 @@
   "collapseNavigationPane": "Свернуть панель навигации",
   "expandNavigationPane": "Развернуть панель навигации",
   "hide": "Скрыть",
-  "dragAndDropFilesHere": "Перетаскивайте файлы сюда"
+  "dragAndDropFilesHere": "Перетаскивайте файлы сюда",
+  "loading": "Загрузка"
 }

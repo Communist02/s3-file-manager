@@ -29,7 +29,6 @@ function App() {
     isMountRef.current = true;
     getFiles();
   }, []);
-  //
 
   // Create Folder
   const handleCreateFolder = async (name, parentFolder) => {
@@ -42,7 +41,6 @@ function App() {
     }
     setIsLoading(false);
   };
-  //
 
   // File Upload Handlers
   const handleFileUploading = (file, parentFolder) => {
@@ -66,7 +64,6 @@ function App() {
     }
     setIsLoading(false);
   };
-  //
 
   // Delete File/Folder
   const handleDelete = async (files) => {

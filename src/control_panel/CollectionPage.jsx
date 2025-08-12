@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message } from 'antd';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag } from 'antd';
 import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection } from '../api/api';
 
 function CollectionPage({ index, collections, getCollections, token }) {
@@ -24,8 +24,6 @@ function CollectionPage({ index, collections, getCollections, token }) {
         lastUpdateIndex.current = index;
         getAccess();
     }
-
-    const showModalRemove = () => setIsModalOpenRemove(true);
 
     async function showModalAccess() {
         let response = await getOtherUsers(token);
@@ -55,9 +53,6 @@ function CollectionPage({ index, collections, getCollections, token }) {
         setIsModalOpenAccess(true);
     }
 
-    const handleCancelRemove = () => setIsModalOpenRemove(false);
-    const handleCancelAccess = () => setIsModalOpenAccess(false);
-
     const handleOkRemove = async () => {
         const response = await removeCollection(collections[index].name, token);
         if (response.status === 200) {
@@ -80,8 +75,9 @@ function CollectionPage({ index, collections, getCollections, token }) {
         }
         if (response.status === 200) {
             messageApi.success('Доступ успешно предоставлен!');
-            setAccessId('');
             await getAccess();
+            setAccessId('');
+            setGroupMode(false);
             setIsModalOpenAccess(false);
         } else {
             messageApi.error('Произошла ошибка! ' + response);
@@ -98,10 +94,6 @@ function CollectionPage({ index, collections, getCollections, token }) {
         }
     };
 
-    function handleChange(value) {
-        setAccessId(value);
-    }
-
     const columns = [
         {
             title: 'ID доступа',
@@ -110,6 +102,10 @@ function CollectionPage({ index, collections, getCollections, token }) {
         {
             title: 'Тип цели',
             dataIndex: 'target_type',
+            render: (value) =>
+                <Tag color={value === 'user' ? 'blue' : 'magenta'}>
+                    {value === 'user' ? 'Пользователь' : 'Группа'}
+                </Tag>
         },
         {
             title: 'Имя цели',
@@ -130,7 +126,7 @@ function CollectionPage({ index, collections, getCollections, token }) {
             <>
                 <Flex vertical gap="small" style={{ width: '100%' }}>
                     {contextHolder}
-                    <Button color="danger" variant="outlined" onClick={showModalRemove}>Удалить коллекцию {collection.name}</Button>
+                    <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>
                     <Button color="cyan" variant="solid" onClick={showModalAccess}>Предоставить доступ к коллекции</Button>
                     <Table pagination={{ position: ['bottomLeft'] }} rowKey="id" columns={columns} dataSource={access} />
                 </Flex>
@@ -140,7 +136,7 @@ function CollectionPage({ index, collections, getCollections, token }) {
                     okType='danger'
                     okText='Удалить'
                     onOk={handleOkRemove}
-                    onCancel={handleCancelRemove}
+                    onCancel={() => setIsModalOpenRemove(false)}
                 >
                     <p>Вы действительно хотите удалить {collection.name} ?</p>
                     <p>Для удаления требуется, чтобы коллекция была пустая!</p>
@@ -149,10 +145,17 @@ function CollectionPage({ index, collections, getCollections, token }) {
                     title={"Предоставление доступа для коллекции " + collection.name}
                     open={isModalOpenAccess}
                     onOk={handleOkAccess}
-                    onCancel={handleCancelAccess}
+                    onCancel={
+                        () => {
+                            setAccessId('');
+                            setGroupMode(false);
+                            setIsModalOpenAccess(false);
+                        }
+                    }
                     okButtonProps={{ disabled: accessId === '' }}
                 >
                     <Segmented
+                        value={groupMode ? 'Для группы' : 'Для пользователя'}
                         options={['Для пользователя', 'Для группы']}
                         onChange={value => {
                             setAccessId('');
@@ -166,13 +169,15 @@ function CollectionPage({ index, collections, getCollections, token }) {
                         style={{ width: '100%' }}
                         placeholder="Выберите кому предоставить"
                         optionFilterProp="label"
-                        onChange={handleChange}
+                        onChange={(value) => setAccessId(value)}
                         // onSearch={onSearch}
                         options={groupMode ? groups : users}
                     />
                 </Modal>
             </>
         );
+    } else {
+        return <Empty description={'Выберите коллекцию'} />;
     }
 }
 

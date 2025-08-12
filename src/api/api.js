@@ -217,3 +217,23 @@ export const deleteAccessToCollection = async (access_id, token) => {
     return error;
   }
 };
+
+export const addUserToGroup = async (group_id, user_id, token) => {
+  try {
+    const response = await api.post('/add_user_to_group', { token, group_id, user_id });
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const getGroupUsers = async (group_id, token) => {
+  try {
+    const response = await api.get('/get_group_users' + '?token=' + token + '&group_id=' + group_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};

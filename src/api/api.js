@@ -1,7 +1,8 @@
 import axios from "axios";
+import { url } from "../url";
 
 export const api = axios.create({
-  baseURL: "http://127.0.0.1:8000",
+  baseURL: url,
 });
 
 export const authAPI = async (username, password) => {
@@ -24,7 +25,7 @@ export const authAPI = async (username, password) => {
 export const checkTokenAPI = async (token) => {
   if (token !== null) {
     try {
-      const response = await api.get('/check?token=' + token);
+      const response = await api.get('/check_token?token=' + token);
       if (response.status === 200) return token;
       return null;
     } catch (error) {
@@ -36,7 +37,7 @@ export const checkTokenAPI = async (token) => {
 
 export const createFolderAPI = async (name, path, bucket, token) => {
   try {
-    const response = await api.post("/folder", { name, path, bucket, token });
+    const response = await api.post("/new_folder", { name, path, bucket, token });
     return response;
   } catch (error) {
     console.log(error);
@@ -178,9 +179,9 @@ export const getOtherUsers = async (token) => {
   }
 };
 
-export const giveAccessUserToCollection = async (collection_id, user_id, token) => {
+export const giveAccessUserToCollection = async (collection_id, user_id, access_type_id, token) => {
   try {
-    const response = await api.post('/give_access_user_to_collection', { token, collection_id, user_id });
+    const response = await api.post('/give_access_user_to_collection', { token, collection_id, user_id, access_type_id });
     return response;
   } catch (error) {
     console.log(error);
@@ -188,9 +189,9 @@ export const giveAccessUserToCollection = async (collection_id, user_id, token) 
   }
 };
 
-export const giveAccessGroupToCollection = async (collection_id, group_id, token) => {
+export const giveAccessGroupToCollection = async (collection_id, group_id, access_type_id, token) => {
   try {
-    const response = await api.post('/give_access_group_to_collection', { token, collection_id, group_id });
+    const response = await api.post('/give_access_group_to_collection', { token, collection_id, group_id, access_type_id });
     return response;
   } catch (error) {
     console.log(error);
@@ -231,6 +232,16 @@ export const addUserToGroup = async (group_id, user_id, token) => {
 export const getGroupUsers = async (group_id, token) => {
   try {
     const response = await api.get('/get_group_users' + '?token=' + token + '&group_id=' + group_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const getAccessTypes = async (token) => {
+  try {
+    const response = await api.get('/get_access_types' + '?token=' + token);
     return response;
   } catch (error) {
     console.log(error);

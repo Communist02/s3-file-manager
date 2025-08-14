@@ -5,8 +5,9 @@ import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, rena
 import ControlPanel from './control_panel/ControlPanel';
 import { Button, ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
-import { Avatar, Dropdown, Select } from 'antd';
+import { Avatar, Dropdown, Select, Result, Flex } from 'antd';
 import { SettingOutlined, LogoutOutlined } from '@ant-design/icons';
+import { url } from "./url";
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +28,7 @@ function App() {
       if (token !== null) {
         const buckets = await getBuckets(token);
         if (buckets.length > 0) {
-          setCurrentBucket(buckets[0].name);
+          setCurrentBucket(buckets[0]);
           await getFiles(buckets[0].name, token);
         }
       }
@@ -57,7 +58,7 @@ function App() {
       result = response.data;
       if (response.data.length > 0) {
         if (currentBucket === '') {
-          setCurrentBucket(result[0].name)
+          setCurrentBucket(result[0])
         }
       }
     } else if (response.status === 500) {
@@ -69,24 +70,24 @@ function App() {
 
   // Refresh Files
   const handleRefresh = () => {
-    getFiles(currentBucket, tokenAuth);
+    getFiles(currentBucket.name, tokenAuth);
   };
 
   const handleDownload = async (files) => {
-    await downloadFile(files, currentBucket, tokenAuth);
+    await downloadFile(files, currentBucket.name, tokenAuth);
   };
 
   // File Upload Handlers
   const handleFileUploading = (file, parentFolder) => {
     console.log(file)
-    return { bucket: currentBucket, path: parentFolder !== null ? parentFolder.path : '/', token: tokenAuth };
+    return { bucket: currentBucket.name, path: parentFolder !== null ? parentFolder.path : '/', token: tokenAuth };
   };
 
   const handleFileUploaded = async (response) => {
     console.log(response)
     // const uploadedFile = JSON.parse(response);
     // setFiles((prev) => [...prev, uploadedFile]);
-    await getFiles(currentBucket, tokenAuth)
+    await getFiles(currentBucket.name, tokenAuth)
   };
 
   const handleError = (error, file) => {
@@ -96,10 +97,10 @@ function App() {
   // Delete File/Folder
   const handleDelete = async (files) => {
     setIsLoading(true);
-    const response = await deleteAPI(currentBucket, files, tokenAuth);
+    const response = await deleteAPI(currentBucket.name, files, tokenAuth);
     setIsLoading(false);
     if (response.status === 200) {
-      await getFiles(currentBucket, tokenAuth);
+      await getFiles(currentBucket.name, tokenAuth);
     } else if (response.status === 500) {
       window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
     }
@@ -107,16 +108,16 @@ function App() {
 
   const handleRename = async (file, newName) => {
     setIsLoading(true);
-    await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket, tokenAuth);
-    await getFiles(currentBucket, tokenAuth);
+    await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket.name, tokenAuth);
+    await getFiles(currentBucket.name, tokenAuth);
   };
 
   // Create Folder
   const handleCreateFolder = async (name, parentFolder) => {
     setIsLoading(true);
-    const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket, tokenAuth);
+    const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.name, tokenAuth);
     if (response.status === 200 || response.status === 201) {
-      getFiles(currentBucket, tokenAuth);
+      getFiles(currentBucket.name, tokenAuth);
     } else {
       console.error(response.data);
     }
@@ -134,32 +135,36 @@ function App() {
       }
     }
     if (operationType === "copy") {
-      const response = await copyItemAPI(currentBucket, copiedFiles, destinationFolder !== null ? destinationFolder.path : '/', tokenAuth);
+      const response = await copyItemAPI(currentBucket.name, copiedFiles, destinationFolder !== null ? destinationFolder.path : '/', tokenAuth);
     } else {
       const response = await moveItemAPI(copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
     }
-    await getFiles(currentBucket, tokenAuth);
+    await getFiles(currentBucket.name, tokenAuth);
   };
 
-  const handleBucket = async (value) => {
-    setCurrentBucket(value);
+  const handleBucket = async (id) => {
+    const collection = buckets.find(item => item.id === id);
+    setCurrentBucket(collection);
     document.querySelector('.breadcrumb > div:nth-child(3) > span:nth-child(1)').click();
-    await getFiles(value, tokenAuth);
+    await getFiles(collection.name, tokenAuth);
   }
 
   const auth = async (event) => {
     event.preventDefault();
     const response = await authAPI(username, password);
     if (response.status === 200) {
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('login', response.data.login)
       const token = response.data.token;
+      localStorage.setItem('token', token);
+      localStorage.setItem('login', response.data.login);
       if (token !== null && token !== '') {
         setTokenAuth(token);
         setUsername(response.data.login);
         const buckets = await getBuckets(token);
-        setCurrentBucket(buckets[0].name);
-        await getFiles(buckets[0].name, token);
+        setBuckets(buckets);
+        if (buckets.length > 0) {
+          setCurrentBucket(buckets[0]);
+          await getFiles(buckets[0].name, token);
+        }
       }
     } else if (response.status === 401) {
       window.alert("Неверно введен логин или пароль!")
@@ -170,8 +175,11 @@ function App() {
 
   const outAccount = () => {
     localStorage.setItem('token', '')
+    localStorage.setItem('login', '')
     setShowControlPanel(false);
     setTokenAuth('');
+    setBuckets([]);
+    setCurrentBucket('');
   }
 
   function onClickLogin(e) {
@@ -198,7 +206,7 @@ function App() {
     for (let i = 0; i < collections.length; i++) {
       const item = {
         label: collections[i].name || collection[i].id,
-        value: collections[i].name,
+        value: collections[i].id,
       };
 
       switch (collections[i].type) {
@@ -247,6 +255,13 @@ function App() {
     page = 'fileManager';
   }
 
+  const permissions = [
+    { create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }, // owner
+    { create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }, // readwrite
+    { create: false, upload: false, move: false, copy: false, rename: false, download: true, delete: false }, // readonly
+    { create: true, upload: true, move: false, copy: false, rename: false, download: false, delete: false }, // writeonly
+  ]
+
   switch (page) {
     case 'auth':
       return (
@@ -294,7 +309,7 @@ function App() {
           <div className='header'>
             <h1>S3 File Manager</h1>
             <div className='header-left'>
-              {buckets.length > 0 && <Select style={{ width: '200px' }} value={currentBucket} onChange={handleBucket} options={getCollectionItems()} />}
+              {buckets.length > 0 && <Select style={{ width: '200px' }} value={currentBucket.id} onChange={handleBucket} options={getCollectionItems()} />}
               <Dropdown menu={{ items, onClick: onClickLogin }}>
                 <Button type="text" shape="circle">
                   <Avatar size={40} style={{ backgroundColor: 'SteelBlue' }}>{username}</Avatar>
@@ -302,27 +317,39 @@ function App() {
               </Dropdown>
             </div>
           </div>
-          <FileManager
-            files={files}
-            language='ru'
-            isLoading={isLoading}
-            layout={'list'}
-            onRefresh={handleRefresh}
-            onError={handleError}
-            onDownload={handleDownload}
-            onDelete={handleDelete}
-            onPaste={handlePaste}
-            onRename={handleRename}
-            onFileUploading={handleFileUploading}
-            onFileUploaded={handleFileUploaded}
-            onCreateFolder={handleCreateFolder}
-            fileUploadConfig={{ url: 'http://127.0.0.1:8000', method: 'PUT' }}
-            defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
-            collapsibleNav={true}
-            filePreviewPath={'http://127.0.0.1:8000/download?bucket=' + currentBucket + '&token=' + tokenAuth + '&file='}
-            primaryColor='SteelBlue'
-            permissions={{ create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }}
-          />
+          {buckets.length > 0 ?
+            <FileManager
+              files={files}
+              language='ru'
+              isLoading={isLoading}
+              layout={'list'}
+              onRefresh={handleRefresh}
+              onError={handleError}
+              onDownload={handleDownload}
+              onDelete={handleDelete}
+              onPaste={handlePaste}
+              onRename={handleRename}
+              onFileUploading={handleFileUploading}
+              onFileUploaded={handleFileUploaded}
+              onCreateFolder={handleCreateFolder}
+              fileUploadConfig={{ url: url, method: 'PUT' }}
+              defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
+              collapsibleNav={true}
+              filePreviewPath={url + '/download?bucket=' + currentBucket.name + '&token=' + tokenAuth + '&file='}
+              primaryColor='SteelBlue'
+              permissions={currentBucket !== '' ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
+            /> :
+            <Flex style={{ height: 'calc(100vh - 140px)' }} justify="center" align="center">
+              <Result
+                title="У вас нет доступных коллекций! Можете создать их в панели управления!"
+                extra={
+                  <Button onClick={() => setShowControlPanel(!showControlPanel)} type="primary">
+                    Перейти в панель управления
+                  </Button>
+                }
+              />
+            </Flex>
+          }
         </>
       );
     case 'controlPanel':

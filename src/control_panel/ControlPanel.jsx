@@ -15,6 +15,7 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
     const newGroupDescription = useRef('');
     const [currentCollection, setCurrentCollection] = useState(-1);
     const [currentGroup, setCurrentGroup] = useState(-1);
+    const [typeCreate, setTypeCreate] = useState('1');
 
     useEffect(() => {
         const get = async () => {
@@ -138,14 +139,6 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
                     <Layout.Content style={{ padding: '10px 10px 0', overflow: 'auto', height: 'calc(100vh - 180px)' }}>
                         <CollectionPage index={currentCollection} collections={collections} getCollections={getCollections} token={token} />
                     </Layout.Content>
-                    <FloatButton
-                        type="primary"
-                        icon={<FolderAddOutlined />}
-                        onClick={() => setIsModalOpen(true)}
-                        style={{ insetInlineEnd: 50, width: 150, height: 60 }}
-                        description='Создать новую коллекцию'
-                        shape='square'
-                    />
                 </Layout>
             ),
         },
@@ -167,14 +160,6 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
                     <Layout.Content style={{ padding: '10px 10px 0', overflow: 'auto', height: 'calc(100vh - 180px)' }}>
                         <GroupPage index={currentGroup} groups={groups} getCollections={getCollections} token={token} />
                     </Layout.Content>
-                    <FloatButton
-                        type="primary"
-                        icon={<UsergroupAddOutlined />}
-                        onClick={() => setIsModalOpenCreateGroup(true)}
-                        style={{ insetInlineEnd: 50, width: 150, height: 60 }}
-                        description='Создать новую группу'
-                        shape='square'
-                    />
                 </Layout>,
         },
         {
@@ -188,6 +173,16 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
         },
     ];
 
+    function getCreateButton(){ 
+        switch (typeCreate) {
+            case '1':
+                return <Button type="primary" icon={<FolderAddOutlined />} onClick={() => setIsModalOpen(true)}>Создать новую коллекцию</Button>;
+            case '2':
+                return <Button type="primary" icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
+            return '';
+        }
+    }
+
     return (
         <div className="control-panel">
             <div className="header">
@@ -197,7 +192,7 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
                 </div>
             </div>
             <div className="control-panel-main">
-                <Tabs defaultActiveKey="1" items={tabItems} />
+                <Tabs onChange={(key) => setTypeCreate(key)} defaultActiveKey="1" items={tabItems} tabBarExtraContent={getCreateButton()} />
                 <Modal
                     title="Создание коллекции"
                     open={isModalOpen}

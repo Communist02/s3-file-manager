@@ -69,8 +69,8 @@ function GroupPage({ index, groups, getCollections, token }) {
                 <Flex vertical gap="small" style={{ width: '100%' }}>
                     {contextHolder}
                     {/* <Button color="danger" variant="outlined" onClick={showModalRemove}>Выйти из группы {group.title}</Button> */}
-                    <Button color="cyan" variant="solid" onClick={showModalAddUser}>Добавить пользователя в группу</Button>
-                    {<Table pagination={{ position: ['bottomLeft'] }} rowKey="id" columns={columns} dataSource={members} />}
+                    <Button type='primary' onClick={showModalAddUser}>Добавить пользователя в группу</Button>
+                    {<Table rowKey="id" columns={columns} dataSource={members} />}
                 </Flex>
                 {/* <Modal
                     title="Удаление коллекции"
@@ -94,6 +94,7 @@ function GroupPage({ index, groups, getCollections, token }) {
                     }
                     okButtonProps={{ disabled: userId === '' }}
                 >
+                    <p>Пользователь</p>
                     <Select
                         showSearch
                         value={userId}

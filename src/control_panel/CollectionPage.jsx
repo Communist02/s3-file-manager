@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag } from 'antd';
-import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection } from '../api/api';
+import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes } from '../api/api';
 
 function CollectionPage({ index, collections, getCollections, token }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
@@ -8,6 +8,8 @@ function CollectionPage({ index, collections, getCollections, token }) {
     const [users, setUsers] = useState([]);
     const [access, setAccess] = useState([]);
     const [groups, setGroups] = useState([]);
+    const [accessTypes, setAccessTypes] = useState([]);
+    const [accessTypeId, setAccessTypeId] = useState('');
     const [accessId, setAccessId] = useState('');
     const [groupMode, setGroupMode] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
@@ -50,6 +52,18 @@ function CollectionPage({ index, collections, getCollections, token }) {
             }
             setGroups(groupsOptions);
         }
+        response = await getAccessTypes(token);
+        if (response.status === 200) {
+            let accessTypesOptions = [];
+            const accessTypesList = response.data;
+            for (const accessType of accessTypesList) {
+                accessTypesOptions.push({
+                    label: accessType.name,
+                    value: accessType.id,
+                });
+            }
+            setAccessTypes(accessTypesOptions);
+        }
         setIsModalOpenAccess(true);
     }
 
@@ -69,14 +83,15 @@ function CollectionPage({ index, collections, getCollections, token }) {
     const handleOkAccess = async () => {
         let response;
         if (!groupMode) {
-            response = await giveAccessUserToCollection(collections[index].id, accessId, token);
+            response = await giveAccessUserToCollection(collections[index].id, accessId, accessTypeId, token);
         } else {
-            response = await giveAccessGroupToCollection(collections[index].id, accessId, token);
+            response = await giveAccessGroupToCollection(collections[index].id, accessId, accessTypeId, token);
         }
         if (response.status === 200) {
             messageApi.success('Доступ успешно предоставлен!');
             await getAccess();
             setAccessId('');
+            setAccessTypeId('');
             setGroupMode(false);
             setIsModalOpenAccess(false);
         } else {
@@ -88,6 +103,9 @@ function CollectionPage({ index, collections, getCollections, token }) {
         const response = await deleteAccessToCollection(access_id, token);
         if (response.status === 200) {
             messageApi.success('Доступ успешно удален!');
+            if (collections[index].type !== 'person') {
+                await getCollections(token);
+            }
             await getAccess();
         } else {
             messageApi.error('Произошла ошибка! ' + response);
@@ -96,11 +114,7 @@ function CollectionPage({ index, collections, getCollections, token }) {
 
     const columns = [
         {
-            title: 'ID доступа',
-            dataIndex: 'id',
-        },
-        {
-            title: 'Тип цели',
+            title: 'Тип получателя',
             dataIndex: 'target_type',
             render: (value) =>
                 <Tag color={value === 'user' ? 'blue' : 'magenta'}>
@@ -108,15 +122,47 @@ function CollectionPage({ index, collections, getCollections, token }) {
                 </Tag>
         },
         {
-            title: 'Имя цели',
+            title: 'Имя получателя',
             dataIndex: 'target_name',
         },
         {
-            title: 'Действие',
-            render: (_, record) =>
+            title: 'Тип доступа',
+            dataIndex: 'type_name',
+            render: (_, record) => {
+                let color;
+                let name;
+                switch (record.type_id) {
+                    case 1:
+                        color = 'cyan';
+                        name = 'Владелец';
+                        break;
+                    case 2:
+                        color = 'purple';
+                        name = 'Чтение и запись';
+                        break;
+                    case 3:
+                        color = 'orange';
+                        name = 'Только чтение';
+                        break;
+                    case 4:
+                        color = 'magenta';
+                        name = 'Только запись';
+                        break;
+                }
+                return (
+                    <Tag color={color}>
+                        {name}
+                    </Tag>
+                );
+            }
+        },
+        {
+            title: '',
+            render: (_, record) => record.type_id !== 1 && (collections[index].access_type_id === 1 || record.target_type !== 'group') ?
                 <Popconfirm title="Вы действительно хотите удалить доступ?" okText="Удалить" onConfirm={() => handleDeleteAccess(record.id)}>
                     <a>Удалить</a>
                 </Popconfirm>
+                : ''
         },
     ];
 
@@ -126,9 +172,9 @@ function CollectionPage({ index, collections, getCollections, token }) {
             <>
                 <Flex vertical gap="small" style={{ width: '100%' }}>
                     {contextHolder}
-                    <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>
-                    <Button color="cyan" variant="solid" onClick={showModalAccess}>Предоставить доступ к коллекции</Button>
-                    <Table pagination={{ position: ['bottomLeft'] }} rowKey="id" columns={columns} dataSource={access} />
+                    {collection.access_type_id === 1 && <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>}
+                    {collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}
+                    <Table rowKey="id" columns={columns} dataSource={access} />
                 </Flex>
                 <Modal
                     title="Удаление коллекции"
@@ -139,7 +185,7 @@ function CollectionPage({ index, collections, getCollections, token }) {
                     onCancel={() => setIsModalOpenRemove(false)}
                 >
                     <p>Вы действительно хотите удалить {collection.name} ?</p>
-                    <p>Для удаления требуется, чтобы коллекция была пустая!</p>
+                    <p>Для удаления требуется, чтобы коллекция была пустой!</p>
                 </Modal>
                 <Modal
                     title={"Предоставление доступа для коллекции " + collection.name}
@@ -148,17 +194,19 @@ function CollectionPage({ index, collections, getCollections, token }) {
                     onCancel={
                         () => {
                             setAccessId('');
+                            setAccessTypeId('');
                             setGroupMode(false);
                             setIsModalOpenAccess(false);
                         }
                     }
-                    okButtonProps={{ disabled: accessId === '' }}
+                    okButtonProps={{ disabled: accessId === '' || accessTypeId === '' }}
                 >
                     <Segmented
                         value={groupMode ? 'Для группы' : 'Для пользователя'}
                         options={['Для пользователя', 'Для группы']}
                         onChange={value => {
                             setAccessId('');
+                            setAccessTypeId('');
                             setGroupMode(value === 'Для группы');
                         }}
                     />
@@ -167,11 +215,20 @@ function CollectionPage({ index, collections, getCollections, token }) {
                         showSearch
                         value={accessId}
                         style={{ width: '100%' }}
-                        placeholder="Выберите кому предоставить"
+                        placeholder="Выберите кому предоставить доступ"
                         optionFilterProp="label"
                         onChange={(value) => setAccessId(value)}
                         // onSearch={onSearch}
                         options={groupMode ? groups : users}
+                    />
+                    <p>Тип доступа</p>
+                    <Select
+                        value={accessTypeId}
+                        style={{ width: '100%' }}
+                        placeholder="Выберите тип доступа"
+                        onChange={(value) => setAccessTypeId(value)}
+                        // onSearch={onSearch}
+                        options={accessTypes}
                     />
                 </Modal>
             </>

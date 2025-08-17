@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Table, message, Empty } from 'antd';
+import { Button, Flex, Modal, Select, Table, message, Empty, Tag } from 'antd';
 import { getOtherUsers, addUserToGroup, getGroupUsers } from '../api/api';
 
 function GroupPage({ index, groups, getCollections, token }) {
@@ -7,6 +7,7 @@ function GroupPage({ index, groups, getCollections, token }) {
     const [users, setUsers] = useState([]);
     const [members, setMembers] = useState([]);
     const [userId, setUserId] = useState('');
+    const [roleId, setRoleId] = useState('');
     const [isModalOpenAddUser, setIsModalOpenAddUser] = useState(false);
     const lastUpdateIndex = useRef(-1);
 
@@ -39,10 +40,11 @@ function GroupPage({ index, groups, getCollections, token }) {
     }
 
     async function handleOkAddUser() {
-        const response = await addUserToGroup(groups[index].id, userId, token);
+        const response = await addUserToGroup(groups[index].id, userId, roleId, token);
         if (response.status === 200) {
             messageApi.success('Пользователь успешно добавлен в группу!');
             setUserId('');
+            setRoleId('');
             await getCollections(token);
             getMembers();
             setIsModalOpenAddUser(false);
@@ -59,6 +61,33 @@ function GroupPage({ index, groups, getCollections, token }) {
         {
             title: 'Имя пользователя',
             dataIndex: 'login',
+        },
+        {
+            title: 'Роль',
+            dataIndex: 'role_id',
+            render: (value) => {
+                let color;
+                let name;
+                switch (value) {
+                    case 1:
+                        color = 'cyan';
+                        name = 'Владелец';
+                        break;
+                    case 2:
+                        color = 'magenta';
+                        name = 'Админ';
+                        break;
+                    case 3:
+                        color = 'orange';
+                        name = 'Участник';
+                        break;
+                }
+                return (
+                    <Tag color={color}>
+                        {name}
+                    </Tag>
+                );
+            }
         },
     ];
 
@@ -89,6 +118,7 @@ function GroupPage({ index, groups, getCollections, token }) {
                     onCancel={
                         () => {
                             setUserId('');
+                            setRoleId('');
                             setIsModalOpenAddUser(false);
                         }
                     }
@@ -104,6 +134,15 @@ function GroupPage({ index, groups, getCollections, token }) {
                         onChange={(value) => setUserId(value)}
                         // onSearch={onSearch}
                         options={users}
+                    />
+                    <p>Роль</p>
+                    <Select
+                        value={roleId}
+                        style={{ width: '100%' }}
+                        placeholder="Выберите роль"
+                        onChange={(value) => setRoleId(value)}
+                        // onSearch={onSearch}
+                        options={[{ label: 'Админ', value: 2 }, { label: 'Участник', value: 3 }]}
                     />
                 </Modal>
             </>

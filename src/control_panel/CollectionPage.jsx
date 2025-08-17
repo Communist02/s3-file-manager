@@ -56,9 +56,24 @@ function CollectionPage({ index, collections, getCollections, token }) {
         if (response.status === 200) {
             let accessTypesOptions = [];
             const accessTypesList = response.data;
+            let label;
             for (const accessType of accessTypesList) {
+                switch (accessType.id) {
+                    case 1:
+                        label = 'Владелец';
+                        break;
+                    case 2:
+                        label = 'Чтение и запись';
+                        break;
+                    case 3:
+                        label = 'Только чтение';
+                        break;
+                    case 4:
+                        label = 'Только запись';
+                        break;
+                }
                 accessTypesOptions.push({
-                    label: accessType.name,
+                    label: label,
                     value: accessType.id,
                 });
             }
@@ -127,11 +142,11 @@ function CollectionPage({ index, collections, getCollections, token }) {
         },
         {
             title: 'Тип доступа',
-            dataIndex: 'type_name',
-            render: (_, record) => {
+            dataIndex: 'type_id',
+            render: (value) => {
                 let color;
                 let name;
-                switch (record.type_id) {
+                switch (value) {
                     case 1:
                         color = 'cyan';
                         name = 'Владелец';
@@ -174,7 +189,7 @@ function CollectionPage({ index, collections, getCollections, token }) {
                     {contextHolder}
                     {collection.access_type_id === 1 && <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>}
                     {collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}
-                    <Table rowKey="id" columns={columns} dataSource={access} />
+                    <Table title={() => 'Доступ к коллекции'} rowKey="id" columns={columns} dataSource={access} />
                 </Flex>
                 <Modal
                     title="Удаление коллекции"

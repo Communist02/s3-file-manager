@@ -4,7 +4,7 @@ import { useSelection } from "../../contexts/SelectionContext";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { useTranslation } from "../../contexts/TranslationProvider";
 
-const FilesHeader = ({ unselectFiles }) => {
+const FilesHeader = ({ unselectFiles, onSort, sortConfig }) => {
   const [showSelectAll, setShowSelectAll] = useState(false);
 
   const { selectedFiles, setSelectedFiles } = useSelection();
@@ -14,6 +14,12 @@ const FilesHeader = ({ unselectFiles }) => {
   const allFilesSelected = useMemo(() => {
     return currentPathFiles.length > 0 && selectedFiles.length === currentPathFiles.length;
   }, [selectedFiles, currentPathFiles]);
+
+  const handleSort = (key) => {
+    if (onSort) {
+      onSort(key);
+    }
+  };
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -35,9 +41,39 @@ const FilesHeader = ({ unselectFiles }) => {
           <Checkbox checked={allFilesSelected} onChange={handleSelectAll} title="Select all" disabled={currentPathFiles.length === 0} />
         )}
       </div>
-      <div className="file-name">{t('name')}</div>
-      <div className="file-date">{t('modified')}</div>
-      <div className="file-size">{t('size')}</div>
+      <div 
+        className={`file-name ${sortConfig?.key === 'name' ? 'active' : ''}`} 
+        onClick={() => handleSort('name')}
+      >
+        {t('name')}
+        {sortConfig?.key === 'name' && (
+          <span className="sort-indicator">
+            {sortConfig.direction === 'asc' ? ' ▲' : ' ▼'}
+          </span>
+        )}
+      </div>
+      <div 
+        className={`file-date ${sortConfig?.key === 'modified' ? 'active' : ''}`} 
+        onClick={() => handleSort('modified')}
+      >
+        {t('modified')}
+        {sortConfig?.key === 'modified' && (
+          <span className="sort-indicator">
+            {sortConfig.direction === 'asc' ? ' ▲' : ' ▼'}
+          </span>
+        )}
+      </div>
+      <div 
+        className={`file-size ${sortConfig?.key === 'size' ? 'active' : ''}`} 
+        onClick={() => handleSort('size')}
+      >
+        {t('size')}
+        {sortConfig?.key === 'size' && (
+          <span className="sort-indicator">
+            {sortConfig.direction === 'asc' ? ' ▲' : ' ▼'}
+          </span>
+        )}
+      </div>
     </div>
   );
 };

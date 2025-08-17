@@ -19,7 +19,7 @@ const FileList = ({
   triggerAction,
   permissions,
 }) => {
-  const { currentPathFiles } = useFileNavigation();
+  const { currentPathFiles, sortConfig, setSortConfig } = useFileNavigation();
   const filesViewRef = useRef(null);
   const { activeLayout } = useLayout();
   const t = useTranslation();
@@ -36,6 +36,14 @@ const FileList = ({
     clickPosition,
     isSelectionCtx,
   } = useFileList(onRefresh, enableFilePreview, triggerAction, permissions);
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const contextMenuRef = useDetectOutsideClick(() => setVisible(false));
   const viewElement = document.getElementsByClassName('files')[0];
@@ -77,7 +85,14 @@ const FileList = ({
       onContextMenu={handleContextMenu}
       onClick={unselectFiles}
     >
-      {activeLayout === "list" && <FilesHeader unselectFiles={unselectFiles} />}
+      {
+        activeLayout === "list" &&
+        <FilesHeader
+          onSort={handleSort}
+          sortConfig={sortConfig}
+          unselectFiles={unselectFiles}
+        />
+      }
 
       {currentPathFiles?.length > 0 ? (
         activeLayout === "list" ?

@@ -10,7 +10,7 @@ export const authAPI = async (username, password) => {
     const response = await api.get('/auth', {
       auth: {
         username: username,
-        password: password
+        password: password,
       }
     });
     return response;
@@ -219,9 +219,9 @@ export const deleteAccessToCollection = async (access_id, token) => {
   }
 };
 
-export const addUserToGroup = async (group_id, user_id, token) => {
+export const addUserToGroup = async (group_id, user_id, role_id, token) => {
   try {
-    const response = await api.post('/add_user_to_group', { token, group_id, user_id });
+    const response = await api.post('/add_user_to_group', { token, group_id, user_id, role_id });
     return response;
   } catch (error) {
     console.log(error);

@@ -179,7 +179,6 @@ const ControlPanel = ({ outAccount, showCtrlPanel, collections, token, getCollec
                 return <Button type="primary" icon={<FolderAddOutlined />} onClick={() => setIsModalOpen(true)}>Создать новую коллекцию</Button>;
             case '2':
                 return <Button type="primary" icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
-            return '';
         }
     }
 

@@ -1,15 +1,17 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Table, message, Empty, Tag } from 'antd';
-import { getOtherUsers, addUserToGroup, getGroupUsers } from '../api/api';
+import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm } from 'antd';
+import { getOtherUsers, addUserToGroup, getGroupUsers, deleteUserToGroup, transferPowerToGroup, exitGroup } from '../api/api';
 
-function GroupPage({ index, groups, getCollections, token }) {
+function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     const [messageApi, contextHolder] = message.useMessage();
     const [users, setUsers] = useState([]);
     const [members, setMembers] = useState([]);
     const [userId, setUserId] = useState('');
     const [roleId, setRoleId] = useState('');
+    const [newOwnerUserId, setNewOwnerUserId] = useState('');
     const [isModalOpenAddUser, setIsModalOpenAddUser] = useState(false);
-    const lastUpdateIndex = useRef(-1);
+    const [isModalOpenTransferPower, setIsModalOpenTransferPower] = useState(false);
+    const lastGroupId = useRef(-1);
 
     const getMembers = async () => {
         const response = await getGroupUsers(groups[index].id, token);
@@ -18,8 +20,8 @@ function GroupPage({ index, groups, getCollections, token }) {
         }
     }
 
-    if (index !== -1 & lastUpdateIndex.current !== index) {
-        lastUpdateIndex.current = index;
+    if (index !== -1 && groups.length > index && lastGroupId.current !== groups[index].id) {
+        lastGroupId.current = groups[index].id;
         getMembers();
     }
 
@@ -39,15 +41,64 @@ function GroupPage({ index, groups, getCollections, token }) {
         setIsModalOpenAddUser(true);
     }
 
+    async function showModalTranferPower() {
+        let usersOptions = [];
+        for (const user of members) {
+            if (user.role_id !== 1) {
+                usersOptions.push({
+                    label: user.login,
+                    value: user.id,
+                });
+            }
+        }
+        setUsers(usersOptions);
+        setIsModalOpenTransferPower(true);
+    }
+
     async function handleOkAddUser() {
         const response = await addUserToGroup(groups[index].id, userId, roleId, token);
         if (response.status === 200) {
             messageApi.success('Пользователь успешно добавлен в группу!');
             setUserId('');
             setRoleId('');
-            await getCollections(token);
             getMembers();
             setIsModalOpenAddUser(false);
+        } else {
+            messageApi.error('Произошла ошибка! ' + response);
+        }
+    }
+
+    async function handleOkTransferPower() {
+        const response = await transferPowerToGroup(groups[index].id, newOwnerUserId, token);
+        if (response.status === 200) {
+            messageApi.success('Власть успешно передана!');
+            setNewOwnerUserId('');
+            updateGroups();
+            getMembers();
+            setIsModalOpenTransferPower(false);
+        } else {
+            messageApi.error('Произошла ошибка! ' + response);
+        }
+    }
+
+    async function handleDeleteUser(userId, name) {
+        const response = await deleteUserToGroup(groups[index].id, userId, token);
+        if (response.status === 200) {
+            messageApi.success('Пользователь ' + name + ' успешно покинул группу!');
+            await getCollections(token);
+            getMembers();
+        } else {
+            messageApi.error('Произошла ошибка! ' + response);
+        }
+    }
+
+    async function handleExitGroup() {
+        const response = await exitGroup(groups[index].id, token);
+        if (response.status === 200) {
+            messageApi.success('Вы успешно покинули группу!');
+            await getCollections(token);
+            updateGroups();
+            getMembers();
         } else {
             messageApi.error('Произошла ошибка! ' + response);
         }
@@ -89,6 +140,14 @@ function GroupPage({ index, groups, getCollections, token }) {
                 );
             }
         },
+        {
+            title: '',
+            render: (_, record) => (groups[index].role_id < record.role_id) ?
+                <Popconfirm title="Вы действительно хотите выгнать?" okText="Выгнать" onConfirm={() => handleDeleteUser(record.id, record.login)}>
+                    <a>Выгнать</a>
+                </Popconfirm>
+                : ''
+        },
     ];
 
     if (index !== -1 && index < groups.length) {
@@ -97,20 +156,17 @@ function GroupPage({ index, groups, getCollections, token }) {
             <>
                 <Flex vertical gap="small" style={{ width: '100%' }}>
                     {contextHolder}
-                    {/* <Button color="danger" variant="outlined" onClick={showModalRemove}>Выйти из группы {group.title}</Button> */}
                     <Button type='primary' onClick={showModalAddUser}>Добавить пользователя в группу</Button>
+                    {
+                        group.role_id == 1 && members.length > 1 ?
+                            <Button onClick={showModalTranferPower}>Передать власть</Button> :
+                            <Popconfirm title="Вы действительно хотите выйти из группы?" okText="Выйти" onConfirm={handleExitGroup}>
+                                <Button color="danger" variant="outlined">Выйти из группы {group.title}</Button>
+                            </Popconfirm>
+
+                    }
                     {<Table rowKey="id" columns={columns} dataSource={members} />}
                 </Flex>
-                {/* <Modal
-                    title="Удаление коллекции"
-                    open={isModalOpenRemove}
-                    okType='danger'
-                    okText='Выйти'
-                    onOk={handleOkRemove}
-                    onCancel={handleCancelRemove}
-                >
-                    <p>Вы действительно хотите выйти из {group.title} ?</p>
-                </Modal> */}
                 <Modal
                     title={"Добавление пользователя в группу " + group.title}
                     open={isModalOpenAddUser}
@@ -122,7 +178,7 @@ function GroupPage({ index, groups, getCollections, token }) {
                             setIsModalOpenAddUser(false);
                         }
                     }
-                    okButtonProps={{ disabled: userId === '' }}
+                    okButtonProps={{ disabled: userId === '' || roleId === '' }}
                 >
                     <p>Пользователь</p>
                     <Select
@@ -143,6 +199,30 @@ function GroupPage({ index, groups, getCollections, token }) {
                         onChange={(value) => setRoleId(value)}
                         // onSearch={onSearch}
                         options={[{ label: 'Админ', value: 2 }, { label: 'Участник', value: 3 }]}
+                    />
+                </Modal>
+                <Modal
+                    title={"Передать власть над группой " + group.title}
+                    open={isModalOpenTransferPower}
+                    onOk={handleOkTransferPower}
+                    onCancel={
+                        () => {
+                            setNewOwnerUserId('');
+                            setIsModalOpenTransferPower(false);
+                        }
+                    }
+                    okButtonProps={{ disabled: newOwnerUserId === '' }}
+                >
+                    <p>Кому</p>
+                    <Select
+                        showSearch
+                        value={newOwnerUserId}
+                        style={{ width: '100%' }}
+                        placeholder="Выберите кому передать"
+                        optionFilterProp="label"
+                        onChange={(value) => setNewOwnerUserId(value)}
+                        // onSearch={onSearch}
+                        options={users}
                     />
                 </Modal>
             </>

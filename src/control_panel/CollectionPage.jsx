@@ -185,10 +185,10 @@ function CollectionPage({ index, collections, getCollections, token }) {
         const collection = collections[index]
         return (
             <>
+                {contextHolder}
                 <Flex vertical gap="small" style={{ width: '100%' }}>
-                    {contextHolder}
-                    {collection.access_type_id === 1 && <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>}
                     {collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}
+                    {collection.access_type_id === 1 && <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>}
                     <Table title={() => 'Доступ к коллекции'} rowKey="id" columns={columns} dataSource={access} />
                 </Flex>
                 <Modal

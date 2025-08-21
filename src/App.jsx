@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI, authAPI, checkTokenAPI } from './api/api'
@@ -6,7 +6,7 @@ import ControlPanel from './control_panel/ControlPanel';
 import { Button, ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { Avatar, Dropdown, Select, Result, Flex } from 'antd';
-import { SettingOutlined, LogoutOutlined } from '@ant-design/icons';
+import { SettingOutlined, LogoutOutlined, GroupOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
 import { url } from "./url";
 
 function App() {
@@ -18,6 +18,7 @@ function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showControlPanel, setShowControlPanel] = useState(false);
+  const pageControl = useRef(1);
 
   useEffect(() => {
     const fun = async () => {
@@ -180,17 +181,7 @@ function App() {
     setTokenAuth('');
     setBuckets([]);
     setCurrentBucket('');
-  }
-
-  function onClickLogin(e) {
-    switch (e.key) {
-      case '1':
-        setShowControlPanel(!showControlPanel);
-        break;
-      case '2':
-        outAccount();
-        break;
-    }
+    setFiles([{}]);
   }
 
   function showCtrlPanel() {
@@ -241,10 +232,52 @@ function App() {
     },
     {
       key: '2',
+      label: 'Профиль',
+      icon: <UserOutlined />,
+    },
+    {
+      key: '3',
+      label: 'Коллекции',
+      icon: <GroupOutlined />,
+    },
+    {
+      key: '4',
+      label: 'Группы',
+      icon: <TeamOutlined />,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: '5',
       label: 'Выход',
       icon: <LogoutOutlined />,
     },
   ];
+
+  function onClickLogin(e) {
+    switch (e.key) {
+      case '1':
+        pageControl.current = '1';
+        setShowControlPanel(!showControlPanel);
+        break;
+      case '2':
+        pageControl.current = '3';
+        setShowControlPanel(!showControlPanel);
+        break;
+      case '3':
+        pageControl.current = '1';
+        setShowControlPanel(!showControlPanel);
+        break;
+      case '4':
+        pageControl.current = '2';
+        setShowControlPanel(!showControlPanel);
+        break;
+      case '5':
+        outAccount();
+        break;
+    }
+  }
 
   let page = 'auth';
   if (!(tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '')) {
@@ -355,7 +388,7 @@ function App() {
     case 'controlPanel':
       return (
         <ConfigProvider locale={ruRU}>
-          <ControlPanel outAccount={outAccount} showCtrlPanel={showCtrlPanel} collections={buckets} token={tokenAuth} getCollections={getBuckets} />
+          <ControlPanel page={pageControl.current} username={username} outAccount={outAccount} showCtrlPanel={showCtrlPanel} collections={buckets} token={tokenAuth} getCollections={getBuckets} />
         </ConfigProvider>
       );
   }

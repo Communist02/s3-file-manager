@@ -219,6 +219,16 @@ export const deleteAccessToCollection = async (access_id, token) => {
   }
 };
 
+export const deleteUserToGroup = async (group_id, user_id, token) => {
+  try {
+    const response = await api.delete('/delete_user_to_group' + '?token=' + token + '&group_id=' + group_id + '&user_id=' + user_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
 export const addUserToGroup = async (group_id, user_id, role_id, token) => {
   try {
     const response = await api.post('/add_user_to_group', { token, group_id, user_id, role_id });
@@ -242,6 +252,26 @@ export const getGroupUsers = async (group_id, token) => {
 export const getAccessTypes = async (token) => {
   try {
     const response = await api.get('/get_access_types' + '?token=' + token);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const transferPowerToGroup = async (group_id, user_id, token) => {
+  try {
+    const response = await api.post('/transfer_power_to_group' + '?token=' + token + '&group_id=' + group_id + '&user_id=' + user_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const exitGroup = async (group_id, token) => {
+  try {
+    const response = await api.delete('/exit_group' + '?token=' + token + '&group_id=' + group_id);
     return response;
   } catch (error) {
     console.log(error);

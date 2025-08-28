@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag } from 'antd';
-import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes } from '../api/api';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown } from 'antd';
+import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType } from '../api/api';
+import { DownOutlined } from '@ant-design/icons';
 
 function CollectionPage({ index, collections, getCollections, token }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
@@ -127,6 +128,16 @@ function CollectionPage({ index, collections, getCollections, token }) {
         }
     };
 
+    async function handleChangeAccess(access_id, accessTypeId) {
+        const response = await changeAccessType(access_id, accessTypeId, token);
+        if (response.status === 200) {
+            messageApi.success('Доступ успешно изменен!');
+            await getAccess();
+        } else {
+            messageApi.error('Произошла ошибка! ' + response);
+        }
+    };
+
     const columns = [
         {
             title: 'Тип получателя',
@@ -143,7 +154,7 @@ function CollectionPage({ index, collections, getCollections, token }) {
         {
             title: 'Тип доступа',
             dataIndex: 'type_id',
-            render: (value) => {
+            render: (value, record) => {
                 let color;
                 let name;
                 switch (value) {
@@ -164,11 +175,21 @@ function CollectionPage({ index, collections, getCollections, token }) {
                         name = 'Только запись';
                         break;
                 }
-                return (
-                    <Tag color={color}>
-                        {name}
-                    </Tag>
-                );
+                const items = [
+                    { key: 2, label: 'Чтение и запись' },
+                    { key: 3, label: 'Только чтение' },
+                    { key: 4, label: 'Только запись' },
+                ]
+                if (collections[index].access_type_id === 1 && value !== 1) {
+                    return <Dropdown menu={{ items, onClick: (e) => handleChangeAccess(record.id, e.key) }} trigger={['click']}>
+                        <a>
+                            <Tag color={color}>{name}</Tag>
+                            <DownOutlined />
+                        </a>
+                    </Dropdown>
+                } else {
+                    return <Tag color={color}>{name}</Tag>
+                }
             }
         },
         {
@@ -187,6 +208,11 @@ function CollectionPage({ index, collections, getCollections, token }) {
             <>
                 {contextHolder}
                 <Flex vertical gap="small" style={{ width: '100%' }}>
+                    <Descriptions bordered size='small' layout='vertical' title={collection.name} items={[
+                        { key: 'collection_id', label: 'id', children: collection.id },
+                        { key: 'access_type', label: 'Тип доступа', children: ['Владелец', 'Чтение и запись', 'Только чтение', 'Только запись'][collection.access_type_id - 1] },
+                        { key: 'access_count', label: 'Количество пользователей', children: access.length },
+                    ]} />
                     {collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}
                     {collection.access_type_id === 1 && <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>}
                     <Table title={() => 'Доступ к коллекции'} rowKey="id" columns={columns} dataSource={access} />

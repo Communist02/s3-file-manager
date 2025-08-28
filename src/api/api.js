@@ -278,3 +278,33 @@ export const exitGroup = async (group_id, token) => {
     return error;
   }
 };
+
+export const changeRoleInGroup = async (group_id, user_id, role_id, token) => {
+  try {
+    const response = await api.post('/change_role_in_group' + '?token=' + token + '&group_id=' + group_id + '&user_id=' + user_id + '&role_id=' + role_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const getUserInfo = async (token) => {
+  try {
+    const response = await api.get('/get_user_info' + '?token=' + token);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const changeAccessType = async (access_id, access_type_id, token) => {
+  try {
+    const response = await api.post('/change_access_type' + '?token=' + token + '&access_id=' + access_id + '&access_type_id=' + access_type_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};

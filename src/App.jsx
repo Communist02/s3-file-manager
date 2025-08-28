@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI, authAPI, checkTokenAPI } from './api/api'
+import AuthPage from './auth/AuthPage'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
 import { Button, ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
@@ -16,26 +17,8 @@ function App() {
   const [currentBucket, setCurrentBucket] = useState('');
   const [tokenAuth, setTokenAuth] = useState('');
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [showControlPanel, setShowControlPanel] = useState(false);
   const pageControl = useRef(1);
-
-  useEffect(() => {
-    const fun = async () => {
-      const token = await checkTokenAPI(localStorage.getItem('token'));
-      const login = localStorage.getItem('login');
-      setTokenAuth(token);
-      setUsername(login);
-      if (token !== null) {
-        const buckets = await getBuckets(token);
-        if (buckets.length > 0) {
-          setCurrentBucket(buckets[0]);
-          await getFiles(buckets[0].name, token);
-        }
-      }
-    }
-    fun();
-  }, []);
 
   const getFiles = async (bucket, token) => {
     setIsLoading(true);
@@ -150,30 +133,6 @@ function App() {
     await getFiles(collection.name, tokenAuth);
   }
 
-  const auth = async (event) => {
-    event.preventDefault();
-    const response = await authAPI(username, password);
-    if (response.status === 200) {
-      const token = response.data.token;
-      localStorage.setItem('token', token);
-      localStorage.setItem('login', response.data.login);
-      if (token !== null && token !== '') {
-        setTokenAuth(token);
-        setUsername(response.data.login);
-        const buckets = await getBuckets(token);
-        setBuckets(buckets);
-        if (buckets.length > 0) {
-          setCurrentBucket(buckets[0]);
-          await getFiles(buckets[0].name, token);
-        }
-      }
-    } else if (response.status === 401) {
-      window.alert("Неверно введен логин или пароль!")
-    } else if (response.status === 500) {
-      window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
-    }
-  }
-
   const outAccount = () => {
     localStorage.setItem('token', '')
     localStorage.setItem('login', '')
@@ -262,20 +221,31 @@ function App() {
         setShowControlPanel(!showControlPanel);
         break;
       case '2':
-        pageControl.current = '3';
-        setShowControlPanel(!showControlPanel);
-        break;
-      case '3':
         pageControl.current = '1';
         setShowControlPanel(!showControlPanel);
         break;
-      case '4':
+      case '3':
         pageControl.current = '2';
+        setShowControlPanel(!showControlPanel);
+        break;
+      case '4':
+        pageControl.current = '3';
         setShowControlPanel(!showControlPanel);
         break;
       case '5':
         outAccount();
         break;
+    }
+  }
+
+  async function auth(token, username) {
+    setTokenAuth(token);
+    setUsername(username);
+    const buckets = await getBuckets(token);
+    setBuckets(buckets);
+    if (buckets.length > 0) {
+      setCurrentBucket(buckets[0]);
+      await getFiles(buckets[0].name, token);
     }
   }
 
@@ -297,50 +267,15 @@ function App() {
 
   switch (page) {
     case 'auth':
-      return (
-        <div className='auth-page'>
-          <div className="auth-container">
-            <div className="auth-header">
-              <h2>Вход в систему</h2>
-            </div>
-
-            <form onSubmit={auth}>
-              <div className="form-group">
-                <label htmlFor="username">Имя пользователя</label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  required
-                  placeholder="Введите ваш логин"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)} // Обновляем состояние при вводе
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="password">Пароль</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  required
-                  placeholder="Введите ваш пароль"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)} // Обновляем состояние при вводе
-                />
-              </div>
-
-              <button type="submit" className="auth-button">Войти</button>
-            </form>
-          </div>
-        </div>
-      );
+      return <AuthPage authEvent={auth}></AuthPage>;
     case 'fileManager':
       return (
         <>
           <div className='header'>
-            <h1>S3 File Manager</h1>
+            <div className='header-right'>
+              <img height='50px' width='50px' src={'./favicon.svg'} />
+              <h1>S3 File Manager</h1>
+            </div>
             <div className='header-left'>
               {buckets.length > 0 && <Select style={{ width: '200px' }} value={currentBucket.id} onChange={handleBucket} options={getCollectionItems()} />}
               <Dropdown menu={{ items, onClick: onClickLogin }}>
@@ -376,7 +311,14 @@ function App() {
               <Result
                 title="У вас нет доступных коллекций! Можете создать их в панели управления!"
                 extra={
-                  <Button onClick={() => setShowControlPanel(!showControlPanel)} type="primary">
+                  <Button
+                    onClick={
+                      () => {
+                        pageControl.current = '1';
+                        setShowControlPanel(!showControlPanel);
+                      }
+                    }
+                    type="primary">
                     Перейти в панель управления
                   </Button>
                 }

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm } from 'antd';
-import { getOtherUsers, addUserToGroup, getGroupUsers, deleteUserToGroup, transferPowerToGroup, exitGroup } from '../api/api';
+import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Space, Collapse, Descriptions } from 'antd';
+import { getOtherUsers, addUserToGroup, getGroupUsers, deleteUserToGroup, transferPowerToGroup, exitGroup, changeRoleInGroup } from '../api/api';
 
 function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     const [messageApi, contextHolder] = message.useMessage();
@@ -104,6 +104,20 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
         }
     }
 
+    async function handleChangeRole(userId, roleId) {
+        const response = await changeRoleInGroup(groups[index].id, userId, roleId, token);
+        if (response.status === 200) {
+            if (roleId === 2) {
+                messageApi.success('Участник успешно повышен до админа!');
+            } else {
+                messageApi.success('Админ успешно понижен до участника!');
+            }
+            getMembers();
+        } else {
+            messageApi.error('Произошла ошибка! ' + response);
+        }
+    }
+
     const columns = [
         {
             title: 'ID пользователя',
@@ -143,9 +157,19 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
         {
             title: '',
             render: (_, record) => (groups[index].role_id < record.role_id) ?
-                <Popconfirm title="Вы действительно хотите выгнать?" okText="Выгнать" onConfirm={() => handleDeleteUser(record.id, record.login)}>
-                    <a>Выгнать</a>
-                </Popconfirm>
+                <Space size="large">
+                    {record.role_id === 2 ?
+                        <Popconfirm title="Вы действительно хотите понизить админа до участника?" okText="Понизить" onConfirm={() => handleChangeRole(record.id, 3)}>
+                            <a>Понизить</a>
+                        </Popconfirm> :
+                        groups[index].role_id == 1 && <Popconfirm title="Вы действительно хотите повысить участника до админа?" okText="Повысить" onConfirm={() => handleChangeRole(record.id, 2)}>
+                            <a>Повысить</a>
+                        </Popconfirm>
+                    }
+                    <Popconfirm title="Вы действительно хотите выгнать?" okText="Выгнать" onConfirm={() => handleDeleteUser(record.id, record.login)}>
+                        <a>Выгнать</a>
+                    </Popconfirm>
+                </Space>
                 : ''
         },
     ];
@@ -154,9 +178,11 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
         const group = groups[index]
         return (
             <>
+                {contextHolder}
                 <Flex vertical gap="small" style={{ width: '100%' }}>
-                    {contextHolder}
-                    <Button type='primary' onClick={showModalAddUser}>Добавить пользователя в группу</Button>
+                    <Descriptions bordered size='small' layout='vertical' title={group.title} items={[{ key: 'group_id', label: 'id', children: group.id }, { key: 'group_count', label: 'Количество участников', children: members.length }]}></Descriptions>
+                    <Collapse size="small" items={[{ key: 'group_description', label: 'Описание', children: group.description }]} />
+                    {group.role_id < 3 && <Button type='primary' onClick={showModalAddUser}>Добавить пользователя в группу</Button>}
                     {
                         group.role_id == 1 && members.length > 1 ?
                             <Button onClick={showModalTranferPower}>Передать власть</Button> :

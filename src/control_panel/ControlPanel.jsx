@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import './ControlPanel.css';
 import CollectionPage from './CollectionPage';
 import GroupPage from './GroupPage';
-import { Tabs, Layout, Menu, Modal, Input, Button, Dropdown, Avatar, message } from 'antd';
+import ProfilePage from './ProfilePage';
+import { Tabs, Layout, Menu, Modal, Input, Button, Dropdown, Avatar, message, Descriptions } from 'antd';
 import { FolderAddOutlined, UsergroupAddOutlined, LeftOutlined, GroupOutlined, TeamOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { createCollection, getGroups, createGroup } from '../api/api';
 
@@ -149,6 +150,15 @@ const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, 
     const tabItems = [
         {
             key: '1',
+            label: 'Профиль',
+            icon: <UserOutlined />,
+            children:
+                <Layout.Content style={{ padding: '10px 10px 0', overflow: 'auto', height: 'calc(100vh - 180px)' }}>
+                    <ProfilePage token={token} />
+                </Layout.Content>,
+        },
+        {
+            key: '2',
             label: 'Коллекции',
             icon: <GroupOutlined />,
             children: (
@@ -169,7 +179,7 @@ const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, 
             ),
         },
         {
-            key: '2',
+            key: '3',
             label: 'Группы',
             icon: <TeamOutlined />,
             children:
@@ -188,22 +198,13 @@ const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, 
                     </Layout.Content>
                 </Layout>,
         },
-        {
-            key: '3',
-            label: 'Профиль',
-            icon: <UserOutlined />,
-            children:
-                <Layout>
-
-                </Layout>,
-        },
     ];
 
     function getCreateButton() {
         switch (typeCreate) {
-            case '1':
-                return <Button type="primary" icon={<FolderAddOutlined />} onClick={() => setIsModalOpen(true)}>Создать новую коллекцию</Button>;
             case '2':
+                return <Button type="primary" icon={<FolderAddOutlined />} onClick={() => setIsModalOpen(true)}>Создать новую коллекцию</Button>;
+            case '3':
                 return <Button type="primary" icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
         }
     }
@@ -238,7 +239,10 @@ const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, 
     return (
         <div className="control-panel">
             <div className="header">
-                <h1>Панель управления</h1>
+                <div className='header-right'>
+                    <img height='50px' width='50px' src={'./favicon.svg'} />
+                    <h1>S3 File Manager</h1>
+                </div>
                 <div className="header-left">
                     <Button icon={<LeftOutlined />} onClick={showCtrlPanel} />
                     <Dropdown menu={{ items, onClick: onClickLogin }}>

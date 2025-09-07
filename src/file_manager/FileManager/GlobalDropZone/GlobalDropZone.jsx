@@ -80,13 +80,14 @@ const GlobalDropZone = ({ onFileUploading, acceptedFileTypes, maxFileSize, trigg
   useEffect(() => {
     const handleDragEnter = (e) => {
       e.preventDefault();
-      dragCounter.current++;
-      setDragging(true);
+      document.getElementById('upload-button').click();
+      // dragCounter.current++;
+      // setDragging(true);
     };
 
     const handleDragLeave = (e) => {
       e.preventDefault();
-      dragCounter.current--;
+      // dragCounter.current--;
       if (dragCounter.current === 0) setDragging(false);
     };
 
@@ -99,16 +100,16 @@ const GlobalDropZone = ({ onFileUploading, acceptedFileTypes, maxFileSize, trigg
       dragCounter.current = 0;
       setDragging(false);
 
-      const items = Array.from(e.dataTransfer.items);
-      const filePromises = items
-        .map((item) => item.webkitGetAsEntry?.())
-        .filter(Boolean)
-        .map((entry) => traverseFileTree(entry));
+      // const items = Array.from(e.dataTransfer.items);
+      // const filePromises = items
+      //   .map((item) => item.webkitGetAsEntry?.())
+      //   .filter(Boolean)
+      //   .map((entry) => traverseFileTree(entry));
 
-      const nestedFiles = await Promise.all(filePromises);
-      const flatFiles = nestedFiles.flat();
+      // const nestedFiles = await Promise.all(filePromises);
+      // const flatFiles = nestedFiles.flat();
 
-      onFilesDrop(flatFiles); // отправляем в UploadFileAction или аналог
+      // onFilesDrop(flatFiles); // отправляем в UploadFileAction или аналог
     };
 
     window.addEventListener("dragenter", handleDragEnter);

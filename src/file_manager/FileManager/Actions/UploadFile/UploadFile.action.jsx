@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import Button from "../../../components/Button/Button";
+import { Button }  from "antd";
 import { AiOutlineCloudUpload } from "react-icons/ai";
 import UploadItem from "./UploadItem";
 import Loader from "../../../components/Loader/Loader";
@@ -162,7 +162,7 @@ const UploadFileAction = ({
           </div>
         </div>
         <div className="btn-choose-file">
-          <Button padding="0" onKeyDown={handleChooseFileKeyDown}>
+          <Button type="primary" onKeyDown={handleChooseFileKeyDown}>
             <label htmlFor="chooseFile">{t("chooseFile")}</label>
             <input
               ref={fileInputRef}
@@ -175,7 +175,7 @@ const UploadFileAction = ({
             />
           </Button>
 
-          <Button padding="0">
+          <Button type="primary">
             <label htmlFor="chooseFolder">{t("chooseFolder")}</label>
             <input
               ref={fileInputRef}

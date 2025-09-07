@@ -1,9 +1,8 @@
-import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Space, Collapse, Descriptions } from 'antd';
-import { getOtherUsers, addUserToGroup, getGroupUsers, deleteUserToGroup, transferPowerToGroup, exitGroup, changeRoleInGroup } from '../api/api';
+import { useState, useRef, use } from 'react';
+import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Space, Collapse, Descriptions, Input } from 'antd';
+import { getOtherUsers, addUserToGroup, getGroupUsers, deleteUserToGroup, transferPowerToGroup, exitGroup, changeRoleInGroup, changeGroupInfo } from '../api/api';
 
 function GroupPage({ index, groups, getCollections, updateGroups, token }) {
-    const [messageApi, contextHolder] = message.useMessage();
     const [users, setUsers] = useState([]);
     const [members, setMembers] = useState([]);
     const [userId, setUserId] = useState('');
@@ -12,6 +11,9 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     const [isModalOpenAddUser, setIsModalOpenAddUser] = useState(false);
     const [isModalOpenTransferPower, setIsModalOpenTransferPower] = useState(false);
     const lastGroupId = useRef(-1);
+    const [isModalOpenEditGroup, setIsModalOpenEditGroup] = useState(false);
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
 
     const getMembers = async () => {
         const response = await getGroupUsers(groups[index].id, token);
@@ -58,49 +60,49 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     async function handleOkAddUser() {
         const response = await addUserToGroup(groups[index].id, userId, roleId, token);
         if (response.status === 200) {
-            messageApi.success('Пользователь успешно добавлен в группу!');
+            message.success('Пользователь успешно добавлен в группу!');
             setUserId('');
             setRoleId('');
             getMembers();
             setIsModalOpenAddUser(false);
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     }
 
     async function handleOkTransferPower() {
         const response = await transferPowerToGroup(groups[index].id, newOwnerUserId, token);
         if (response.status === 200) {
-            messageApi.success('Власть успешно передана!');
+            message.success('Власть успешно передана!');
             setNewOwnerUserId('');
             updateGroups();
             getMembers();
             setIsModalOpenTransferPower(false);
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     }
 
     async function handleDeleteUser(userId, name) {
         const response = await deleteUserToGroup(groups[index].id, userId, token);
         if (response.status === 200) {
-            messageApi.success('Пользователь ' + name + ' успешно покинул группу!');
+            message.success('Пользователь ' + name + ' успешно покинул группу!');
             await getCollections(token);
             getMembers();
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     }
 
     async function handleExitGroup() {
         const response = await exitGroup(groups[index].id, token);
         if (response.status === 200) {
-            messageApi.success('Вы успешно покинули группу!');
+            message.success('Вы успешно покинули группу!');
             await getCollections(token);
             updateGroups();
             getMembers();
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     }
 
@@ -108,14 +110,33 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
         const response = await changeRoleInGroup(groups[index].id, userId, roleId, token);
         if (response.status === 200) {
             if (roleId === 2) {
-                messageApi.success('Участник успешно повышен до админа!');
+                message.success('Участник успешно повышен до админа!');
             } else {
-                messageApi.success('Админ успешно понижен до участника!');
+                message.success('Админ успешно понижен до участника!');
             }
             getMembers();
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
+    }
+
+    async function handleOkEditGroup() {
+        const response = await changeGroupInfo(groups[index].id, title, description, token);
+        if (response.status === 200) {
+            message.success('Данные успешно изменены!');
+            setTitle('');
+            setDescription('');
+            updateGroups();
+            setIsModalOpenEditGroup(false);
+        } else {
+            message.error('Произошла ошибка! ' + response);
+        }
+    }
+
+    function showModalEditGroup() {
+        setTitle(groups[index].title);
+        setDescription(groups[index].description);
+        setIsModalOpenEditGroup(true);
     }
 
     const columns = [
@@ -178,11 +199,16 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
         const group = groups[index]
         return (
             <>
-                {contextHolder}
                 <Flex vertical gap="small" style={{ width: '100%' }}>
                     <Descriptions bordered size='small' layout='vertical' title={group.title} items={[{ key: 'group_id', label: 'id', children: group.id }, { key: 'group_count', label: 'Количество участников', children: members.length }]}></Descriptions>
                     <Collapse size="small" items={[{ key: 'group_description', label: 'Описание', children: group.description }]} />
-                    {group.role_id < 3 && <Button type='primary' onClick={showModalAddUser}>Добавить пользователя в группу</Button>}
+                    {
+                        group.role_id < 3 &&
+                        <>
+                            <Button type='primary' onClick={showModalAddUser}>Добавить пользователя в группу</Button>
+                            <Button onClick={showModalEditGroup}>Редактировать название и описание группы</Button>
+                        </>
+                    }
                     {
                         group.role_id == 1 && members.length > 1 ?
                             <Button onClick={showModalTranferPower}>Передать власть</Button> :
@@ -250,6 +276,17 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
                         // onSearch={onSearch}
                         options={users}
                     />
+                </Modal>
+                <Modal
+                    title="Редактирование"
+                    open={isModalOpenEditGroup}
+                    onOk={handleOkEditGroup}
+                    onCancel={() => setIsModalOpenEditGroup(false)}
+                >
+                    <p>Название группы</p>
+                    <Input value={title} placeholder="Название" count={{ show: true, max: 255 }} onChange={(e) => setTitle(e.target.value)} />
+                    <p>Описание группы</p>
+                    <Input.TextArea value={description} placeholder="Описание" onChange={(e) => setDescription(e.target.value)} />
                 </Modal>
             </>
         );

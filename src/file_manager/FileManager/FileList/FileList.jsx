@@ -35,7 +35,7 @@ const FileList = ({
     selectedFileIndexes,
     clickPosition,
     isSelectionCtx,
-  } = useFileList(onRefresh, enableFilePreview, triggerAction, permissions);
+  } = useFileList(onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen);
 
   const handleSort = (key) => {
     let direction = 'asc';

@@ -57,31 +57,23 @@ export const deleteAPI = async (bucket, files, token) => {
 
 export const downloadFile = async (files, bucket, token) => {
   if (files.length === 0) return;
-
   try {
-    let i = 0;
-    for (const file of files) {
-      const url = `${api.defaults.baseURL}/download?file=${file.path}&bucket=${bucket}&token=${token}`;
-      if (i++ === 0) {
-        window.location.href = url;
-      } else {
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.download = file.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+    let url;
+    if (files.length === 1 && !files[0].isDirectory) {
+      url = `${api.defaults.baseURL}/download?file=${files[0].path}&bucket=${bucket}&token=${token}`;
+    } else {
+      const fileQuery = 'files=' + files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|');
+      url = `${api.defaults.baseURL}/download_files?${fileQuery}&collection_name=${bucket}&token=${token}`;
     }
+    window.location.href = url;
   } catch (error) {
     return error;
   }
 };
 
-export const copyItemAPI = async (bucket, sourcePaths, destinationPath, token) => {
+export const copyItemAPI = async (source_collection_id, source_paths, destination_collection_id, destination_path, token) => {
   try {
-    const response = await api.post("/copy", { sourcePaths, destinationPath, bucket, token });
+    const response = await api.post("/copy", { source_collection_id, source_paths, destination_collection_id, destination_path, token });
     return response;
   } catch (error) {
     console.log(error);
@@ -302,6 +294,16 @@ export const getUserInfo = async (token) => {
 export const changeAccessType = async (access_id, access_type_id, token) => {
   try {
     const response = await api.post('/change_access_type' + '?token=' + token + '&access_id=' + access_id + '&access_type_id=' + access_type_id);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const changeGroupInfo = async (group_id, title, description, token) => {
+  try {
+    const response = await api.post('/change_group_info', { group_id, title, description, token });
     return response;
   } catch (error) {
     console.log(error);

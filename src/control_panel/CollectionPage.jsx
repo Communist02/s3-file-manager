@@ -13,7 +13,6 @@ function CollectionPage({ index, collections, getCollections, token }) {
     const [accessTypeId, setAccessTypeId] = useState('');
     const [accessId, setAccessId] = useState('');
     const [groupMode, setGroupMode] = useState(false);
-    const [messageApi, contextHolder] = message.useMessage();
     const lastUpdateIndex = useRef(-1);
 
     const getAccess = async () => {
@@ -86,13 +85,13 @@ function CollectionPage({ index, collections, getCollections, token }) {
     const handleOkRemove = async () => {
         const response = await removeCollection(collections[index].name, token);
         if (response.status === 200) {
-            messageApi.success('Коллекция успешно удалена!');
+            message.success('Коллекция успешно удалена!');
             await getCollections(token);
             setIsModalOpenRemove(false);
         } else if (response.status === 406) {
-            messageApi.error('Коллекция не является пустой, удалите все файлы!');
+            message.error('Коллекция не является пустой, удалите все файлы!');
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     };
 
@@ -104,37 +103,37 @@ function CollectionPage({ index, collections, getCollections, token }) {
             response = await giveAccessGroupToCollection(collections[index].id, accessId, accessTypeId, token);
         }
         if (response.status === 200) {
-            messageApi.success('Доступ успешно предоставлен!');
+            message.success('Доступ успешно предоставлен!');
             await getAccess();
             setAccessId('');
             setAccessTypeId('');
             setGroupMode(false);
             setIsModalOpenAccess(false);
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     };
 
     async function handleDeleteAccess(access_id) {
         const response = await deleteAccessToCollection(access_id, token);
         if (response.status === 200) {
-            messageApi.success('Доступ успешно удален!');
+            message.success('Доступ успешно удален!');
             if (collections[index].type !== 'person') {
                 await getCollections(token);
             }
             await getAccess();
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     };
 
     async function handleChangeAccess(access_id, accessTypeId) {
         const response = await changeAccessType(access_id, accessTypeId, token);
         if (response.status === 200) {
-            messageApi.success('Доступ успешно изменен!');
+            message.success('Доступ успешно изменен!');
             await getAccess();
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     };
 
@@ -206,7 +205,6 @@ function CollectionPage({ index, collections, getCollections, token }) {
         const collection = collections[index]
         return (
             <>
-                {contextHolder}
                 <Flex vertical gap="small" style={{ width: '100%' }}>
                     <Descriptions bordered size='small' layout='vertical' title={collection.name} items={[
                         { key: 'collection_id', label: 'id', children: collection.id },

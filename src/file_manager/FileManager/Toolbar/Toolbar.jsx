@@ -17,6 +17,7 @@ import { useLayout } from "../../contexts/LayoutContext";
 import { validateApiCallback } from "../../utils/validateApiCallback";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./Toolbar.scss";
+import { Button } from "antd";
 
 const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
   const [showToggleViewMenu, setShowToggleViewMenu] = useState(false);
@@ -29,22 +30,26 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
   // Toolbar Items
   const toolbarLeftItems = [
     {
+      icon: <FaRegPaste size={18} />,
+      text: t("paste"),
+      type: 'primary',
+      permission: !!clipBoard,
+      onClick: handleFilePasting,
+    },
+    {
       icon: <BsFolderPlus size={17} strokeWidth={0.3} />,
       text: t("newFolder"),
+      type: '',
       permission: permissions.create,
       onClick: () => triggerAction.show("createFolder"),
     },
     {
       icon: <MdOutlineFileUpload size={18} />,
       text: t("upload"),
+      type: '',
       permission: permissions.upload,
-      onClick: () => triggerAction.show("uploadFile"),
-    },
-    {
-      icon: <FaRegPaste size={18} />,
-      text: t("paste"),
-      permission: !!clipBoard,
-      onClick: handleFilePasting,
+      // onClick: () => triggerAction.show("uploadFile"),
+      onClick: () => document.getElementById('upload-button').click(),
     },
   ];
 
@@ -79,54 +84,54 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
       <div className="toolbar file-selected">
         <div className="file-action-container">
           <div>
-            {permissions.move && (
-              <button className="item-action file-action" onClick={() => handleCutCopy(true)}>
-                <BsScissors size={18} />
-                <span>{t("cut")}</span>
-              </button>
-            )}
-            {permissions.copy && (
-              <button className="item-action file-action" onClick={() => handleCutCopy(false)}>
-                <BsCopy strokeWidth={0.1} size={17} />
-                <span>{t("copy")}</span>
-              </button>
-            )}
-            {clipBoard?.files?.length > 0 && (
-              <button
+            {/* {clipBoard?.files?.length > 0 && (
+              <Button
+                type='primary'
+                icon={<FaRegPaste size={18} />}
                 className="item-action file-action"
                 onClick={handleFilePasting}
-                // disabled={!clipBoard}
+              // disabled={!clipBoard}
               >
-                <FaRegPaste size={18} />
-                <span>{t("paste")}</span>
-              </button>
+                {t("paste")}
+              </Button>
+            )} */}
+            {permissions.move && (
+              <Button icon={<BsScissors size={18} />} className="item-action file-action" onClick={() => handleCutCopy(true)}>
+                {t("cut")}
+              </Button>
+            )}
+            {permissions.copy && (
+              <Button icon={<BsCopy size={18} />} className="item-action file-action" onClick={() => handleCutCopy(false)}>
+                {t("copy")}
+              </Button>
             )}
             {selectedFiles.length === 1 && permissions.rename && (
-              <button
+              <Button
+                icon={<BiRename />}
                 className="item-action file-action"
                 onClick={() => triggerAction.show("rename")}
               >
-                <BiRename size={19} />
-                <span>{t("rename")}</span>
-              </button>
+                {t("rename")}
+              </Button>
             )}
             {permissions.download && (
-              <button className="item-action file-action" onClick={handleDownloadItems}>
-                <MdOutlineFileDownload size={19} />
-                <span>{t("download")}</span>
-              </button>
+              <Button icon={<MdOutlineFileDownload size={18} />} className="item-action file-action" onClick={handleDownloadItems}>
+                {t("download")}
+              </Button>
             )}
             {permissions.delete && (
-              <button
+              <Button icon={<MdOutlineDelete size={18} />}
                 className="item-action file-action"
                 onClick={() => triggerAction.show("delete")}
               >
-                <MdOutlineDelete size={19} />
-                <span>{t("delete")}</span>
-              </button>
+                {t("delete")}
+              </Button>
             )}
           </div>
-          <button
+          <Button
+            type="text"
+            icon={<MdClear size={18} />}
+            iconPosition="end"
             className="item-action file-action"
             title={t("clearSelection")}
             onClick={() => setSelectedFiles([])}
@@ -135,8 +140,7 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
               {selectedFiles.length}{" "}
               {t(selectedFiles.length > 1 ? "itemsSelected" : "itemSelected")}
             </span>
-            <MdClear size={18} />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -150,18 +154,15 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
           {toolbarLeftItems
             .filter((item) => item.permission)
             .map((item, index) => (
-              <button className="item-action" key={index} onClick={item.onClick}>
-                {item.icon}
-                <span>{item.text}</span>
-              </button>
+              <Button type={item.type} icon={item.icon} className="item-action" key={index} onClick={item.onClick}>
+                {item.text}
+              </Button>
             ))}
         </div>
         <div>
           {toolbarRightItems.map((item, index) => (
             <div key={index} className="toolbar-left-items">
-              <button className="item-action icon-only" title={item.title} onClick={item.onClick}>
-                {item.icon}
-              </button>
+              <Button icon={item.icon} className="item-action icon-only" title={item.title} onClick={item.onClick} />
               {index !== toolbarRightItems.length - 1 && <div className="item-separator"></div>}
             </div>
           ))}

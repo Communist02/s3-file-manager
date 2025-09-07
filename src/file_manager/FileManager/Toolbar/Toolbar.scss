@@ -1,9 +1,9 @@
 @use "../../styles/variables" as *;
 
 .toolbar {
-  height: 35px;
-  min-height: 35px;
-  max-height: 35px;
+  // height: 35px;
+  // min-height: 35px;
+  // max-height: 35px;
   border-bottom: 1px solid $border-color;
   padding: 5px 10px;
 
@@ -13,27 +13,28 @@
 
     >div {
       display: flex;
-    }
-
-    .file-action {
-      background-color: transparent;
       gap: 5px;
-
-      &:hover:not(:disabled) {
-        cursor: pointer;
-        background-color: rgb(0, 0, 0, 0.55) !important;
-        border-radius: 3px;
-        color: white;
-        text-shadow: 0px 0px 1px white;
-      }
-
-      &:hover:disabled {
-        cursor: default;
-        background-color: transparent !important;
-        color: #b0b0b0;
-        text-shadow: none;
-      }
     }
+
+    // .file-action {
+    //   background-color: transparent;
+    //   gap: 5px;
+
+    //   &:hover:not(:disabled) {
+    //     cursor: pointer;
+    //     background-color: rgb(0, 0, 0, 0.55) !important;
+    //     border-radius: 3px;
+    //     color: white;
+    //     text-shadow: 0px 0px 1px white;
+    //   }
+
+    //   &:hover:disabled {
+    //     cursor: default;
+    //     background-color: transparent !important;
+    //     color: #b0b0b0;
+    //     text-shadow: none;
+    //   }
+    // }
   }
 
   .fm-toolbar {
@@ -43,6 +44,7 @@
     >div {
       display: flex;
       position: relative;
+      gap: 5px;
     }
 
     .toolbar-left-items {
@@ -86,53 +88,53 @@
     }
   }
 
-  .item-action {
-    background-color: white;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 12px;
-    font-size: 14px;
-    width: fit-content;
-    border: none;
+  // .item-action {
+  //   background-color: white;
+  //   display: flex;
+  //   align-items: center;
+  //   gap: 7px;
+  //   padding: 8px 12px;
+  //   font-size: 14px;
+  //   width: fit-content;
+  //   border: none;
 
-    &:hover {
-      cursor: pointer;
-      background-color: rgb(0 0 0 / 12%) !important;
-      border-radius: 3px;
-    }
+  //   &:hover {
+  //     cursor: pointer;
+  //     background-color: rgb(0 0 0 / 12%) !important;
+  //     border-radius: 3px;
+  //   }
 
-    .toggle-view-icon {
-      background-color: transparent;
-      border: none;
+  //   .toggle-view-icon {
+  //     background-color: transparent;
+  //     border: none;
 
-      &:hover {
-        cursor: pointer;
-      }
-    }
-  }
+  //     &:hover {
+  //       cursor: pointer;
+  //     }
+  //   }
+  // }
 
-  .icon-only {
-    padding: 0 8px !important;
+  // .icon-only {
+  //   padding: 0 8px !important;
 
-    &:focus {
-      background-color: rgb(0 0 0 / 12%);
-      border-radius: 3px;
-    }
+  //   &:focus {
+  //     background-color: rgb(0 0 0 / 12%);
+  //     border-radius: 3px;
+  //   }
 
-    &:hover {
-      color: var(--file-manager-primary-color);
-    }
-  }
+  //   &:hover {
+  //     color: var(--file-manager-primary-color);
+  //   }
+  // }
 
   .item-separator {
-    height: 36px;
+    // height: 36px;
     background: $border-color;
     width: 1px;
     margin: 0 5px;
   }
 }
 
-.file-selected {
-  background-color: $item-hover-color;
-}
+// .file-selected {
+//   background-color: $item-hover-color;
+// }

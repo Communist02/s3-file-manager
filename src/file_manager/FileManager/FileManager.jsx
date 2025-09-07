@@ -37,6 +37,7 @@ const FileManager = ({
   onLayoutChange = () => { },
   onRefresh,
   onFileOpen = () => { },
+  onFolderChange = () => { },
   onSelect,
   onError = () => { },
   layout = "grid",
@@ -77,7 +78,7 @@ const FileManager = ({
       <TranslationProvider language={language}>
         <FilesProvider filesData={files} onError={onError}>
           <FilesPersistProvider>
-            <FileNavigationProvider initialPath={initialPath}>
+            <FileNavigationProvider initialPath={initialPath} onFolderChange={onFolderChange}>
               <SelectionProvider onDownload={onDownload} onSelect={onSelect}>
                 <ClipBoardProvider onPaste={onPaste} onCut={onCut} onCopy={onCopy}>
                   <LayoutProvider layout={layout}>
@@ -190,6 +191,7 @@ FileManager.propTypes = {
   onLayoutChange: PropTypes.func,
   onRefresh: PropTypes.func,
   onFileOpen: PropTypes.func,
+  onFolderChange: PropTypes.func,
   onSelect: PropTypes.func,
   onError: PropTypes.func,
   layout: PropTypes.oneOf(["grid", "list"]),

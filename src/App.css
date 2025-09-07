@@ -135,11 +135,6 @@
   margin-right: 10%; */
 }
 
-.fm-modal.dialog:has(.fm-upload-file) {
-  width: 90% !important;
-  max-width: 768px;
-}
-
 .video-preview {
   width: 100% !important;
   height: 100% !important;
@@ -158,15 +153,15 @@
   margin-right: 10%; */
 }
 
+.fm-modal.dialog:has(.fm-upload-file) {
+  width: 90% !important;
+  max-width: 768px;
+}
+
 .fm-upload-file .btn-choose-file {
   gap: 10px;
 }
 
-.header-left {
-  display: flex;
-  gap: 5px;
-}
-
 .fm-upload-file .files-progress ul {
-  height: 300px !important;
+  height: 400px !important;
 }

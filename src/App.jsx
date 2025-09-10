@@ -10,7 +10,7 @@ import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
 import '@ant-design/v5-patch-for-react-19';
 import Uploader from './uploader/Uploader'
-import Logs from './logs/Logs'
+import Logs from './logsView/Logs'
 import CollectionPage from './control_panel/CollectionPage'
 
 function App() {

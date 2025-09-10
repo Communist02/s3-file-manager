@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown } from 'antd';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip } from 'antd';
 import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType } from '../api/api';
-import { DownOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownOutlined } from '@ant-design/icons';
 
 function CollectionPage({ collection, getCollections, setCurrentCollection, token, setOpen }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
@@ -210,14 +210,12 @@ function CollectionPage({ collection, getCollections, setCurrentCollection, toke
         return (
             <>
                 <Flex vertical gap="small" style={{ width: '100%' }}>
-                    <Descriptions bordered size='small' layout='vertical' title={collection.name} items={[
+                    <Descriptions bordered size='small' layout='vertical' title={<Space>{collection.name}{collection.access_type_id === 1 && <Tooltip title="Удалить коллекцию"><Button color="danger" variant="outlined" icon={<DeleteOutlined />} onClick={() => setIsModalOpenRemove(true)}></Button></Tooltip>}</Space>} items={[
                         { key: 'collection_id', label: 'id', children: collection.id },
                         { key: 'access_type', label: 'Тип доступа', children: ['Владелец', 'Чтение и запись', 'Только чтение', 'Только запись'][collection.access_type_id - 1] },
                         { key: 'access_count', label: 'Количество пользователей', children: access.length },
                     ]} />
-                    {collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}
-                    {collection.access_type_id === 1 && <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>}
-                    <Table title={() => 'Доступ к коллекции'} rowKey="id" pagination={{ hideOnSinglePage: true }} columns={columns} dataSource={access} />
+                    <Table title={() => <div>{collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}</div>} rowKey="id" pagination={{ hideOnSinglePage: true }} columns={columns} dataSource={access} />
                 </Flex>
                 <Modal
                     title="Удаление коллекции"

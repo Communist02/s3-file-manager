@@ -176,9 +176,9 @@ const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, 
     function getCreateButton() {
         switch (page.toString()) {
             case '2':
-                return <Button type="primary" style={{ 'margin-left': 5 }} icon={<FolderAddOutlined />} onClick={() => setIsModalOpen(true)}>Создать новую коллекцию</Button>;
+                return <Button type="primary" style={{ marginLeft: 5 }} icon={<FolderAddOutlined />} onClick={() => setIsModalOpen(true)}>Создать новую коллекцию</Button>;
             case '3':
-                return <Button type="primary" style={{ 'margin-left': 5 }} icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
+                return <Button type="primary" style={{ marginLeft: 5 }} icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
         }
     }
 

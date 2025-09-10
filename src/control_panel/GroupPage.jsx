@@ -1,6 +1,7 @@
-import { useState, useRef, use } from 'react';
-import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Space, Collapse, Descriptions, Input } from 'antd';
+import { useState, useRef } from 'react';
+import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Space, Collapse, Descriptions, Input, Tooltip } from 'antd';
 import { getOtherUsers, addUserToGroup, getGroupUsers, deleteUserToGroup, transferPowerToGroup, exitGroup, changeRoleInGroup, changeGroupInfo } from '../api/api';
+import { EditOutlined, UserAddOutlined } from '@ant-design/icons';
 
 function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     const [users, setUsers] = useState([]);
@@ -200,24 +201,26 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
         return (
             <>
                 <Flex vertical gap="small" style={{ width: '100%' }}>
-                    <Descriptions bordered size='small' layout='vertical' title={group.title} items={[{ key: 'group_id', label: 'id', children: group.id }, { key: 'group_count', label: 'Количество участников', children: members.length }]}></Descriptions>
-                    <Collapse size="small" items={[{ key: 'group_description', label: 'Описание', children: group.description }]} />
-                    {
-                        group.role_id < 3 &&
-                        <>
-                            <Button type='primary' onClick={showModalAddUser}>Добавить пользователя в группу</Button>
-                            <Button onClick={showModalEditGroup}>Редактировать название и описание группы</Button>
-                        </>
-                    }
-                    {
-                        group.role_id == 1 && members.length > 1 ?
-                            <Button onClick={showModalTranferPower}>Передать власть</Button> :
-                            <Popconfirm title="Вы действительно хотите выйти из группы?" okText="Выйти" onConfirm={handleExitGroup}>
-                                <Button color="danger" variant="outlined">Выйти из группы {group.title}</Button>
-                            </Popconfirm>
+                    <Descriptions bordered size='small' layout='vertical' title={
+                        <Space>
+                            {group.title}
+                            {group.role_id < 3 &&
+                                <>
+                                    <Tooltip title='Редактировать название и описание группы'><Button onClick={showModalEditGroup} icon={<EditOutlined />} /></Tooltip>
+                                    <Tooltip title='Добавить пользователя в группу'><Button type='primary' onClick={showModalAddUser} icon={<UserAddOutlined />} /></Tooltip>
+                                </>}
+                            {
+                                group.role_id == 1 && members.length > 1 ?
+                                    <Button onClick={showModalTranferPower}>Передать власть</Button> :
+                                    <Popconfirm title="Вы действительно хотите выйти из группы?" okText="Выйти" onConfirm={handleExitGroup}>
+                                        <Button color="danger" variant="outlined">Выйти из группы</Button>
+                                    </Popconfirm>
 
-                    }
-                    {<Table rowKey="id" columns={columns} dataSource={members} />}
+                            }
+                        </Space>
+                    } items={[{ key: 'group_id', label: 'id', children: group.id }, { key: 'group_count', label: 'Количество участников', children: members.length }]}></Descriptions>
+                    <Collapse size="small" items={[{ key: 'group_description', label: 'Описание', children: group.description }]} />
+                    {<Table rowKey="id" columns={columns} dataSource={members} pagination={{ hideOnSinglePage: true }} />}
                 </Flex>
                 <Modal
                     title={"Добавление пользователя в группу " + group.title}

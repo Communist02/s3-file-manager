@@ -5,7 +5,7 @@ import AuthPage from './auth/AuthPage'
 import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
 import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton } from 'antd';
-import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, DownloadOutlined, SunOutlined, SettingOutlined, PlusOutlined } from '@ant-design/icons';
+import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
 import '@ant-design/v5-patch-for-react-19';
@@ -27,7 +27,7 @@ function App() {
     const [openLogs, setOpenLogs] = useState(false);
     const [openCollection, setOpenCollection] = useState(false);
     const [currentPath, setCurrentPath] = useState('');
-    const [darkTheme, setDarkTheme] = useState(false);
+    const [darkTheme, setDarkTheme] = useState(localStorage.getItem('darkTheme'));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCollectionName, setNewCollectionName] = useState('');
 
@@ -320,6 +320,7 @@ function App() {
                 setOpenLogs(!openLogs);
                 break;
             case 'theme':
+                localStorage.setItem('darkTheme', !darkTheme)
                 setDarkTheme(!darkTheme);
                 break;
             case 'exit':
@@ -435,7 +436,7 @@ function App() {
                     <Space className='header-left'>
                         {
                             buckets.length > 0 && !showControlPanel && <>
-                            <FloatButton id='upload-button' type="primary" icon={<DownloadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
+                            <FloatButton id='upload-button' type="primary" icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
                                 {['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
                                 <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} popupRender={(menu) => (
                                     <>

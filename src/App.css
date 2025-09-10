@@ -7,7 +7,7 @@
 
 @media (max-width: 576px) {
   .file-explorer {
-    padding: 0 0 30px 0;
+    padding: 0 0 0 0;
   }
 
   .files.grid {
@@ -22,29 +22,15 @@
 }
 
 .file-explorer {
-  margin: 0 30px;
-  min-height: calc(100vh - 30px - 70px) !important;
+  margin: 0;
+  min-height: calc(100vh - 38px - 70px) !important;
   height: 200px !important;
   box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
-}
-
-.header {
-  margin: 0 30px;
-  display: flex;
-  height: 70px;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .header>h1 {
   margin: 0;
   padding: 0;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .files.list .files-header .file-select-all {
@@ -56,7 +42,7 @@
 }
 
 .files.list>.files-header>.file-name {
-  width: calc(65%) !important;
+  /* width: calc(65%) !important; */
   text-align: left !important;
   padding-left: 0 !important;
 }

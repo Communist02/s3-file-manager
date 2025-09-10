@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './ControlPanel.css';
 import CollectionPage from './CollectionPage';
 import GroupPage from './GroupPage';
 import ProfilePage from './ProfilePage';
-import { Tabs, Layout, Menu, Modal, Input, Button, Dropdown, Avatar, message, Descriptions, Space } from 'antd';
-import { FolderAddOutlined, UsergroupAddOutlined, LeftOutlined, GroupOutlined, TeamOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Tabs, Layout, Menu, Modal, Input, Button, message } from 'antd';
+import { FolderAddOutlined, UsergroupAddOutlined, GroupOutlined, TeamOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { createCollection, getGroups, createGroup } from '../api/api';
 
 const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, token, getCollections }) => {
@@ -17,7 +17,6 @@ const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, 
     const [newGroupDescription, setNewGroupDescription] = useState('');
     const [currentCollection, setCurrentCollection] = useState(-1);
     const [currentGroup, setCurrentGroup] = useState(-1);
-    const [typeCreate, setTypeCreate] = useState(page);
 
     const updateGroups = async () => {
         const response = await getGroups(token);
@@ -35,20 +34,6 @@ const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, 
         }
         updateGroups();
     }, []);
-
-    const handleOk = async () => {
-        let response = await createCollection(newCollectionName, token);
-        if (response.status === 200) {
-            messageApi.success('Коллекция успешно создана!');
-            await getCollections(token);
-            setNewCollectionName('');
-            setIsModalOpen(false);
-        } else if (response.status === 406) {
-            messageApi.error('Имя может содержать только латинские буквы и цифры!');
-        } else {
-            messageApi.error('Произошла ошибка! ' + response);
-        }
-    };
 
     const handleOkCreateGroup = async () => {
         let response = await createGroup(newGroupTitle.current, newGroupDescription.current, token);
@@ -189,74 +174,18 @@ const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, 
     ];
 
     function getCreateButton() {
-        switch (typeCreate) {
+        switch (page.toString()) {
             case '2':
-                return <Button type="primary" icon={<FolderAddOutlined />} onClick={() => setIsModalOpen(true)}>Создать новую коллекцию</Button>;
+                return <Button type="primary" style={{ 'margin-left': 5 }} icon={<FolderAddOutlined />} onClick={() => setIsModalOpen(true)}>Создать новую коллекцию</Button>;
             case '3':
-                return <Button type="primary" icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
-        }
-    }
-
-    const items = [
-        {
-            key: '1',
-            label: 'Назад',
-            icon: <LeftOutlined />,
-        },
-        {
-            type: 'divider',
-        },
-        {
-            key: '2',
-            label: 'Выход',
-            icon: <LogoutOutlined />,
-        },
-    ];
-
-    function onClickLogin(e) {
-        switch (e.key) {
-            case '1':
-                showCtrlPanel();
-                break;
-            case '2':
-                outAccount();
-                break;
+                return <Button type="primary" style={{ 'margin-left': 5 }} icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
         }
     }
 
     return (
         <div className="control-panel">
-            <div className="header">
-                <div className='header-right'>
-                    <img height='40px' width='40px' src={'./favicon.svg'} />
-                    <h1>S3 File Manager</h1>
-                </div>
-                <Space className="header-left">
-                    <Button icon={<LeftOutlined />} onClick={showCtrlPanel} />
-                    <Dropdown menu={{ items, onClick: onClickLogin }}>
-                        <Button type="text" shape="circle">
-                            <Avatar size={40} style={{ backgroundColor: 'SteelBlue' }}>{username}</Avatar>
-                        </Button>
-                    </Dropdown>
-                </Space>
-            </div>
             <div className="control-panel-main">
-                <Tabs onChange={(key) => setTypeCreate(key)} defaultActiveKey={page} items={tabItems} tabBarExtraContent={getCreateButton()} />
-                <Modal
-                    title="Создание коллекции"
-                    open={isModalOpen}
-                    onOk={handleOk}
-                    onCancel={
-                        () => {
-                            setIsModalOpen(false);
-                            setNewCollectionName('');
-                        }
-                    }
-                    okButtonProps={{ disabled: newCollectionName.length < 3 }}
-                >
-                    <p>Имя коллекции</p>
-                    <Input placeholder="Имя" value={newCollectionName} count={{ show: true, max: 63 }} onChange={(e) => setNewCollectionName(e.target.value)} />
-                </Modal>
+                <Tabs activeKey={page.toString()} items={tabItems} tabBarExtraContent={{ left: getCreateButton() }} />
                 <Modal
                     title="Создание группы"
                     open={isModalOpenCreateGroup}

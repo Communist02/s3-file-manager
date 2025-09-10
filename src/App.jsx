@@ -4,12 +4,14 @@ import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
-import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp } from 'antd';
-import { LogoutOutlined, GroupOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input } from 'antd';
+import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, DownloadOutlined, SunOutlined, SettingOutlined, PlusOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
 import '@ant-design/v5-patch-for-react-19';
 import Uploader from './uploader/Uploader'
+import Logs from './logs/Logs'
+import CollectionPage from './control_panel/CollectionPage'
 
 function App() {
     const [isLoading, setIsLoading] = useState(false);
@@ -19,10 +21,15 @@ function App() {
     const [tokenAuth, setTokenAuth] = useState('');
     const [username, setUsername] = useState('');
     const [showControlPanel, setShowControlPanel] = useState(false);
-    const pageControl = useRef(1);
+    const [pageControl, setPageControl] = useState();
     const copyCollection = useRef('');
     const [openUploader, setOpenUploader] = useState(false);
+    const [openLogs, setOpenLogs] = useState(false);
+    const [openCollection, setOpenCollection] = useState(false);
     const [currentPath, setCurrentPath] = useState('');
+    const [darkTheme, setDarkTheme] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newCollectionName, setNewCollectionName] = useState('');
 
     const getFiles = async (bucket, token) => {
         setIsLoading(true);
@@ -179,6 +186,20 @@ function App() {
         setShowControlPanel(!showControlPanel);
     }
 
+    const handleOk = async () => {
+        let response = await createCollection(newCollectionName, token);
+        if (response.status === 200) {
+            message.success('Коллекция успешно создана!');
+            await getCollections(token);
+            setNewCollectionName('');
+            setIsModalOpen(false);
+        } else if (response.status === 406) {
+            message.error('Имя может содержать только латинские буквы и цифры!');
+        } else {
+            message.error('Произошла ошибка! ' + response);
+        }
+    };
+
     function getCollectionItems() {
         const personItems = [];
         const accessItems = [];
@@ -222,17 +243,25 @@ function App() {
         //     type: 'divider',
         // },
         {
-            key: '2',
+            key: 'fileManager',
+            label: 'Файловый менеджер',
+            icon: <img height='40px' width='40px' src={'./favicon.svg'} />,
+        },
+        {
+            type: 'divider',
+        },
+        {
+            key: 'profile',
             label: 'Профиль',
             icon: <UserOutlined />,
         },
+        // {
+        //     key: 'collections',
+        //     label: 'Коллекции',
+        //     icon: <GroupOutlined />,
+        // },
         {
-            key: '3',
-            label: 'Коллекции',
-            icon: <GroupOutlined />,
-        },
-        {
-            key: '4',
+            key: 'groups',
             label: 'Группы',
             icon: <TeamOutlined />,
         },
@@ -240,7 +269,23 @@ function App() {
             type: 'divider',
         },
         {
-            key: '5',
+            key: 'logs',
+            label: 'Логи',
+            icon: <HistoryOutlined />,
+        },
+        {
+            type: 'divider',
+        },
+        {
+            key: 'theme',
+            label: 'Переключить тему',
+            icon: <SunOutlined />,
+        },
+        {
+            type: 'divider',
+        },
+        {
+            key: 'exit',
             label: 'Выход',
             icon: <LogoutOutlined />,
         },
@@ -248,23 +293,28 @@ function App() {
 
     function onClickLogin(e) {
         switch (e.key) {
-            case '1':
-                pageControl.current = '1';
-                setShowControlPanel(!showControlPanel);
+            case 'fileManager':
+                setShowControlPanel(false);
                 break;
-            case '2':
-                pageControl.current = '1';
-                setShowControlPanel(!showControlPanel);
+            case 'profile':
+                setPageControl(1);
+                setShowControlPanel(true);
                 break;
-            case '3':
-                pageControl.current = '2';
-                setShowControlPanel(!showControlPanel);
+            // case 'collections':
+            //     setPageControl(2);
+            //     setShowControlPanel(true);
+            //     break;
+            case 'groups':
+                setPageControl(3);
+                setShowControlPanel(true);
                 break;
-            case '4':
-                pageControl.current = '3';
-                setShowControlPanel(!showControlPanel);
+            case 'logs':
+                setOpenLogs(!openLogs);
                 break;
-            case '5':
+            case 'theme':
+                setDarkTheme(!darkTheme);
+                break;
+            case 'exit':
                 outAccount();
                 break;
         }
@@ -303,26 +353,21 @@ function App() {
             break;
         case 'fileManager':
             page = <>
-                <div className='header'>
-                    <div className='header-right'>
-                        <img height='40px' width='40px' src={'./favicon.svg'} />
-                        <h1>S3 File Manager</h1>
-                    </div>
-                    <Space className='header-left'>
-                        {
-                            buckets.length > 0 && <>
-                                {['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
-                                <Button id='upload-button' type="primary" onClick={() => setOpenUploader(true)}>Загрузки</Button>
-                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={handleBucket} options={getCollectionItems()} />
-                            </>
+                <Modal
+                    title="Создание коллекции"
+                    open={isModalOpen}
+                    onOk={handleOk}
+                    onCancel={
+                        () => {
+                            setIsModalOpen(false);
+                            setNewCollectionName('');
                         }
-                        <Dropdown menu={{ items, onClick: onClickLogin }}>
-                            <Button type="text" shape="circle">
-                                <Avatar size={40} style={{ backgroundColor: 'SteelBlue' }}>{username}</Avatar>
-                            </Button>
-                        </Dropdown>
-                    </Space>
-                </div>
+                    }
+                    okButtonProps={{ disabled: newCollectionName.length < 3 }}
+                >
+                    <p>Имя коллекции</p>
+                    <Input placeholder="Имя" value={newCollectionName} count={{ show: true, max: 63 }} onChange={(e) => setNewCollectionName(e.target.value)} />
+                </Modal>
                 {buckets.length > 0 ?
                     <FileManager
                         files={files}
@@ -354,12 +399,11 @@ function App() {
                                 <Button
                                     onClick={
                                         () => {
-                                            pageControl.current = '2';
-                                            setShowControlPanel(!showControlPanel);
+                                            setIsModalOpen(true);
                                         }
                                     }
                                     type="primary">
-                                    Перейти к созданию
+                                    Создать коллекцию
                                 </Button>
                             }
                         />
@@ -368,15 +412,60 @@ function App() {
             </>;
             break;
         case 'controlPanel':
-            page = <ControlPanel page={pageControl.current} username={username} outAccount={outAccount} showCtrlPanel={showCtrlPanel} collections={buckets} token={tokenAuth} getCollections={getBuckets} />;
+            page = <ControlPanel page={pageControl} username={username} outAccount={outAccount} showCtrlPanel={showCtrlPanel} collections={buckets} token={tokenAuth} getCollections={getBuckets} />;
             break;
 
     }
 
-    return <ConfigProvider locale={ruRU}>
+    return <ConfigProvider locale={ruRU} theme={{
+        components: { Layout: { headerBg: '#00000000' }, Card: { bodyPadding: 0 } },
+        algorithm: darkTheme && theme.darkAlgorithm,
+    }}>
         <AntApp>
-            {page}
-            <Uploader open={openUploader} setOpen={setOpenUploader} url={url + '/upload'} collection_id={currentBucket.id} path={currentPath} token={tokenAuth} updateCollection={updateCollection} />
+            <Layout>
+                {tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '' && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Button type='text' style={{ height: 60, padding: 0 }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>
+                        <img height='40px' width='40px' src={'./favicon.svg'} />
+                        <h1>S3 File Manager</h1>
+                    </Button>
+                    <Space className='header-left'>
+                        {
+                            buckets.length > 0 && !showControlPanel && <>
+                                {['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
+                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={handleBucket} options={getCollectionItems()} popupRender={(menu) => (
+                                    <>
+                                        {menu}
+                                        <Divider style={{ margin: '8px 0' }} />
+                                        <Flex vertical gap={3} style={{ width: '100%' }}>
+                                            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} >
+                                                Создать коллекцию
+                                            </Button>
+                                            <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)}>Управление</Button>
+                                        </Flex>
+                                    </>
+                                )} />
+                            </>
+                        }
+                        <Button id='upload-button' type="primary" icon={<DownloadOutlined />} onClick={() => setOpenUploader(true)}>Загрузки</Button>
+                        <Dropdown menu={{ items, onClick: onClickLogin }}>
+                            <Button type="text" shape="circle">
+                                <Avatar size={40} style={{ backgroundColor: 'SteelBlue' }}>{username}</Avatar>
+                            </Button>
+                        </Dropdown>
+                    </Space>
+                    <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
+                    <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
+                        <CollectionPage collection={currentBucket} token={tokenAuth} getCollections={getBuckets} />
+                    </Drawer>
+                </Layout.Header>}
+                <Layout.Content>
+                    <Card style={{ margin: '0 10px' }}>
+                        {page}
+                    </Card>
+                    <Uploader open={openUploader} setOpen={setOpenUploader} url={url + '/upload'} collection_id={currentBucket.id} path={currentPath} token={tokenAuth} updateCollection={updateCollection} />
+                </Layout.Content>
+                <Layout.Footer style={{ padding: '10px 50px', textAlign: 'center', color: 'grey' }}>S3 File Manager © 2025 Created by Denis Mazur</Layout.Footer>
+            </Layout>
         </AntApp>
     </ConfigProvider>
 }

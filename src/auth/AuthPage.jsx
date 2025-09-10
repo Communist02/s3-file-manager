@@ -42,7 +42,7 @@ function AuthPage({ authEvent }) {
     }
 
     return (
-        <Watermark image='/favicon.svg' zIndex={-1}>
+        <Watermark image='/favicon.svg'>
             <div className='auth-page'>
                 <div className="auth-container">
                     <h1>Вход в систему</h1>

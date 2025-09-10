@@ -3,7 +3,7 @@ import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Emp
 import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType } from '../api/api';
 import { DownOutlined } from '@ant-design/icons';
 
-function CollectionPage({ index, collections, getCollections, token }) {
+function CollectionPage({ collection, getCollections, token }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
     const [isModalOpenAccess, setIsModalOpenAccess] = useState(false);
     const [users, setUsers] = useState([]);
@@ -13,7 +13,10 @@ function CollectionPage({ index, collections, getCollections, token }) {
     const [accessTypeId, setAccessTypeId] = useState('');
     const [accessId, setAccessId] = useState('');
     const [groupMode, setGroupMode] = useState(false);
-    const lastUpdateIndex = useRef(-1);
+    const lastId = useRef(-1);
+
+    const collections = [collection];
+    const index = 0;
 
     const getAccess = async () => {
         const response = await getAccessToCollection(collections[index].id, token);
@@ -22,8 +25,8 @@ function CollectionPage({ index, collections, getCollections, token }) {
         }
     }
 
-    if (index !== -1 & lastUpdateIndex.current !== index) {
-        lastUpdateIndex.current = index;
+    if (lastId.current !== collection.id) {
+        lastId.current = collection.id;
         getAccess();
     }
 
@@ -213,7 +216,7 @@ function CollectionPage({ index, collections, getCollections, token }) {
                     ]} />
                     {collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}
                     {collection.access_type_id === 1 && <Button color="danger" variant="outlined" onClick={() => setIsModalOpenRemove(true)}>Удалить коллекцию {collection.name}</Button>}
-                    <Table title={() => 'Доступ к коллекции'} rowKey="id" columns={columns} dataSource={access} />
+                    <Table title={() => 'Доступ к коллекции'} rowKey="id" pagination={{ hideOnSinglePage: true }} columns={columns} dataSource={access} />
                 </Flex>
                 <Modal
                     title="Удаление коллекции"

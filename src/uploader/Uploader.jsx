@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { InboxOutlined } from '@ant-design/icons'
 import { Drawer, Upload, message, Checkbox } from 'antd';
 
@@ -20,27 +20,28 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
     return (
         <Drawer
             size='large'
-            title="Загрузки"
+            title='Загрузки'
             onClose={() => setOpen(false)}
             open={open}
+            extra={<Checkbox checked={dirMode} onChange={(e) => setDirMode(e.target.checked)}>Режим директории</Checkbox>}
         >
-            <Checkbox checked={dirMode} onChange={(e) => setDirMode(e.target.checked)}>Режим директории</Checkbox>
             <Upload.Dragger
                 height={300}
-                action={(file) => {
-                    let filePath;
-                    if (dirMode) {
-                        filePath = path + '/' + file.webkitRelativePath.substring(0, file.webkitRelativePath.lastIndexOf('/'));
-                        console.log(file.webkitRelativePath.lastIndexOf('/'));
-                    } else {
-                        filePath = path;
-                        if (file.size === 0) {
-                            message.error('Не может быть загружен пустой файл!');
-                            return '';
+                action={
+                    (file) => {
+                        let filePath;
+                        if (dirMode) {
+                            filePath = path + '/' + file.webkitRelativePath.substring(0, file.webkitRelativePath.lastIndexOf('/'));
+                            console.log(file.webkitRelativePath.lastIndexOf('/'));
+                        } else {
+                            filePath = path;
+                            if (file.size === 0) {
+                                message.error('Не может быть загружен пустой файл!');
+                                return '';
+                            }
                         }
+                        return url + `?token=${token}&collection_id=${collection_id}&path=${filePath}`
                     }
-                    return url + `?token=${token}&collection_id=${collection_id}&path=${filePath}`
-                }
                 }
                 onChange={(info, collection = collection_id) => onChange(info, collection)}
                 listType="picture"

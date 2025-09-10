@@ -100,7 +100,7 @@ const FileList = ({
             className="virtual-list"
             height={window.outerHeight}
             itemCount={currentPathFiles.length}
-            itemSize={43}
+            itemSize={34}
           // width={300}
           >
             {getItem}

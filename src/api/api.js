@@ -310,3 +310,13 @@ export const changeGroupInfo = async (group_id, title, description, token) => {
     return error;
   }
 };
+
+export const getLogs = async (token) => {
+  try {
+    const response = await api.get('/get_logs' + '?token=' + token);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};

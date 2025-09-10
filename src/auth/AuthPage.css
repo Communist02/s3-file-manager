@@ -2,17 +2,19 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: calc(100vh - 44px);
   margin: 0;
 }
 
 .auth-container {
-  background: white;
+  /* background: white; */
   padding: 10px 30px;
   border-radius: 12px;
   box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
   width: 100%;
   max-width: 400px;
+  z-index: 100;
+  backdrop-filter: blur(50px);
 }
 
 .auth-container>h1 {

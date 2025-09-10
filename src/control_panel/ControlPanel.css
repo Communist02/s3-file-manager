@@ -1,8 +1,11 @@
 .control-panel-main {
-    background: white;
-    padding: 0px 10px;
+    padding: 0px 0px;
     border-radius: 8px;
     box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
-    min-height: calc(100vh - 2rem - 70px);
-    margin: 0 30px;
+    min-height: calc(100vh - 38px - 70px);
+    position: relative;
+}
+
+.control-panel-main .ant-tabs-nav-wrap {
+    visibility: hidden;
 }

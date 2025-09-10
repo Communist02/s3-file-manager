@@ -2,9 +2,9 @@ import { useState, useRef } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI } from './api/api'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
-import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input } from 'antd';
+import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, DownloadOutlined, SunOutlined, SettingOutlined, PlusOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
@@ -57,7 +57,7 @@ function App() {
         }
     };
 
-    const getBuckets = async (token) => {
+    const getBuckets = async (token, clear = false) => {
         let result = [];
         setIsLoading(true);
         const response = await getBucketsAPI(token);
@@ -65,8 +65,11 @@ function App() {
         if (response.status === 200) {
             result = response.data;
             if (response.data.length > 0) {
-                if (currentBucket === '') {
+                if (currentBucket === '' || clear) {
                     setCurrentBucket(result[0]);
+                }
+                if (clear) {
+                    getFiles(result[0].name, token);
                 }
             }
         } else if (response.status === 500) {
@@ -138,7 +141,6 @@ function App() {
 
     function handleFolderChange(path) {
         setCurrentPath(path);
-        console.log(path);
     }
 
     const handlePaste = async (copiedItems, destinationFolder, operationType) => {
@@ -165,10 +167,15 @@ function App() {
         await getFiles(currentBucket.name, tokenAuth);
     };
 
-    const handleBucket = async (id) => {
-        const collection = buckets.find(item => item.id === id);
-        setCurrentBucket(collection);
+    const handleBucket = async (id, collections = null) => {
+        let collection;
+        if (collections !== null) {
+            collection = collections.find(item => item.id === id);
+        } else {
+            collection = buckets.find(item => item.id === id);
+        }
         document.querySelector('.breadcrumb > div:nth-child(3) > span:nth-child(1)').click();
+        setCurrentBucket(collection);
         await getFiles(collection.name, tokenAuth);
     }
 
@@ -187,10 +194,11 @@ function App() {
     }
 
     const handleOk = async () => {
-        let response = await createCollection(newCollectionName, token);
+        let response = await createCollection(newCollectionName, tokenAuth);
         if (response.status === 200) {
             message.success('Коллекция успешно создана!');
-            await getCollections(token);
+            const collections = await getBuckets(tokenAuth);
+            await handleBucket(response.data, collections);
             setNewCollectionName('');
             setIsModalOpen(false);
         } else if (response.status === 406) {
@@ -323,12 +331,8 @@ function App() {
     async function auth(token, username) {
         setTokenAuth(token);
         setUsername(username);
-        const buckets = await getBuckets(token);
+        const buckets = await getBuckets(token, true);
         setBuckets(buckets);
-        if (buckets.length > 0) {
-            setCurrentBucket(buckets[0]);
-            await getFiles(buckets[0].name, token);
-        }
     }
 
     let page = 'auth';
@@ -431,8 +435,9 @@ function App() {
                     <Space className='header-left'>
                         {
                             buckets.length > 0 && !showControlPanel && <>
+                            <FloatButton id='upload-button' type="primary" icon={<DownloadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
                                 {['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
-                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={handleBucket} options={getCollectionItems()} popupRender={(menu) => (
+                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} popupRender={(menu) => (
                                     <>
                                         {menu}
                                         <Divider style={{ margin: '8px 0' }} />
@@ -446,7 +451,6 @@ function App() {
                                 )} />
                             </>
                         }
-                        <Button id='upload-button' type="primary" icon={<DownloadOutlined />} onClick={() => setOpenUploader(true)}>Загрузки</Button>
                         <Dropdown menu={{ items, onClick: onClickLogin }}>
                             <Button type="text" shape="circle">
                                 <Avatar size={40} style={{ backgroundColor: 'SteelBlue' }}>{username}</Avatar>
@@ -455,7 +459,7 @@ function App() {
                     </Space>
                     <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
-                        <CollectionPage collection={currentBucket} token={tokenAuth} getCollections={getBuckets} />
+                        <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} token={tokenAuth} getCollections={getBuckets} setOpen={setOpenCollection} />
                     </Drawer>
                 </Layout.Header>}
                 <Layout.Content>

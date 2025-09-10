@@ -43,14 +43,14 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
       permission: permissions.create,
       onClick: () => triggerAction.show("createFolder"),
     },
-    {
-      icon: <MdOutlineFileUpload size={18} />,
-      text: t("upload"),
-      type: '',
-      permission: permissions.upload,
-      // onClick: () => triggerAction.show("uploadFile"),
-      onClick: () => document.getElementById('upload-button').click(),
-    },
+    // {
+    //   icon: <MdOutlineFileUpload size={18} />,
+    //   text: t("upload"),
+    //   type: '',
+    //   permission: permissions.upload,
+    //   // onClick: () => triggerAction.show("uploadFile"),
+    //   onClick: () => document.getElementById('upload-button').click(),
+    // },
   ];
 
   const toolbarRightItems = [

@@ -3,7 +3,7 @@ import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Emp
 import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType } from '../api/api';
 import { DownOutlined } from '@ant-design/icons';
 
-function CollectionPage({ collection, getCollections, token }) {
+function CollectionPage({ collection, getCollections, setCurrentCollection, token, setOpen }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
     const [isModalOpenAccess, setIsModalOpenAccess] = useState(false);
     const [users, setUsers] = useState([]);
@@ -89,8 +89,9 @@ function CollectionPage({ collection, getCollections, token }) {
         const response = await removeCollection(collections[index].name, token);
         if (response.status === 200) {
             message.success('Коллекция успешно удалена!');
-            await getCollections(token);
+            await getCollections(token, true);
             setIsModalOpenRemove(false);
+            setOpen(false);
         } else if (response.status === 406) {
             message.error('Коллекция не является пустой, удалите все файлы!');
         } else {
@@ -122,7 +123,7 @@ function CollectionPage({ collection, getCollections, token }) {
         if (response.status === 200) {
             message.success('Доступ успешно удален!');
             if (collections[index].type !== 'person') {
-                await getCollections(token);
+                await getCollections(token, true);
             }
             await getAccess();
         } else {

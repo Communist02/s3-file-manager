@@ -12,6 +12,7 @@ import '@ant-design/v5-patch-for-react-19';
 import Uploader from './uploader/Uploader'
 import Logs from './logsView/Logs'
 import CollectionPage from './control_panel/CollectionPage'
+import ProfilePage from './control_panel/ProfilePage'
 
 function App() {
     const [isLoading, setIsLoading] = useState(false);
@@ -25,9 +26,10 @@ function App() {
     const copyCollection = useRef('');
     const [openUploader, setOpenUploader] = useState(false);
     const [openLogs, setOpenLogs] = useState(false);
+    const [openProfile, setOpenProfile] = useState(false);
     const [openCollection, setOpenCollection] = useState(false);
     const [currentPath, setCurrentPath] = useState('');
-    const [darkTheme, setDarkTheme] = useState(localStorage.getItem('darkTheme'));
+    const [darkTheme, setDarkTheme] = useState(localStorage.getItem('darkTheme') === 'true');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCollectionName, setNewCollectionName] = useState('');
 
@@ -305,13 +307,8 @@ function App() {
                 setShowControlPanel(false);
                 break;
             case 'profile':
-                setPageControl(1);
-                setShowControlPanel(true);
+                setOpenProfile(true);
                 break;
-            // case 'collections':
-            //     setPageControl(2);
-            //     setShowControlPanel(true);
-            //     break;
             case 'groups':
                 setPageControl(3);
                 setShowControlPanel(true);
@@ -320,7 +317,7 @@ function App() {
                 setOpenLogs(!openLogs);
                 break;
             case 'theme':
-                localStorage.setItem('darkTheme', !darkTheme)
+                localStorage.setItem('darkTheme', !darkTheme);
                 setDarkTheme(!darkTheme);
                 break;
             case 'exit':
@@ -461,6 +458,9 @@ function App() {
                     <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
                         <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} token={tokenAuth} getCollections={getBuckets} setOpen={setOpenCollection} />
+                    </Drawer>
+                    <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
+                        <ProfilePage token={tokenAuth} />
                     </Drawer>
                 </Layout.Header>}
                 <Layout.Content>

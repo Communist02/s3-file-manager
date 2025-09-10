@@ -33,7 +33,7 @@ function ProfilePage({ token }) {
         {
             key: 'token',
             label: 'Токен авторизации',
-            children: <Input.Password value={token}/>,
+            children: <Input.Password value={token} />,
         },
     ];
 

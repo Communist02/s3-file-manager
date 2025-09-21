@@ -33,9 +33,9 @@ function App() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCollectionName, setNewCollectionName] = useState('');
 
-    const getFiles = async (bucket, token) => {
+    const getFiles = async (collection, token) => {
         setIsLoading(true);
-        const response = await getAllFilesAPI(bucket, token);
+        const response = await getAllFilesAPI(collection.id, token);
         setIsLoading(false);
         if (response.status === 200) {
             if (response.data.length > 0) {
@@ -48,7 +48,7 @@ function App() {
 
     async function updateCollection(collection_id) {
         if (collection_id === currentBucket.id) {
-            const response = await getAllFilesAPI(currentBucket.name, tokenAuth);
+            const response = await getAllFilesAPI(currentBucket.id, tokenAuth);
             if (response.status === 200) {
                 if (response.data.length > 0) {
                     setFiles(response.data);
@@ -71,7 +71,7 @@ function App() {
                     setCurrentBucket(result[0]);
                 }
                 if (clear) {
-                    getFiles(result[0].name, token);
+                    getFiles(result[0], token);
                 }
             }
         } else if (response.status === 500) {
@@ -83,11 +83,11 @@ function App() {
 
     // Refresh Files
     const handleRefresh = () => {
-        getFiles(currentBucket.name, tokenAuth);
+        getFiles(currentBucket, tokenAuth);
     };
 
     const handleDownload = async (files) => {
-        await downloadFile(files, currentBucket.name, tokenAuth);
+        await downloadFile(files, currentBucket.id, tokenAuth);
     };
 
     // File Upload Handlers
@@ -100,7 +100,7 @@ function App() {
         console.log(response);
         // const uploadedFile = JSON.parse(response);
         // setFiles((prev) => [...prev, uploadedFile]);
-        await getFiles(currentBucket.name, tokenAuth);
+        await getFiles(currentBucket, tokenAuth);
     };
 
     const handleError = (error, file) => {
@@ -110,27 +110,27 @@ function App() {
     // Delete File/Folder
     const handleDelete = async (files) => {
         setIsLoading(true);
-        const response = await deleteAPI(currentBucket.name, files, tokenAuth);
+        const response = await deleteAPI(currentBucket.id, files, tokenAuth);
         setIsLoading(false);
         if (response.status === 200) {
-            await getFiles(currentBucket.name, tokenAuth);
+            await getFiles(currentBucket, tokenAuth);
         } else if (response.status === 500) {
-            window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
+            window.alert("Ошибка сервера. Обратитесь в службу поддержки!");
         }
     };
 
     const handleRename = async (file, newName) => {
         setIsLoading(true);
-        await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket.name, tokenAuth);
-        await getFiles(currentBucket.name, tokenAuth);
+        await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket.id, tokenAuth);
+        await getFiles(currentBucket, tokenAuth);
     };
 
     // Create Folder
     const handleCreateFolder = async (name, parentFolder) => {
         setIsLoading(true);
-        const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.name, tokenAuth);
+        const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.id, tokenAuth);
         if (response.status === 200 || response.status === 201) {
-            getFiles(currentBucket.name, tokenAuth);
+            getFiles(currentBucket, tokenAuth);
         } else {
             console.error(response.data);
         }
@@ -158,15 +158,12 @@ function App() {
         if (operationType === "copy") {
             const response = await copyItemAPI(copyCollection.current.id, copiedFiles, currentBucket.id, destinationFolder !== null ? destinationFolder.path : '/', tokenAuth);
             if (response.status === 403) {
-                window.alert("Нет прав доступа!")
+                window.alert("Нет прав доступа!");
             }
-            // } else {
-            //     console.error(response);
-            // }
         } else {
             const response = await moveItemAPI(copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
         }
-        await getFiles(currentBucket.name, tokenAuth);
+        await getFiles(currentBucket, tokenAuth);
     };
 
     const handleBucket = async (id, collections = null) => {
@@ -178,7 +175,7 @@ function App() {
         }
         document.querySelector('.breadcrumb > div:nth-child(3) > span:nth-child(1)').click();
         setCurrentBucket(collection);
-        await getFiles(collection.name, tokenAuth);
+        await getFiles(collection, tokenAuth);
     }
 
     const outAccount = () => {
@@ -244,14 +241,6 @@ function App() {
     }
 
     const items = [
-        // {
-        //     key: '1',
-        //     label: 'Панель управления',
-        //     icon: <SettingOutlined />,
-        // },
-        // {
-        //     type: 'divider',
-        // },
         {
             key: 'fileManager',
             label: 'Файловый менеджер',
@@ -265,11 +254,6 @@ function App() {
             label: 'Профиль',
             icon: <UserOutlined />,
         },
-        // {
-        //     key: 'collections',
-        //     label: 'Коллекции',
-        //     icon: <GroupOutlined />,
-        // },
         {
             key: 'groups',
             label: 'Группы',
@@ -389,7 +373,7 @@ function App() {
                         fileUploadConfig={{ url: url, method: 'PUT' }}
                         defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
                         collapsibleNav={true}
-                        filePreviewPath={url + '/download?preview=true&bucket=' + currentBucket.name + '&token=' + tokenAuth + '&file='}
+                        filePreviewPath={url + `/collections/${currentBucket.id}?preview=true` + '&token=' + tokenAuth + '&file='}
                         primaryColor='#1677ff'
                         permissions={currentBucket !== '' ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
                         onFolderChange={handleFolderChange}
@@ -433,7 +417,7 @@ function App() {
                     <Space className='header-left'>
                         {
                             buckets.length > 0 && !showControlPanel && <>
-                            <FloatButton id='upload-button' type="primary" icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
+                                <FloatButton id='upload-button' type="primary" icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
                                 {['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
                                 <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} popupRender={(menu) => (
                                     <>
@@ -467,7 +451,7 @@ function App() {
                     <Card style={{ margin: '0 10px' }}>
                         {page}
                     </Card>
-                    <Uploader open={openUploader} setOpen={setOpenUploader} url={url + '/upload'} collection_id={currentBucket.id} path={currentPath} token={tokenAuth} updateCollection={updateCollection} />
+                    <Uploader open={openUploader} setOpen={setOpenUploader} url={url} collection_id={currentBucket.id} path={currentPath} token={tokenAuth} updateCollection={updateCollection} />
                 </Layout.Content>
                 <Layout.Footer style={{ padding: '10px 50px', textAlign: 'center', color: 'grey' }}>S3 File Manager © 2025 Created by Denis Mazur</Layout.Footer>
             </Layout>

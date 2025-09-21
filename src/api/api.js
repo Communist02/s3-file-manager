@@ -35,9 +35,9 @@ export const checkTokenAPI = async (token) => {
   }
 };
 
-export const createFolderAPI = async (name, path, bucket, token) => {
+export const createFolderAPI = async (name, path, collection_id, token) => {
   try {
-    const response = await api.post("/new_folder", { name, path, bucket, token });
+    const response = await api.post(`/collections/${collection_id}/create_folder`, { name, path, token });
     return response;
   } catch (error) {
     console.log(error);
@@ -45,25 +45,25 @@ export const createFolderAPI = async (name, path, bucket, token) => {
   }
 };
 
-export const deleteAPI = async (bucket, files, token) => {
+export const deleteAPI = async (collection_id, files, token) => {
   const fileQuery = 'files=' + files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|');
   try {
-    const response = await api.delete(`?${fileQuery}` + '&bucket=' + bucket + '&token=' + token);
+    const response = await api.delete(`/collections/${collection_id}?${fileQuery}` + '&token=' + token);
     return response;
   } catch (error) {
     return error;
   }
 };
 
-export const downloadFile = async (files, bucket, token) => {
+export const downloadFile = async (files, collection_id, token) => {
   if (files.length === 0) return;
   try {
     let url;
     if (files.length === 1 && !files[0].isDirectory) {
-      url = `${api.defaults.baseURL}/download?file=${files[0].path}&bucket=${bucket}&token=${token}`;
+      url = `${api.defaults.baseURL}/collections/${collection_id}${files[0].path}?token=${token}`;
     } else {
       const fileQuery = 'files=' + files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|');
-      url = `${api.defaults.baseURL}/download_files?${fileQuery}&collection_name=${bucket}&token=${token}`;
+      url = `${api.defaults.baseURL}/archive/collections/${collection_id}?${fileQuery}&token=${token}`;
     }
     window.location.href = url;
   } catch (error) {
@@ -91,9 +91,9 @@ export const moveItemAPI = async (bucket, sourcePaths, destinationPath) => {
   }
 };
 
-export const getAllFilesAPI = async (bucket, token) => {
+export const getAllFilesAPI = async (collection_id, token) => {
   try {
-    const response = await api.get('?bucket=' + bucket + '&token=' + token);
+    const response = await api.get('/collections/' + collection_id + '?token=' + token);
     return response;
   } catch (error) {
     console.log(error);
@@ -103,7 +103,7 @@ export const getAllFilesAPI = async (bucket, token) => {
 
 export const getBucketsAPI = async (token) => {
   try {
-    const response = await api.get('/get_list_collections' + '?token=' + token);
+    const response = await api.get('/collections' + '?token=' + token);
     return response;
   } catch (error) {
     console.log(error);
@@ -111,9 +111,9 @@ export const getBucketsAPI = async (token) => {
   }
 };
 
-export const renameAPI = async (path, newName, bucket, token) => {
+export const renameAPI = async (path, new_name, collection_id, token) => {
   try {
-    const response = await api.post("/rename", { path, newName, bucket, token });
+    const response = await api.post('/collections/' + collection_id + '/rename', { path, new_name, token });
     return response;
   } catch (error) {
     console.log(error);

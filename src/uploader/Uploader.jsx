@@ -40,7 +40,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                                 return '';
                             }
                         }
-                        return url + `?token=${token}&collection_id=${collection_id}&path=${filePath}`
+                        return url + `/collections/${collection_id}/upload?token=${token}&path=${filePath}`
                     }
                 }
                 onChange={(info, collection = collection_id) => onChange(info, collection)}

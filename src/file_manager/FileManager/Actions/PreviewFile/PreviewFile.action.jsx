@@ -26,7 +26,7 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload }
   const { selectedFiles } = useSelection();
   const fileIcons = useFileIcons(73);
   const extension = getFileExtension(selectedFiles[0].name)?.toLowerCase();
-  const filePath = `${filePreviewPath}${selectedFiles[0].path}`;
+  const filePath = [filePreviewPath.slice(0, filePreviewPath.indexOf('?')), selectedFiles[0].path, filePreviewPath.slice(filePreviewPath.indexOf('?'))].join('');
   const [content, setContent] = useState('');
   const t = useTranslation();
 

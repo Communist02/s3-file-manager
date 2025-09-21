@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FaChevronRight } from "react-icons/fa6";
 import SubMenu from "./SubMenu";
 import "./ContextMenu.scss";
+import { Menu } from "antd";
 
 const ContextMenu = ({ filesViewRef, contextMenuRef, menuItems, visible, clickPosition }) => {
   const [left, setLeft] = useState(0);
@@ -67,59 +68,108 @@ const ContextMenu = ({ filesViewRef, contextMenuRef, menuItems, visible, clickPo
     }
   }, [visible]);
 
-  if (visible) {
-    return (
-      <div
-        ref={contextMenuRef}
-        onContextMenu={handleContextMenu}
-        onClick={(e) => e.stopPropagation()}
-        className={`fm-context-menu ${top ? "visible" : "hidden"}`}
-        style={{
-          top: top,
-          left: left,
-        }}
-      >
-        <div className="file-context-menu-list">
-          <ul>
-            {menuItems
-              .filter((item) => !item.hidden)
-              .map((item, index) => {
-                const hasChildren = item.hasOwnProperty("children");
-                const activeSubMenu = activeSubMenuIndex === index && hasChildren;
-                return (
-                  <div key={item.title}>
-                    <li
-                      onClick={item.onClick}
-                      className={`${item.className ?? ""} ${activeSubMenu ? "active" : ""}`}
-                      onMouseOver={() => handleMouseOver(index)}
-                    >
-                      {item.icon}
-                      <span>{item.title}</span>
-                      {hasChildren && (
-                        <>
-                          <FaChevronRight size={14} className="list-expand-icon" />
-                          {activeSubMenu && (
-                            <SubMenu
-                              subMenuRef={subMenuRef}
-                              list={item.children}
-                              position={subMenuPosition}
-                            />
-                          )}
-                        </>
-                      )}
-                    </li>
-                    {item.divider &&
-                      index !== menuItems.filter((item) => !item.hidden).length - 1 && (
-                        <div className="divider"></div>
-                      )}
-                  </div>
-                );
-              })}
-          </ul>
-        </div>
-      </div>
-    );
+
+  const items = [];
+  {
+    menuItems
+      .filter((item) => !item.hidden)
+      .map((item, index) => {
+        const hasChildren = item.hasOwnProperty("children");
+        const activeSubMenu = activeSubMenuIndex === index && hasChildren;
+        const children = [];
+        if (hasChildren) {
+          for (const child of item.children) {
+            children.push({
+              key: child.title,
+              label: child.title,
+              icon: child.icon,
+              disabled: child.selected,
+              onClick: child.onClick,
+            });
+          }
+        }
+
+        items.push({
+          key: item.title,
+          label: item.title,
+          disabled: item.className === 'disable-paste',
+          icon: item.icon,
+          children: hasChildren && children,
+          onClick: item.onClick,
+        })
+        item.divider && index !== menuItems.filter((item) => !item.hidden).length - 1 && items.push({ type: 'divider' })
+      })
   }
+
+
+  return <div
+    ref={contextMenuRef}
+    onContextMenu={handleContextMenu}
+    onClick={(e) => e.stopPropagation()}
+    className={`fm-context-menu ${top ? "visible" : "hidden"}`}
+    style={{
+      top: top,
+      left: left,
+    }}
+  >
+    <Menu
+      style={{ minWidth: 200 }}
+      selectable={false}
+      items={items}
+      onClick={(e) => { e.onClick }}
+    />
+  </div>
+  return (
+    <div
+      ref={contextMenuRef}
+      onContextMenu={handleContextMenu}
+      onClick={(e) => e.stopPropagation()}
+      className={`fm-context-menu ${top ? "visible" : "hidden"}`}
+      style={{
+        top: top,
+        left: left,
+      }}
+    >
+      <div className="file-context-menu-list">
+        <ul>
+          {menuItems
+            .filter((item) => !item.hidden)
+            .map((item, index) => {
+              const hasChildren = item.hasOwnProperty("children");
+              const activeSubMenu = activeSubMenuIndex === index && hasChildren;
+              return (
+                <div key={item.title}>
+                  <li
+                    onClick={item.onClick}
+                    className={`${item.className ?? ""} ${activeSubMenu ? "active" : ""}`}
+                    onMouseOver={() => handleMouseOver(index)}
+                  >
+                    {item.icon}
+                    <span>{item.title}</span>
+                    {hasChildren && (
+                      <>
+                        <FaChevronRight size={14} className="list-expand-icon" />
+                        {activeSubMenu && (
+                          <SubMenu
+                            subMenuRef={subMenuRef}
+                            list={item.children}
+                            position={subMenuPosition}
+                          />
+                        )}
+                      </>
+                    )}
+                  </li>
+                  {item.divider &&
+                    index !== menuItems.filter((item) => !item.hidden).length - 1 && (
+                      <div className="divider"></div>
+                    )}
+                </div>
+              );
+            })}
+        </ul>
+      </div>
+    </div>
+  );
 };
 
 export default ContextMenu;

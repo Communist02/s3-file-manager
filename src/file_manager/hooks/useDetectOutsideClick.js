@@ -6,7 +6,7 @@ export const useDetectOutsideClick = (handleOutsideClick = () => {}) => {
 
   const handleClick = (event) => {
     if (!ref.current?.contains(event.target)) {
-      setIsClicked(true);
+      // setIsClicked(true);
       handleOutsideClick(event, ref);
     } else {
       setIsClicked(false);

@@ -13,7 +13,7 @@ import { duplicateNameHandler } from "../../utils/duplicateNameHandler";
 import { validateApiCallback } from "../../utils/validateApiCallback";
 import { useTranslation } from "../../contexts/TranslationProvider";
 
-const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions) => {
+const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen) => {
   const [selectedFileIndexes, setSelectedFileIndexes] = useState([]);
   const [visible, setVisible] = useState(false);
   const [isSelectionCtx, setIsSelectionCtx] = useState(false);
@@ -85,7 +85,8 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions) =
 
   const handleUpload = () => {
     setVisible(false);
-    triggerAction.show("uploadFile");
+    document.getElementById('upload-button').click();
+    // triggerAction.show("uploadFile");
   };
 
   const handleselectAllFiles = () => {

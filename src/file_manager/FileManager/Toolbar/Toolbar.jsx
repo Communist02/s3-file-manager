@@ -84,7 +84,7 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
       <div className="toolbar file-selected">
         <div className="file-action-container">
           <div>
-            {/* {clipBoard?.files?.length > 0 && (
+            {clipBoard?.files?.length > 0 && (
               <Button
                 type='primary'
                 icon={<FaRegPaste size={18} />}
@@ -94,7 +94,7 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
               >
                 {t("paste")}
               </Button>
-            )} */}
+            )}
             {permissions.move && (
               <Button icon={<BsScissors size={18} />} className="item-action file-action" onClick={() => handleCutCopy(true)}>
                 {t("cut")}

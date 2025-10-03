@@ -9,7 +9,8 @@ import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { useSelection } from "../../contexts/SelectionContext";
 import { useClipBoard } from "../../contexts/ClipboardContext";
 import { useLayout } from "../../contexts/LayoutContext";
-import Checkbox from "../../components/Checkbox/Checkbox";
+// import Checkbox from "../../components/Checkbox/Checkbox";
+import { Checkbox } from "antd";
 
 const dragIconSize = 50;
 
@@ -207,6 +208,7 @@ const FileItem = ({
             className={`selection-checkbox ${checkboxClassName}`}
             onChange={handleCheckboxChange}
             onClick={(e) => e.stopPropagation()}
+            style={{scale: 1.2}}
           />
         )}
         {file.isDirectory ? (

@@ -1,13 +1,15 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip } from 'antd';
-import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType } from '../api/api';
-import { DeleteOutlined, DownOutlined } from '@ant-design/icons';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Card, Input } from 'antd';
+import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType, changeCollectionInfo, getCollectionInfo } from '../api/api';
+import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 
-function CollectionPage({ collection, getCollections, setCurrentCollection, token, setOpen }) {
+function CollectionPage({ collection, getCollections, token, setOpen }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
     const [isModalOpenAccess, setIsModalOpenAccess] = useState(false);
+    const [isModalOpenEditCollection, setIsModalOpenEditCollection] = useState(false);
     const [users, setUsers] = useState([]);
     const [access, setAccess] = useState([]);
+    const [collectionInfo, setCollectionInfo] = useState('');
     const [groups, setGroups] = useState([]);
     const [accessTypes, setAccessTypes] = useState([]);
     const [accessTypeId, setAccessTypeId] = useState('');
@@ -19,15 +21,25 @@ function CollectionPage({ collection, getCollections, setCurrentCollection, toke
     const index = 0;
 
     const getAccess = async () => {
-        const response = await getAccessToCollection(collections[index].id, token);
+        const response = await getAccessToCollection(collection.id, token);
         if (response.status === 200) {
             setAccess(response.data);
+        }
+    }
+
+    async function getInfo() {
+        const response = await getCollectionInfo(collection.id, token);
+        if (response.status === 200) {
+            setCollectionInfo(response.data);
+        } else if (response.status === 404) {
+            setCollectionInfo('');
         }
     }
 
     if (lastId.current !== collection.id) {
         lastId.current = collection.id;
         getAccess();
+        getInfo();
     }
 
     async function showModalAccess() {
@@ -86,7 +98,7 @@ function CollectionPage({ collection, getCollections, setCurrentCollection, toke
     }
 
     const handleOkRemove = async () => {
-        const response = await removeCollection(collections[index].name, token);
+        const response = await removeCollection(collections[index].id, token);
         if (response.status === 200) {
             message.success('Коллекция успешно удалена!');
             await getCollections(token, true);
@@ -136,6 +148,17 @@ function CollectionPage({ collection, getCollections, setCurrentCollection, toke
         if (response.status === 200) {
             message.success('Доступ успешно изменен!');
             await getAccess();
+        } else {
+            message.error('Произошла ошибка! ' + response);
+        }
+    };
+
+    async function handleOkChangeInfo(data) {
+        const response = await changeCollectionInfo(collection.id, data, token);
+        if (response.status === 200) {
+            message.success('Описание изменено!');
+            setIsModalOpenEditCollection(false);
+            await getInfo();
         } else {
             message.error('Произошла ошибка! ' + response);
         }
@@ -206,16 +229,33 @@ function CollectionPage({ collection, getCollections, setCurrentCollection, toke
     ];
 
     if (index !== -1 && index < collections.length) {
-        const collection = collections[index]
+        const [form] = Form.useForm();
         return (
             <>
                 <Flex vertical gap="small" style={{ width: '100%' }}>
-                    <Descriptions bordered size='small' layout='vertical' title={<Space>{collection.name}{collection.access_type_id === 1 && <Tooltip title="Удалить коллекцию"><Button color="danger" variant="outlined" icon={<DeleteOutlined />} onClick={() => setIsModalOpenRemove(true)}></Button></Tooltip>}</Space>} items={[
-                        { key: 'collection_id', label: 'id', children: collection.id },
-                        { key: 'access_type', label: 'Тип доступа', children: ['Владелец', 'Чтение и запись', 'Только чтение', 'Только запись'][collection.access_type_id - 1] },
-                        { key: 'access_count', label: 'Количество пользователей', children: access.length },
-                    ]} />
+                    <Descriptions
+                        bordered
+                        size='small'
+                        layout='vertical'
+                        title={
+                            <Space>
+                                {collection.name}
+                                {collection.access_type_id === 1 && <>
+                                    <Tooltip title='Редактировать описание'><Button onClick={() => setIsModalOpenEditCollection(true)} icon={<EditOutlined />} /></Tooltip>
+                                    <Tooltip title="Удалить коллекцию"><Button color="danger" variant="outlined" icon={<DeleteOutlined />} onClick={() => setIsModalOpenRemove(true)} /></Tooltip>
+                                </>}
+                            </Space>
+                        }
+                        items={[
+                            { key: 'collection_id', label: 'id', children: collection.id },
+                            { key: 'access_type', label: 'Тип доступа', children: ['Владелец', 'Чтение и запись', 'Только чтение', 'Только запись'][collection.access_type_id - 1] },
+                            { key: 'access_count', label: 'Количество пользователей', children: access.length },
+                        ]}
+                    />
                     <Table title={() => <div>{collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}</div>} rowKey="id" pagination={{ hideOnSinglePage: true }} columns={columns} dataSource={access} />
+                    {collectionInfo !== '' && collectionInfo !== null && <Typography>
+                        <pre>{JSON.stringify(collectionInfo, null, 4)}</pre>
+                    </Typography>}
                 </Flex>
                 <Modal
                     title="Удаление коллекции"
@@ -271,6 +311,105 @@ function CollectionPage({ collection, getCollections, setCurrentCollection, toke
                         // onSearch={onSearch}
                         options={accessTypes}
                     />
+                </Modal>
+                <Modal
+                    title="Редактирование описания"
+                    open={isModalOpenEditCollection}
+                    okText='Сохранить'
+                    onOk={() => handleOkChangeInfo(form.getFieldsValue())}
+                    onCancel={() => {
+                        setIsModalOpenEditCollection(false);
+                        form.resetFields();
+                    }}
+                    width={700}
+                >
+                    {isModalOpenEditCollection && <Form
+                        form={form}
+                        name="dynamic_form_complex"
+                        autoComplete="off"
+                        initialValues={collectionInfo === '' ? { collection_id: collection.id } : collectionInfo}
+                        onFieldsChange={(_, allFields) => {
+                            // setFields(allFields);
+                        }}
+                    >
+                        <Form.Item
+                            name="collection_id"
+                            label="ID Коллекции"
+                        >
+                            <Input disabled defaultValue={collection.id} />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="name"
+                            label="Название коллекции"
+                            rules={[{ required: true }]}
+                        >
+                            <Input />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="description"
+                            label="Описание коллекции"
+                            rules={[{ required: true }]}
+                        >
+                            <Input.TextArea />
+                        </Form.Item>
+
+                        <Form.Item label="Ключевые слова для категоризации">
+                            <Form.List name='tags'>
+                                {(subFields, subOpt) => (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        {subFields.map(subField => (
+                                            <Flex key={subField.key} gap={6}>
+                                                <Form.Item noStyle name={[subField.name]}>
+                                                    <Input placeholder="Ключевое слово" />
+                                                </Form.Item>
+                                                <CloseOutlined
+                                                    onClick={() => {
+                                                        subOpt.remove(subField.name);
+                                                    }}
+                                                />
+                                            </Flex>
+                                        ))}
+                                        <Button type="dashed" onClick={() => subOpt.add('')} block>Добавить</Button>
+                                    </div>
+                                )}
+                            </Form.List>
+                        </Form.Item>
+
+                        <Form.Item label="Описание типов файлов">
+                            <Form.List name='types'>
+                                {(subFields, subOpt) => (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        {subFields.map(subField => (
+                                            <Space key={subField.key} align='start'>
+                                                <Form.Item style={{ width: '50%' }} noStyle name={[subField.name, 'type']}>
+                                                    <Input placeholder="Тип файла" />
+                                                </Form.Item>
+                                                <Form.Item style={{ width: '50%' }} noStyle name={[subField.name, 'description']}>
+                                                    <Input.TextArea placeholder="Описание" />
+                                                </Form.Item>
+                                                <CloseOutlined
+                                                    onClick={() => {
+                                                        subOpt.remove(subField.name);
+                                                    }}
+                                                />
+                                            </Space>
+                                        ))}
+                                        <Button type="dashed" onClick={() => subOpt.add('')} block>Добавить</Button>
+                                    </div>
+                                )}
+                            </Form.List>
+                        </Form.Item>
+
+                        <Form.Item noStyle shouldUpdate>
+                            {() => (
+                                <Typography>
+                                    <pre>{JSON.stringify(form.getFieldsValue(), null, 4)}</pre>
+                                </Typography>
+                            )}
+                        </Form.Item>
+                    </Form>}
                 </Modal>
             </>
         );

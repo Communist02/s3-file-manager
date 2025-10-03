@@ -114,6 +114,7 @@ function App() {
         setIsLoading(false);
         if (response.status === 200) {
             await getFiles(currentBucket, tokenAuth);
+            message.success(`Успешно удалено!`);
         } else if (response.status === 500) {
             window.alert("Ошибка сервера. Обратитесь в службу поддержки!");
         }
@@ -131,14 +132,17 @@ function App() {
         const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.id, tokenAuth);
         if (response.status === 200 || response.status === 201) {
             getFiles(currentBucket, tokenAuth);
+            message.success(`Папка "${name}" создана!`);
         } else {
             console.error(response.data);
         }
         setIsLoading(false);
+
     };
 
     function handleCopy(files) {
         copyCollection.current = currentBucket;
+        message.success('Готово к вставке!');
     }
 
     function handleFolderChange(path) {
@@ -158,10 +162,13 @@ function App() {
         if (operationType === "copy") {
             const response = await copyItemAPI(copyCollection.current.id, copiedFiles, currentBucket.id, destinationFolder !== null ? destinationFolder.path : '/', tokenAuth);
             if (response.status === 403) {
-                window.alert("Нет прав доступа!");
+                message.success('Нет прав доступа!');
             }
         } else {
             const response = await moveItemAPI(copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
+            if (response.status === 200) {
+                message.success('Файлы успешно скопированы!');
+            }
         }
         await getFiles(currentBucket, tokenAuth);
     };
@@ -179,8 +186,8 @@ function App() {
     }
 
     const outAccount = () => {
-        localStorage.setItem('token', '')
-        localStorage.setItem('login', '')
+        localStorage.setItem('token', '');
+        localStorage.setItem('login', '');
         setShowControlPanel(false);
         setTokenAuth('');
         setBuckets([]);
@@ -400,7 +407,6 @@ function App() {
         case 'controlPanel':
             page = <ControlPanel page={pageControl} username={username} outAccount={outAccount} showCtrlPanel={showCtrlPanel} collections={buckets} token={tokenAuth} getCollections={getBuckets} />;
             break;
-
     }
 
     return <ConfigProvider locale={ruRU} theme={{
@@ -409,8 +415,8 @@ function App() {
     }}>
         <AntApp>
             <Layout>
-                {tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '' && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Button type='text' style={{ height: 60, padding: 0 }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>
+                {tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '' && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 20 }}>
+                    <Button type='text' style={{ height: 60, padding: 0, }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>
                         <img height='40px' width='40px' src={'./favicon.svg'} />
                         <h1>S3 File Manager</h1>
                     </Button>
@@ -433,9 +439,9 @@ function App() {
                                 )} />
                             </>
                         }
-                        <Dropdown menu={{ items, onClick: onClickLogin }}>
+                        <Dropdown trigger={['click']} menu={{ items, onClick: onClickLogin }}>
                             <Button type="text" shape="circle">
-                                <Avatar size={40} style={{ backgroundColor: 'SteelBlue' }}>{username}</Avatar>
+                                <Avatar size={40} style={{ backgroundColor: '#1677ff' }}>{username}</Avatar>
                             </Button>
                         </Dropdown>
                     </Space>

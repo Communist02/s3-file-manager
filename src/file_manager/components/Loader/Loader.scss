@@ -5,34 +5,34 @@
   align-items: center;
   height: 100%;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.15);
   z-index: 1000;
 }
 
-.spinner {
-  font-size: 3rem;
-  color: white;
-  animation: spin 1s linear infinite;
-}
+// .spinner {
+//   font-size: 3rem;
+//   color: white;
+//   animation: spin 1s linear infinite;
+// }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
+// @keyframes spin {
+//   0% {
+//     transform: rotate(0deg);
+//   }
 
-  100% {
-    transform: rotate(360deg);
-  }
-}
+//   100% {
+//     transform: rotate(360deg);
+//   }
+// }
 
-.upload-loading {
-  position: relative;
-  display: block;
-  background-color: transparent;
-  z-index: 0;
+// .upload-loading {
+//   position: relative;
+//   display: block;
+//   background-color: transparent;
+//   z-index: 0;
 
-  .spinner {
-    font-size: .9rem;
-    color: black;
-  }
-}
+//   .spinner {
+//     font-size: .9rem;
+//     color: black;
+//   }
+// }

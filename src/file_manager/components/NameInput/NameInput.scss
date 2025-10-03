@@ -1,5 +1,4 @@
 .rename-file {
-    position: relative;
     min-width: 69%;
     max-width: -webkit-fill-available;
     max-width: -moz-available;
@@ -8,7 +7,6 @@
     border-radius: 10px;
     font-size: 15px;
     font-family: var(--file-manager-font-family);
-    padding: 1px 7px;
     resize: none;
     field-sizing: content;
     overflow-y: hidden;

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Button, Drawer, Table, Tag } from 'antd';
+import { Button, Drawer, Table, Tag, Typography } from 'antd';
 import { getLogs } from '../api/api';
 
 function Logs({ open, setOpen, token }) {
@@ -80,7 +80,7 @@ function Logs({ open, setOpen, token }) {
                 columns={columns}
                 pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default' }}
                 expandable={{
-                    expandedRowRender: record => <p style={{ margin: 0 }}>{record.message + ', group_id: ' + record.group_id}</p>,
+                    expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>,
                     rowExpandable: record => record.message !== null && record.message !== ''
                 }}
             />

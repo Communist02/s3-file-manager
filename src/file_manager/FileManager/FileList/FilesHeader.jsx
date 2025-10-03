@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import Checkbox from "../../components/Checkbox/Checkbox";
+// import Checkbox from "../../components/Checkbox/Checkbox";
 import { useSelection } from "../../contexts/SelectionContext";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { useTranslation } from "../../contexts/TranslationProvider";
+import { Checkbox } from "antd";
 
 const FilesHeader = ({ unselectFiles, onSort, sortConfig }) => {
   const [showSelectAll, setShowSelectAll] = useState(false);
@@ -38,7 +39,7 @@ const FilesHeader = ({ unselectFiles, onSort, sortConfig }) => {
     >
       <div className="file-select-all">
         {(showSelectAll || allFilesSelected) && (
-          <Checkbox checked={allFilesSelected} onChange={handleSelectAll} title="Select all" disabled={currentPathFiles.length === 0} />
+          <Checkbox checked={allFilesSelected} onChange={handleSelectAll} title="Select all" disabled={currentPathFiles.length === 0} style={{scale: 1.2}} />
         )}
       </div>
       <div 

@@ -72,7 +72,7 @@ const Actions = ({
     }
   }, [triggerAction.isActive]);
 
-  if (activeAction) {
+  if (activeAction && triggerAction.actionType === "previewFile") {
     return (
       <Modal
         heading={activeAction.title}
@@ -83,6 +83,8 @@ const Actions = ({
         {activeAction?.component}
       </Modal>
     );
+  } else if (activeAction) {
+    return activeAction.component
   }
 };
 

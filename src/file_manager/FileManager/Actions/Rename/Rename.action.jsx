@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Button, Modal, Input } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { Tooltip, Modal, Input } from "antd";
 import { IoWarningOutline } from "react-icons/io5";
 import { useDetectOutsideClick } from "../../../hooks/useDetectOutsideClick";
 // import Modal from "../../../components/Modal/Modal";
@@ -65,20 +65,20 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
     }
   };
 
-  // Auto hide error message after 7 seconds
+  // Auto hide error message after 5 seconds
   useEffect(() => {
     if (fileRenameError) {
       const autoHideError = setTimeout(() => {
         setFileRenameError(false);
         setRenameErrorMessage("");
-      }, 7000);
+      }, 5000);
 
       return () => clearTimeout(autoHideError);
     }
   }, [fileRenameError]);
   //
 
-  function handleFileRenaming(isConfirmed) {
+  function handleFileRenaming(isConfirmed, skipCheck = false) {
     if (renameFile === "" || renameFile === file.name || !isConfirmed) {
       setCurrentPathFiles((prev) =>
         prev.map((f) => {
@@ -94,7 +94,7 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
       setFileRenameError(true);
       setRenameErrorMessage(t("folderExists", { renameFile }));
       return;
-    } else if (!file.isDirectory && !isConfirmed) {
+    } else if (!file.isDirectory && isConfirmed && !skipCheck) {
       const fileExtension = getFileExtension(file.name);
       const renameFileExtension = getFileExtension(renameFile);
       if (fileExtension !== renameFileExtension) {
@@ -121,32 +121,32 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
   // };
 
   // useEffect(() => {
-    // if (!isModalOpen) {
-    //   setIsModalOpen(true);
-    // }
-    // focusName();
+  // if (!isModalOpen) {
+  //   setIsModalOpen(true);
+  // }
+  // focusName();
 
-    // // Dynamic Error Message Placement based on available space
-    // if (outsideClick.ref?.current) {
-    //   const errorMessageWidth = 292 + 8 + 8 + 5; // 8px padding on left and right + additional 5px for gap
-    //   const errorMessageHeight = 56 + 20 + 10 + 2; // 20px :before height
-    //   const filesContainer = filesViewRef.current;
-    //   const filesContainerRect = filesContainer.getBoundingClientRect();
-    //   const renameInputContainer = outsideClick.ref.current;
-    //   const renameInputContainerRect = renameInputContainer.getBoundingClientRect();
+  // // Dynamic Error Message Placement based on available space
+  // if (outsideClick.ref?.current) {
+  //   const errorMessageWidth = 292 + 8 + 8 + 5; // 8px padding on left and right + additional 5px for gap
+  //   const errorMessageHeight = 56 + 20 + 10 + 2; // 20px :before height
+  //   const filesContainer = filesViewRef.current;
+  //   const filesContainerRect = filesContainer.getBoundingClientRect();
+  //   const renameInputContainer = outsideClick.ref.current;
+  //   const renameInputContainerRect = renameInputContainer.getBoundingClientRect();
 
-    //   const rightAvailableSpace = filesContainerRect.right - renameInputContainerRect.left;
-    //   rightAvailableSpace > errorMessageWidth
-    //     ? setErrorXPlacement("right")
-    //     : setErrorXPlacement("left");
+  //   const rightAvailableSpace = filesContainerRect.right - renameInputContainerRect.left;
+  //   rightAvailableSpace > errorMessageWidth
+  //     ? setErrorXPlacement("right")
+  //     : setErrorXPlacement("left");
 
-    //   const bottomAvailableSpace =
-    //     filesContainerRect.bottom -
-    //     (renameInputContainerRect.top + renameInputContainer.clientHeight);
-    //   bottomAvailableSpace > errorMessageHeight
-    //     ? setErrorYPlacement("bottom")
-    //     : setErrorYPlacement("top");
-    // }
+  //   const bottomAvailableSpace =
+  //     filesContainerRect.bottom -
+  //     (renameInputContainerRect.top + renameInputContainer.clientHeight);
+  //   bottomAvailableSpace > errorMessageHeight
+  //     ? setErrorYPlacement("bottom")
+  //     : setErrorYPlacement("top");
+  // }
   // }, []);
 
   // useEffect(() => {
@@ -155,6 +155,18 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
   //   }
   //   focusName();
   // }, [outsideClick.isClicked]);
+
+  function handleChange(e) {
+    const value = e.target.value;
+    const reg = /[\\/:*?"<>|]/;
+    if (!reg.test(value)) {
+      setRenameFile(e.target.value);
+      setFileRenameError(false);
+    } else {
+      // setRenameErrorMessage(t("invalidFileName"));
+      setFileRenameError(true);
+    }
+  };
 
   return (
     <>
@@ -173,8 +185,8 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
       /> */}
 
       <Modal
+        centered
         title={t('rename')}
-        closable={{ 'aria-label': 'Custom Close Button' }}
         open={true}
         onOk={
           () => {
@@ -189,28 +201,53 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
           }
         }
       >
-        <Input value={renameFile} onChange={
-          (e) => {
-            setRenameFile(e.target.value);
-            setFileRenameError(false);
-          }
-        } />
+        <Tooltip
+          open={fileRenameError}
+          title={t('invalidFileName')}
+          placement="bottomLeft"
+        >
+          <Input
+            value={renameFile}
+            onChange={
+              (e) => {
+                handleChange(e);
+              }
+            } />
+        </Tooltip>
       </Modal>
 
-      {fileRenameError && (
+      {/* {fileRenameError && (
         <ErrorTooltip
           message={renameErrorMessage}
           xPlacement={errorXPlacement}
           yPlacement={errorYPlacement}
         />
-      )}
+      )} */}
 
-      {/* <Modal
-        heading={t("rename")}
-        show={renameFileWarning}
-        setShow={setRenameFileWarning}
-        dialogWidth={"25vw"}
-        closeButton={false}
+      <Modal
+        centered
+        title={t("rename")}
+        open={renameFileWarning}
+        onOk={
+          () => {
+            setRenameFileWarning(false);
+            handleFileRenaming(true, true);
+          }
+        }
+        onCancel={
+          () => {
+            setCurrentPathFiles((prev) =>
+              prev.map((f) => {
+                if (f.key === file.key) {
+                  f.isEditing = false;
+                }
+                return f;
+              })
+            );
+            setRenameFileWarning(false);
+            triggerAction.close();
+          }
+        }
       >
         <div className="fm-rename-folder-container" ref={warningModalRef}>
           <div className="fm-rename-folder-input">
@@ -219,36 +256,8 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
               <div>{t("fileNameChangeWarning")}</div>
             </div>
           </div>
-          <div className="fm-rename-folder-action">
-            <Button
-              type="secondary"
-              onClick={() => {
-                setCurrentPathFiles((prev) =>
-                  prev.map((f) => {
-                    if (f.key === file.key) {
-                      f.isEditing = false;
-                    }
-                    return f;
-                  })
-                );
-                setRenameFileWarning(false);
-                triggerAction.close();
-              }}
-            >
-              {t("no")}
-            </Button>
-            <Button
-              type="danger"
-              onClick={() => {
-                setRenameFileWarning(false);
-                handleFileRenaming(true);
-              }}
-            >
-              {t("yes")}
-            </Button>
-          </div>
         </div>
-      </Modal> */}
+      </Modal>
     </>
   );
 };

@@ -120,13 +120,14 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload }
       )}
       {docExtensions.includes(extension) && (
         <>
-          <object
-            data={filePath}
+          <embed
+            src={filePath}
             width={window.innerWidth}
             height={window.innerHeight - 100}
+            type="application/pdf"
             onLoad={handleImageLoad}
-            onError={handleImageError}
             className={`photo-popup-iframe ${isLoading ? "img-loading" : ""}`}
+            title="PDF document"
           />
         </>
       )}

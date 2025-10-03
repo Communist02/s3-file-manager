@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Button from "../../../components/Button/Button";
+import { Button, Modal } from 'antd';
 import { useSelection } from "../../../contexts/SelectionContext";
 import { useTranslation } from "../../../contexts/TranslationProvider";
 import "./Delete.action.scss";
@@ -26,17 +26,9 @@ const DeleteAction = ({ triggerAction, onDelete }) => {
   };
 
   return (
-    <div className="file-delete-confirm">
-      <p className="file-delete-confirm-text">{deleteMsg}</p>
-      <div className="file-delete-confirm-actions">
-        <Button type="secondary" onClick={() => triggerAction.close()}>
-          {t("cancel")}
-        </Button>
-        <Button type="danger" onClick={handleDeleting}>
-          {t("delete")}
-        </Button>
-      </div>
-    </div>
+    <Modal centered title={t("delete")} open={triggerAction.isActive} onCancel={triggerAction.close} okType='danger' okText={t("delete")} onOk={handleDeleting}>
+      {deleteMsg}
+    </Modal>
   );
 };
 

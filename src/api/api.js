@@ -151,9 +151,9 @@ export const createGroup = async (title, description, token) => {
   }
 };
 
-export const removeCollection = async (collection, token) => {
+export const removeCollection = async (collection_id, token) => {
   try {
-    const response = await api.delete('/remove_collection' + '?token=' + token + '&collection=' + collection);
+    const response = await api.delete('/remove_collection' + '?token=' + token + '&collection_id=' + collection_id);
     return response;
   } catch (error) {
     console.log(error);
@@ -314,6 +314,26 @@ export const changeGroupInfo = async (group_id, title, description, token) => {
 export const getLogs = async (token) => {
   try {
     const response = await api.get('/get_logs' + '?token=' + token);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const changeCollectionInfo = async (collection_id, data, token) => {
+  try {
+    const response = await api.post('/change_collection_info' + '?token=' + token + '&collection_id=' + collection_id, data);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const getCollectionInfo = async (collection_id, token) => {
+  try {
+    const response = await api.get('/get_collection_info' + '?token=' + token + '&collection_id=' + collection_id);
     return response;
   } catch (error) {
     console.log(error);

@@ -81,7 +81,7 @@ function Logs({ open, setOpen, token }) {
                 pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default' }}
                 expandable={{
                     expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>,
-                    rowExpandable: record => record.message !== null && record.message !== ''
+                    // rowExpandable: record => record.message !== null && record.message !== ''
                 }}
             />
         </Drawer>

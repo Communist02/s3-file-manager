@@ -3,6 +3,7 @@ import { url } from "../url";
 
 export const api = axios.create({
   baseURL: url,
+  timeout: 10000,
 });
 
 export const authAPI = async (username, password) => {
@@ -26,11 +27,10 @@ export const checkTokenAPI = async (token) => {
   if (token !== null) {
     try {
       const response = await api.get('/check_token?token=' + token);
-      if (response.status === 200) return token;
-      return null;
+      return response;
     } catch (error) {
       console.log(error);
-      return null;
+      return error;
     }
   }
 };
@@ -314,6 +314,16 @@ export const changeGroupInfo = async (group_id, title, description, token) => {
 export const getLogs = async (token) => {
   try {
     const response = await api.get('/get_logs' + '?token=' + token);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const getHistoryCollection = async (collection_id, token) => {
+  try {
+    const response = await api.get('/get_history_collection' + '?token=' + token + '&collection_id=' + collection_id);
     return response;
   } catch (error) {
     console.log(error);

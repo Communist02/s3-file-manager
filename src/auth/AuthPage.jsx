@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, use } from 'react';
-import { Button, Checkbox, Watermark, Form, Input } from 'antd';
+import { useState, useEffect, useRef } from 'react';
+import { Button, Checkbox, Watermark, Form, Input, message, Spin } from 'antd';
 import { authAPI, checkTokenAPI } from '../api/api';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import './AuthPage.css';
@@ -8,28 +8,44 @@ function AuthPage({ authEvent }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const remember = useRef(true);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const start = async () => {
+        let token = localStorage.getItem('token');
+        if (token !== null) {
+            const response = await checkTokenAPI(token);
+            setIsLoading(false);
+            if (response.status === 200) {
+                const login = localStorage.getItem('login');
+                authEvent(token, login);
+            } else if (response.status === 401) {
+                message.info('Сессия устарела');
+                localStorage.removeItem('token');
+                localStorage.removeItem('login');
+            } else {
+                message.error(response.message);
+            }
+        } else {
+            setIsLoading(false);
+        }
+    }
 
     useEffect(() => {
-        const fun = async () => {
-            const token = await checkTokenAPI(localStorage.getItem('token'));
-            const login = localStorage.getItem('login');
-            if (token !== null) {
-                authEvent(token, login);
-            }
-        }
-        fun();
+        start();
     }, []);
 
     const auth = async () => {
+        setIsLoading(true);
         const response = await authAPI(username, password);
+        setIsLoading(false);
         if (response.status === 200) {
             const token = response.data.token;
             if (remember.current) {
                 localStorage.setItem('token', token);
                 localStorage.setItem('login', response.data.login);
             } else {
-                localStorage.setItem('token', null);
-                localStorage.setItem('login', null);
+                localStorage.removeItem('token');
+                localStorage.removeItem('login');
             }
             if (token !== null && token !== '') {
                 await authEvent(token, response.data.login)
@@ -38,6 +54,8 @@ function AuthPage({ authEvent }) {
             window.alert("Неверно введен логин или пароль!")
         } else if (response.status === 500) {
             window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
+        } else {
+            message.error(response.message);
         }
     }
 
@@ -77,6 +95,7 @@ function AuthPage({ authEvent }) {
                     </Form>
                 </div>
             </div>
+            {isLoading && <Spin size="large" fullscreen />}
         </Watermark>
     );
 }

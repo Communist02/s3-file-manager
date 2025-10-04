@@ -11,6 +11,7 @@ import ruRU from 'antd/locale/ru_RU';
 import '@ant-design/v5-patch-for-react-19';
 import Uploader from './uploader/Uploader'
 import Logs from './logsView/Logs'
+import History from './historyView/History'
 import CollectionPage from './control_panel/CollectionPage'
 import ProfilePage from './control_panel/ProfilePage'
 
@@ -28,6 +29,7 @@ function App() {
     const [openLogs, setOpenLogs] = useState(false);
     const [openProfile, setOpenProfile] = useState(false);
     const [openCollection, setOpenCollection] = useState(false);
+    const [openHistory, setOpenHistory] = useState(false);
     const [currentPath, setCurrentPath] = useState('');
     const [darkTheme, setDarkTheme] = useState(localStorage.getItem('darkTheme') === 'true');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -186,8 +188,8 @@ function App() {
     }
 
     const outAccount = () => {
-        localStorage.setItem('token', '');
-        localStorage.setItem('login', '');
+        localStorage.removeItem('token');
+        localStorage.removeItem('login');
         setShowControlPanel(false);
         setTokenAuth('');
         setBuckets([]);
@@ -433,6 +435,7 @@ function App() {
                                             <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} >
                                                 Создать коллекцию
                                             </Button>
+                                            <Button icon={<HistoryOutlined />} onClick={() => setOpenHistory(true)}>История</Button>
                                             <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)}>Управление</Button>
                                         </Flex>
                                     </>
@@ -446,6 +449,7 @@ function App() {
                         </Dropdown>
                     </Space>
                     <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
+                    <History collection_id={currentBucket.id} token={tokenAuth} open={openHistory} setOpen={setOpenHistory} />
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
                         <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} token={tokenAuth} getCollections={getBuckets} setOpen={setOpenCollection} />
                     </Drawer>

@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
-import { useDetectOutsideClick } from "../../../hooks/useDetectOutsideClick";
 import { duplicateNameHandler } from "../../../utils/duplicateNameHandler";
-import NameInput from "../../../components/NameInput/NameInput";
-import ErrorTooltip from "../../../components/ErrorTooltip/ErrorTooltip";
 import { useFileNavigation } from "../../../contexts/FileNavigationContext";
-import { useLayout } from "../../../contexts/LayoutContext";
 import { validateApiCallback } from "../../../utils/validateApiCallback";
 import { useTranslation } from "../../../contexts/TranslationProvider";
+import { Tooltip, Modal, Input } from "antd";
 
 const maxNameLength = 220;
 
@@ -16,12 +13,7 @@ const CreateFolderAction = ({ filesViewRef, file, onCreateFolder, triggerAction 
   const [folderErrorMessage, setFolderErrorMessage] = useState("");
   const [errorXPlacement, setErrorXPlacement] = useState("right");
   const [errorYPlacement, setErrorYPlacement] = useState("bottom");
-  const outsideClick = useDetectOutsideClick((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  });
   const { currentFolder, currentPathFiles, setCurrentPathFiles } = useFileNavigation();
-  const { activeLayout } = useLayout();
   const t = useTranslation();
 
   // Folder name change handler function
@@ -82,9 +74,6 @@ const CreateFolderAction = ({ filesViewRef, file, onCreateFolder, triggerAction 
     if (alreadyExists) {
       setFolderErrorMessage(t("folderExists", { renameFile: newFolderName }));
       setFolderNameError(true);
-      outsideClick.ref.current?.focus();
-      outsideClick.ref.current?.select();
-      outsideClick.setIsClicked(false);
       return;
     }
 
@@ -99,58 +88,91 @@ const CreateFolderAction = ({ filesViewRef, file, onCreateFolder, triggerAction 
   //
 
   // Folder name text selection upon visible
-  useEffect(() => {
-    outsideClick.ref.current?.focus();
-    outsideClick.ref.current?.select();
+  // useEffect(() => {
+  //   outsideClick.ref.current?.focus();
+  //   outsideClick.ref.current?.select();
 
-    // Dynamic Error Message Placement based on available space
-    if (outsideClick.ref?.current) {
-      const errorMessageWidth = 292 + 8 + 8 + 5; // 8px padding on left and right + additional 5px for gap
-      const errorMessageHeight = 56 + 20 + 10 + 2; // 20px :before height
-      const filesContainer = filesViewRef.current;
-      const filesContainerRect = filesContainer.getBoundingClientRect();
-      const nameInputContainer = outsideClick.ref.current;
-      const nameInputContainerRect = nameInputContainer.getBoundingClientRect();
+  //   // Dynamic Error Message Placement based on available space
+  //   if (outsideClick.ref?.current) {
+  //     const errorMessageWidth = 292 + 8 + 8 + 5; // 8px padding on left and right + additional 5px for gap
+  //     const errorMessageHeight = 56 + 20 + 10 + 2; // 20px :before height
+  //     const filesContainer = filesViewRef.current;
+  //     const filesContainerRect = filesContainer.getBoundingClientRect();
+  //     const nameInputContainer = outsideClick.ref.current;
+  //     const nameInputContainerRect = nameInputContainer.getBoundingClientRect();
 
-      const rightAvailableSpace = filesContainerRect.right - nameInputContainerRect.left;
-      rightAvailableSpace > errorMessageWidth
-        ? setErrorXPlacement("right")
-        : setErrorXPlacement("left");
+  //     const rightAvailableSpace = filesContainerRect.right - nameInputContainerRect.left;
+  //     rightAvailableSpace > errorMessageWidth
+  //       ? setErrorXPlacement("right")
+  //       : setErrorXPlacement("left");
 
-      const bottomAvailableSpace =
-        filesContainerRect.bottom - (nameInputContainerRect.top + nameInputContainer.clientHeight);
-      bottomAvailableSpace > errorMessageHeight
-        ? setErrorYPlacement("bottom")
-        : setErrorYPlacement("top");
-    }
-  }, []);
+  //     const bottomAvailableSpace =
+  //       filesContainerRect.bottom - (nameInputContainerRect.top + nameInputContainer.clientHeight);
+  //     bottomAvailableSpace > errorMessageHeight
+  //       ? setErrorYPlacement("bottom")
+  //       : setErrorYPlacement("top");
+  //   }
+  // }, []);
   //
 
-  useEffect(() => {
-    if (outsideClick.isClicked) {
-      handleFolderCreating();
-    }
-  }, [outsideClick.isClicked]);
+  // useEffect(() => {
+  //   if (outsideClick.isClicked) {
+  //     handleFolderCreating();
+  //   }
+  // }, [outsideClick.isClicked]);
 
   return (
     <>
-      <NameInput
-        nameInputRef={outsideClick.ref}
-        maxLength={maxNameLength}
-        value={folderName}
-        onChange={handleFolderNameChange}
-        onKeyDown={handleValidateFolderName}
-        onClick={(e) => e.stopPropagation()}
-        {...(activeLayout === "list" && { rows: 1 })}
-      />
-      {folderNameError && (
-        <ErrorTooltip
-          message={folderErrorMessage}
-          xPlacement={errorXPlacement}
-          yPlacement={errorYPlacement}
-        />
-      )}
+      {folderName}
+      <Modal
+        centered
+        title={t('newFolder')}
+        open={true}
+        onOk={
+          () => {
+            handleFolderCreating();
+          }
+        }
+        onCancel={
+          () => {
+            setCurrentPathFiles((prev) => prev.filter((f) => f.key !== file.key));
+            triggerAction.close();
+          }
+        }
+      >
+        <Tooltip
+          open={folderNameError}
+          title={folderErrorMessage}
+          placement="bottomLeft"
+        >
+          <Input
+            value={folderName}
+            onChange={
+              (e) => {
+                handleFolderNameChange(e);
+              }
+            } />
+        </Tooltip>
+      </Modal>
     </>
+    // <>
+    //   <NameInput
+    //     nameInputRef={outsideClick.ref}
+    //     maxLength={maxNameLength}
+    //     value={folderName}
+    //     onChange={handleFolderNameChange}
+    //     onKeyDown={handleValidateFolderName}
+    //     onClick={(e) => e.stopPropagation()}
+    //     {...(activeLayout === "list" && { rows: 1 })}
+    //   />
+    //   {folderNameError && (
+    //     <ErrorTooltip
+    //       message={folderErrorMessage}
+    //       xPlacement={errorXPlacement}
+    //       yPlacement={errorYPlacement}
+    //     />
+    //   )}
+    // </>
   );
 };
 

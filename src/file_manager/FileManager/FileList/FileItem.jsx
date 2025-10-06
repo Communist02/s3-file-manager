@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { FaRegFile, FaRegFolderOpen, FaRegFolder } from "react-icons/fa6";
 import { useFileIcons } from "../../hooks/useFileIcons";
 import CreateFolderAction from "../Actions/CreateFolder/CreateFolder.action";
@@ -11,6 +11,7 @@ import { useClipBoard } from "../../contexts/ClipboardContext";
 import { useLayout } from "../../contexts/LayoutContext";
 // import Checkbox from "../../components/Checkbox/Checkbox";
 import { Checkbox } from "antd";
+import { getIconForFile, getIconForFolder } from 'vscode-icons-js';
 
 const dragIconSize = 50;
 
@@ -34,7 +35,7 @@ const FileItem = ({
   const [tooltipPosition, setTooltipPosition] = useState(null);
   const lastClickTime = useRef(new Date().getTime());
   const { activeLayout } = useLayout();
-  const iconSize = activeLayout === "grid" ? 48 : 20;
+  const iconSize = activeLayout === "grid" ? 48 : 28;
   const fileIcons = useFileIcons(iconSize);
   const { setCurrentPath, currentPathFiles, onFolderChange } = useFileNavigation();
   const { setSelectedFiles } = useSelection();
@@ -96,7 +97,7 @@ const FileItem = ({
     }
 
     const currentTime = new Date().getTime();
-    if (fileSelected && (currentTime - lastClickTime.current < 300)) {
+    if (fileSelected && (currentTime - lastClickTime.current < 400)) {
       handleFileAccess();
       return;
     }
@@ -212,11 +213,9 @@ const FileItem = ({
           />
         )}
         {file.isDirectory ? (
-          <FaRegFolder size={iconSize} />
+          <img src={'/icons/' + getIconForFolder(file.name)} width={iconSize} height={iconSize} />
         ) : (
-          <>
-            {fileIcons[file.name?.split(".").pop()?.toLowerCase()] ?? <FaRegFile size={iconSize} />}
-          </>
+          <img src={'/icons/' + getIconForFile(file.name)} width={iconSize} height={iconSize} />
         )}
 
         {file.isEditing ? (

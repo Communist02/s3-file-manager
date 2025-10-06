@@ -1,18 +1,18 @@
 import { useState, useRef } from 'react';
-import { Button, Drawer, Table, Typography } from 'antd';
+import { Button, Drawer, Table } from 'antd';
 import { getHistoryCollection } from '../api/api';
 
 function History({ open, setOpen, collection_id, token }) {
     const [logs, setLogs] = useState([]);
-    const updated = useRef(false);
+    const last_collection_id = useRef(null);
 
     async function updateLogs() {
         const response = await getHistoryCollection(collection_id, token);
         setLogs(response.data);
     }
 
-    if (!updated.current && open) {
-        updated.current = true;
+    if (open && last_collection_id.current !== collection_id) {
+        last_collection_id.current = collection_id;
         updateLogs();
     }
 
@@ -20,7 +20,22 @@ function History({ open, setOpen, collection_id, token }) {
         {
             title: 'Время',
             dataIndex: 'date_time',
-            width: '25%',
+            width: '20%',
+            render: (value) => {
+                const formatter = Intl.DateTimeFormat('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                return formatter.format(Date.parse(value));
+            }
+        },
+        {
+            title: 'Пользователь',
+            dataIndex: 'login',
+            width: '20%',
         },
         {
             title: 'Действие',
@@ -41,6 +56,8 @@ function History({ open, setOpen, collection_id, token }) {
                         return `Переименование «${record.message.path}» в «${record.message.new_name}»`;
                     case 'create_folder':
                         return `Создание новой папки «${record.message.name}» в «${record.message.path}»`;
+                    case 'change_collection_info':
+                        return 'Изменена информация о коллекции';
                 }
             }
         },
@@ -61,14 +78,15 @@ function History({ open, setOpen, collection_id, token }) {
             // placement='top'
             extra={<Button type='primary' onClick={updateLogs}>Обновить</Button>}
         >
-            <Table
+            {open ? <Table
                 scroll={{ y: 'calc(100vh - 180px)' }}
                 rowKey="id"
                 size="small"
                 dataSource={logs}
                 columns={columns}
                 pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default' }}
-            />
+            /> : <></>}
+
         </Drawer>
     );
 };

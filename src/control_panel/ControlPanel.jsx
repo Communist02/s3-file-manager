@@ -5,7 +5,7 @@ import { Tabs, Layout, Menu, Modal, Input, Button, message } from 'antd';
 import { UsergroupAddOutlined, TeamOutlined } from '@ant-design/icons';
 import { getGroups, createGroup } from '../api/api';
 
-const ControlPanel = ({ page, username, outAccount, showCtrlPanel, collections, token, getCollections }) => {
+const ControlPanel = ({ page, token, getCollections }) => {
     const [messageApi, contextHolder] = message.useMessage();
     const [isModalOpenCreateGroup, setIsModalOpenCreateGroup] = useState(false);
     const [groups, setGroups] = useState([]);

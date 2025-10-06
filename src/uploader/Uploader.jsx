@@ -46,7 +46,7 @@ const useUploadSpeed = (uid, percent, size) => {
     return speedRef.current;
 };
 
-function Uploader({ open, setOpen, url, token, collection_id, path, updateCollection }) {
+function Uploader({ open, setOpen, url, token, collection_id, path, updateCollection, setCurrentCountUploading }) {
     const [dirMode, setDirMode] = useState(false);
     const [uploadingFiles, setUploadingFiles] = useState(new Set());
 
@@ -64,6 +64,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
     function onChange(info, collection_id) {
         if (info.file.status === 'done') {
             // Удаляем файл из трекера при успешной загрузке
+            !open && setCurrentCountUploading(uploadingFiles.size - 1);
             setUploadingFiles(prev => {
                 const newSet = new Set(prev);
                 newSet.delete(info.file.uid);
@@ -73,6 +74,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             updateCollection(collection_id);
         } else if (info.file.status === 'error') {
             // Удаляем файл из трекера при ошибке
+            !open && setCurrentCountUploading(uploadingFiles.size - 1);
             setUploadingFiles(prev => {
                 const newSet = new Set(prev);
                 newSet.delete(info.file.uid);
@@ -81,6 +83,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             message.error(`${info.file.name} не удалось загрузить.`);
         } else if (info.file.status === 'uploading') {
             // Добавляем файл в трекер при начале загрузки
+            !open && setCurrentCountUploading(uploadingFiles.size + 1);
             setUploadingFiles(prev => new Set(prev).add(info.file.uid));
         }
     };
@@ -123,15 +126,19 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         <Drawer
             size='large'
             title='Загрузки'
-            onClose={() => setOpen(false)}
+            onClose={() => {
+                setOpen(false);
+                setCurrentCountUploading(uploadingFiles.size);
+            }
+            }
             open={open}
             extra={
                 <div>
                     <Checkbox checked={dirMode} onChange={(e) => setDirMode(e.target.checked)}>
                         Режим директории
                     </Checkbox>
-                    <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
-                        Одновременно загружается: {uploadingFiles.size}
+                    <div style={{ marginTop: 4, fontSize: '12px', color: '#666', textAlign: 'right', marginRight: 8 }}>
+                        Сейчас загружается: {uploadingFiles.size}
                     </div>
                 </div>
             }
@@ -143,7 +150,6 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                         let filePath;
                         if (dirMode) {
                             filePath = path + '/' + file.webkitRelativePath.substring(0, file.webkitRelativePath.lastIndexOf('/'));
-                            console.log(file.webkitRelativePath.lastIndexOf('/'));
                         } else {
                             filePath = path;
                         }

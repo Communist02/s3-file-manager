@@ -3,6 +3,7 @@ import Collapse from "../../components/Collapse/Collapse";
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
+import { getIconForFile, getIconForFolder, getIconForOpenFolder } from 'vscode-icons-js';
 
 const FolderTree = ({ folder, onFileOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,9 +52,11 @@ const FolderTree = ({ folder, onFileOpen }) => {
           </span>
           <div className="sb-folder-details">
             {isOpen || isActive ? (
-              <FaRegFolderOpen size={20} className="folder-open-icon" />
+              <img src={'/icons/' + getIconForOpenFolder(folder.name)} width={24} height={24}></img>
+              // <FaRegFolderOpen size={20} className="folder-open-icon" />
             ) : (
-              <FaRegFolder size={17} className="folder-close-icon" />
+              <img src={'/icons/' + getIconForFolder(folder.name)} width={24} height={24}></img>
+              // <FaRegFolder size={17} className="folder-close-icon" />
             )}
             <span className="sb-folder-name" title={folder.name}>
               {folder.name}
@@ -78,9 +81,9 @@ const FolderTree = ({ folder, onFileOpen }) => {
         <span className="non-expanable"></span>
         <div className="sb-folder-details">
           {isActive ? (
-            <FaRegFolderOpen size={20} className="folder-open-icon" />
+            <img src={'/icons/' + getIconForOpenFolder(folder.name)} width={24} height={24}></img>
           ) : (
-            <FaRegFolder size={17} className="folder-close-icon" />
+            <img src={'/icons/' + getIconForFolder(folder.name)} width={24} height={24}></img>
           )}
           <span className="sb-folder-name" title={folder.name}>
             {folder.name}

@@ -3,22 +3,20 @@ import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Emp
 import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType, changeCollectionInfo, getCollectionInfo } from '../api/api';
 import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 
-function CollectionPage({ collection, getCollections, token, setOpen }) {
+function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
     const [isModalOpenAccess, setIsModalOpenAccess] = useState(false);
     const [isModalOpenEditCollection, setIsModalOpenEditCollection] = useState(false);
     const [users, setUsers] = useState([]);
     const [access, setAccess] = useState([]);
-    const [collectionInfo, setCollectionInfo] = useState('');
+    const [collectionInfo, setCollectionInfo] = useState(null);
     const [groups, setGroups] = useState([]);
     const [accessTypes, setAccessTypes] = useState([]);
     const [accessTypeId, setAccessTypeId] = useState('');
     const [accessId, setAccessId] = useState('');
     const [groupMode, setGroupMode] = useState(false);
     const lastId = useRef(-1);
-
-    const collections = [collection];
-    const index = 0;
+    const [form] = Form.useForm();
 
     const getAccess = async () => {
         const response = await getAccessToCollection(collection.id, token);
@@ -32,7 +30,7 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
         if (response.status === 200) {
             setCollectionInfo(response.data);
         } else if (response.status === 404) {
-            setCollectionInfo('');
+            setCollectionInfo(null);
         }
     }
 
@@ -98,7 +96,7 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
     }
 
     const handleOkRemove = async () => {
-        const response = await removeCollection(collections[index].id, token);
+        const response = await removeCollection(collection.id, token);
         if (response.status === 200) {
             message.success('Коллекция успешно удалена!');
             await getCollections(token, true);
@@ -114,9 +112,9 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
     const handleOkAccess = async () => {
         let response;
         if (!groupMode) {
-            response = await giveAccessUserToCollection(collections[index].id, accessId, accessTypeId, token);
+            response = await giveAccessUserToCollection(collection.id, accessId, accessTypeId, token);
         } else {
-            response = await giveAccessGroupToCollection(collections[index].id, accessId, accessTypeId, token);
+            response = await giveAccessGroupToCollection(collection.id, accessId, accessTypeId, token);
         }
         if (response.status === 200) {
             message.success('Доступ успешно предоставлен!');
@@ -134,7 +132,7 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
         const response = await deleteAccessToCollection(access_id, token);
         if (response.status === 200) {
             message.success('Доступ успешно удален!');
-            if (collections[index].type !== 'person') {
+            if (collection.type !== 'person') {
                 await getCollections(token, true);
             }
             await getAccess();
@@ -206,7 +204,7 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
                     { key: 3, label: 'Только чтение' },
                     { key: 4, label: 'Только запись' },
                 ]
-                if (collections[index].access_type_id === 1 && value !== 1) {
+                if (collection.access_type_id === 1 && value !== 1) {
                     return <Dropdown menu={{ items, onClick: (e) => handleChangeAccess(record.id, e.key) }} trigger={['click']}>
                         <a>
                             <Tag color={color}>{name}</Tag>
@@ -220,7 +218,7 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
         },
         {
             title: '',
-            render: (_, record) => record.type_id !== 1 && (collections[index].access_type_id === 1 || record.target_type !== 'group') ?
+            render: (_, record) => record.type_id !== 1 && (collection.access_type_id === 1 || record.target_type !== 'group') ?
                 <Popconfirm title="Вы действительно хотите удалить доступ?" okText="Удалить" onConfirm={() => handleDeleteAccess(record.id)}>
                     <a>Удалить</a>
                 </Popconfirm>
@@ -228,8 +226,49 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
         },
     ];
 
-    if (index !== -1 && index < collections.length) {
-        const [form] = Form.useForm();
+    let itemsInfo;
+    if (collectionInfo !== null) {
+        const tags = [];
+        if (collectionInfo.tags) {
+            for (const item of collectionInfo.tags) {
+                tags.push(<Tag>{item}</Tag>);
+            }
+        }
+
+        const types = [];
+        if (collectionInfo.types) {
+            for (const item of collectionInfo.types) {
+                types.push(<Tag>{item.type}: {item.description}</Tag>);
+            }
+        }
+        itemsInfo = [
+            {
+                key: 'collection-name',
+                label: 'Имя',
+                children: collectionInfo.name,
+            },
+            {
+                key: 'collection-description',
+                label: 'Описание',
+                children: collectionInfo.description,
+            },
+            {
+                key: 'collection-tags',
+                label: 'Ключевые слова',
+                children: <Space size={0}>{tags}</Space>,
+            },
+            {
+                key: 'collection-types',
+                label: 'Описание файлов',
+                children: <Space size={0}>{types}</Space>,
+            },
+        ];
+    }
+
+    if (open) {
+        // if (!isModalOpenEditCollection) {
+        //     setTimeout(() => form.resetFields(), 2000);
+        // }
         return (
             <>
                 <Flex vertical gap="small" style={{ width: '100%' }}>
@@ -241,7 +280,7 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
                             <Space>
                                 {collection.name}
                                 {collection.access_type_id === 1 && <>
-                                    <Tooltip title='Редактировать описание'><Button onClick={() => setIsModalOpenEditCollection(true)} icon={<EditOutlined />} /></Tooltip>
+                                    <Tooltip title='Редактировать информацию'><Button onClick={() => setIsModalOpenEditCollection(true)} icon={<EditOutlined />} /></Tooltip>
                                     <Tooltip title="Удалить коллекцию"><Button color="danger" variant="outlined" icon={<DeleteOutlined />} onClick={() => setIsModalOpenRemove(true)} /></Tooltip>
                                 </>}
                             </Space>
@@ -252,10 +291,11 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
                             { key: 'access_count', label: 'Количество пользователей', children: access.length },
                         ]}
                     />
+                    {
+                        collectionInfo !== null &&
+                        <Descriptions title='Информация' layout='vertical' items={itemsInfo} />
+                    }
                     <Table title={() => <div>{collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}</div>} rowKey="id" pagination={{ hideOnSinglePage: true }} columns={columns} dataSource={access} />
-                    {collectionInfo !== '' && collectionInfo !== null && <Typography>
-                        <pre>{JSON.stringify(collectionInfo, null, 4)}</pre>
-                    </Typography>}
                 </Flex>
                 <Modal
                     title="Удаление коллекции"
@@ -323,11 +363,11 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
                     }}
                     width={700}
                 >
-                    {isModalOpenEditCollection && <Form
+                    <Form
                         form={form}
                         name="dynamic_form_complex"
                         autoComplete="off"
-                        initialValues={collectionInfo === '' ? { collection_id: collection.id } : collectionInfo}
+                        initialValues={collectionInfo === null ? { collection_id: collection.id } : collectionInfo}
                         onFieldsChange={(_, allFields) => {
                             // setFields(allFields);
                         }}
@@ -336,7 +376,7 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
                             name="collection_id"
                             label="ID Коллекции"
                         >
-                            <Input disabled defaultValue={collection.id} />
+                            <Input disabled />
                         </Form.Item>
 
                         <Form.Item
@@ -409,7 +449,7 @@ function CollectionPage({ collection, getCollections, token, setOpen }) {
                                 </Typography>
                             )}
                         </Form.Item>
-                    </Form>}
+                    </Form>
                 </Modal>
             </>
         );

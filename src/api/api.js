@@ -3,7 +3,6 @@ import { url } from "../url";
 
 export const api = axios.create({
   baseURL: url,
-  timeout: 10000,
 });
 
 export const authAPI = async (username, password) => {

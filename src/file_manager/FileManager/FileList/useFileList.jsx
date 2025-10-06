@@ -1,9 +1,4 @@
-import { BiRename, BiSelectMultiple } from "react-icons/bi";
-import { BsCopy, BsFolderPlus, BsGrid, BsScissors } from "react-icons/bs";
-import { FaListUl, FaRegFile, FaRegPaste } from "react-icons/fa6";
-import { FiRefreshCw } from "react-icons/fi";
-import { MdOutlineDelete, MdOutlineFileDownload, MdOutlineFileUpload } from "react-icons/md";
-import { PiFolderOpen } from "react-icons/pi";
+import { BsScissors } from "react-icons/bs";
 import { useClipBoard } from "../../contexts/ClipboardContext";
 import { useEffect, useState } from "react";
 import { useSelection } from "../../contexts/SelectionContext";
@@ -12,6 +7,7 @@ import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { duplicateNameHandler } from "../../utils/duplicateNameHandler";
 import { validateApiCallback } from "../../utils/validateApiCallback";
 import { useTranslation } from "../../contexts/TranslationProvider";
+import { AppstoreOutlined, BarsOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FileOutlined, FolderAddOutlined, FolderOpenOutlined, ImportOutlined, SelectOutlined, SyncOutlined, UploadOutlined } from '@ant-design/icons'
 
 const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen) => {
   const [selectedFileIndexes, setSelectedFileIndexes] = useState([]);
@@ -97,12 +93,12 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
   const emptySelecCtxItems = [
     {
       title: t("view"),
-      icon: activeLayout === "grid" ? <BsGrid size={18} /> : <FaListUl size={18} />,
+      icon: activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />,
       onClick: () => { },
       children: [
         {
           title: t("grid"),
-          icon: <BsGrid size={18} />,
+          icon: <AppstoreOutlined />,
           selected: activeLayout === "grid",
           onClick: () => {
             setActiveLayout("grid");
@@ -111,7 +107,7 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
         },
         {
           title: t("list"),
-          icon: <FaListUl size={18} />,
+          icon: <BarsOutlined />,
           selected: activeLayout === "list",
           onClick: () => {
             setActiveLayout("list");
@@ -122,7 +118,7 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
     },
     {
       title: t("paste"),
-      icon: <FaRegPaste size={18} />,
+      icon: <ImportOutlined />,
       onClick: handleFilePastingNoSelect,
       className: `${clipBoard ? "" : "disable-paste"}`,
       divider: true,
@@ -130,27 +126,27 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
     },
     {
       title: t("refresh"),
-      icon: <FiRefreshCw size={18} />,
+      icon: <SyncOutlined />,
       onClick: handleRefresh,
       divider: true,
     },
     {
       title: t("newFolder"),
-      icon: <BsFolderPlus size={18} />,
+      icon: <FolderAddOutlined />,
       onClick: handleCreateNewFolder,
       divider: !permissions.upload,
       hidden: !permissions.create,
     },
     {
       title: t("upload"),
-      icon: <MdOutlineFileUpload size={18} />,
+      icon: <UploadOutlined />,
       onClick: handleUpload,
       divider: true,
       hidden: !permissions.upload,
     },
     {
       title: t("selectAll"),
-      icon: <BiSelectMultiple size={18} />,
+      icon: <SelectOutlined />,
       onClick: handleselectAllFiles,
     },
   ];
@@ -158,7 +154,7 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
   const selecCtxItems = [
     {
       title: t("open"),
-      icon: lastSelectedFile?.isDirectory ? <PiFolderOpen size={20} /> : <FaRegFile size={16} />,
+      icon: lastSelectedFile?.isDirectory ? <FolderOpenOutlined /> : <FileOutlined />,
       onClick: handleFileOpen,
       divider: true,
     },
@@ -171,14 +167,14 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
     },
     {
       title: t("copy"),
-      icon: <BsCopy strokeWidth={0.1} size={17} />,
+      icon: <CopyOutlined />,
       onClick: () => handleMoveOrCopyItems(false),
       divider: !lastSelectedFile?.isDirectory,
       hidden: !permissions.copy,
     },
     {
       title: t("paste"),
-      icon: <FaRegPaste size={18} />,
+      icon: <ImportOutlined />,
       onClick: handleFilePasting,
       className: `${clipBoard ? "" : "disable-paste"}`,
       divider: true,
@@ -186,19 +182,19 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
     },
     {
       title: t("rename"),
-      icon: <BiRename size={19} />,
+      icon: <EditOutlined />,
       onClick: handleRenaming,
       hidden: selectedFiles.length > 1 || !permissions.rename,
     },
     {
       title: t("download"),
-      icon: <MdOutlineFileDownload size={18} />,
+      icon: <DownloadOutlined />,
       onClick: handleDownloadItems,
       hidden: !permissions.download,
     },
     {
       title: t("delete"),
-      icon: <MdOutlineDelete size={19} />,
+      icon: <DeleteOutlined />,
       onClick: handleDelete,
       hidden: !permissions.delete,
     },

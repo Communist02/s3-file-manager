@@ -54,6 +54,8 @@ const Actions = ({
           filePreviewPath={filePreviewPath}
           filePreviewComponent={filePreviewComponent}
           onDownload={onDownload}
+          show={triggerAction.isActive}
+          setShow={triggerAction.close}
         />
       ),
       width: "50%",
@@ -72,18 +74,19 @@ const Actions = ({
     }
   }, [triggerAction.isActive]);
 
-  if (activeAction && triggerAction.actionType === "previewFile") {
-    return (
-      <Modal
-        heading={activeAction.title}
-        show={triggerAction.isActive}
-        setShow={triggerAction.close}
-        dialogWidth={activeAction.width}
-      >
-        {activeAction?.component}
-      </Modal>
-    );
-  } else if (activeAction) {
+  // if (activeAction && triggerAction.actionType === "previewFile") {
+  //   return (
+  //     <Modal
+  //       heading={activeAction.title}
+  //       show={triggerAction.isActive}
+  //       setShow={triggerAction.close}
+  //       dialogWidth={activeAction.width}
+  //     >
+  //       {activeAction?.component}
+  //     </Modal>
+  //   );
+  // } else
+    if (activeAction) {
     return activeAction.component
   }
 };

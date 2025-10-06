@@ -24,6 +24,16 @@ function Logs({ open, setOpen, token }) {
         {
             title: 'Время',
             dataIndex: 'date_time',
+            render: (value) => {
+                const formatter = Intl.DateTimeFormat('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                return formatter.format(Date.parse(value));
+            }
         },
         {
             title: 'Действие',
@@ -72,7 +82,7 @@ function Logs({ open, setOpen, token }) {
             // placement='top'
             extra={<Button type='primary' onClick={updateLogs}>Обновить</Button>}
         >
-            <Table
+            {open ? <Table
                 scroll={{ y: 'calc(100vh - 180px)' }}
                 rowKey="id"
                 size="small"
@@ -83,7 +93,7 @@ function Logs({ open, setOpen, token }) {
                     expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>,
                     // rowExpandable: record => record.message !== null && record.message !== ''
                 }}
-            />
+            /> : <></>}
         </Drawer>
     );
 };

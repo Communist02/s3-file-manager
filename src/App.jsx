@@ -34,6 +34,7 @@ function App() {
     const [darkTheme, setDarkTheme] = useState(localStorage.getItem('darkTheme') === 'true');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCollectionName, setNewCollectionName] = useState('');
+    const [currentCountUploading, setCurrentCountUploading] = useState(0);
 
     const getFiles = async (collection, token) => {
         setIsLoading(true);
@@ -425,7 +426,7 @@ function App() {
                     <Space className='header-left'>
                         {
                             buckets.length > 0 && !showControlPanel && <>
-                                <FloatButton id='upload-button' type="primary" icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
+                                <FloatButton id='upload-button' type='primary' badge={{ count: currentCountUploading }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
                                 {['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
                                 <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} popupRender={(menu) => (
                                     <>
@@ -451,7 +452,7 @@ function App() {
                     <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
                     <History collection_id={currentBucket.id} token={tokenAuth} open={openHistory} setOpen={setOpenHistory} />
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
-                        <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} token={tokenAuth} getCollections={getBuckets} setOpen={setOpenCollection} />
+                        {openCollection && <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} token={tokenAuth} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
                     </Drawer>
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
                         <ProfilePage token={tokenAuth} />
@@ -461,7 +462,7 @@ function App() {
                     <Card style={{ margin: '0 10px' }}>
                         {page}
                     </Card>
-                    <Uploader open={openUploader} setOpen={setOpenUploader} url={url} collection_id={currentBucket.id} path={currentPath} token={tokenAuth} updateCollection={updateCollection} />
+                    <Uploader open={openUploader} setOpen={setOpenUploader} url={url} collection_id={currentBucket.id} path={currentPath} token={tokenAuth} updateCollection={updateCollection} setCurrentCountUploading={setCurrentCountUploading} />
                 </Layout.Content>
                 <Layout.Footer style={{ padding: '10px 50px', textAlign: 'center', color: 'grey' }}>S3 File Manager © 2025 Created by Denis Mazur</Layout.Footer>
             </Layout>

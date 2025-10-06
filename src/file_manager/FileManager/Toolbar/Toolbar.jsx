@@ -1,13 +1,5 @@
 import { useState } from "react";
-import { BsCopy, BsFolderPlus, BsGridFill, BsScissors } from "react-icons/bs";
-import { FiRefreshCw } from "react-icons/fi";
-import {
-  MdClear,
-  MdOutlineDelete,
-  MdOutlineFileDownload,
-  MdOutlineFileUpload,
-} from "react-icons/md";
-import { BiRename } from "react-icons/bi";
+import { BsGridFill } from "react-icons/bs";
 import { FaListUl, FaRegPaste } from "react-icons/fa6";
 import LayoutToggler from "./LayoutToggler";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
@@ -18,6 +10,7 @@ import { validateApiCallback } from "../../utils/validateApiCallback";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./Toolbar.scss";
 import { Button } from "antd";
+import { AppstoreOutlined, BarsOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FolderAddOutlined, ImportOutlined, SyncOutlined } from '@ant-design/icons'
 
 const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
   const [showToggleViewMenu, setShowToggleViewMenu] = useState(false);
@@ -30,14 +23,14 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
   // Toolbar Items
   const toolbarLeftItems = [
     {
-      icon: <FaRegPaste size={18} />,
+      icon: <ImportOutlined />,
       text: t("paste"),
       type: 'primary',
       permission: !!clipBoard,
       onClick: handleFilePasting,
     },
     {
-      icon: <BsFolderPlus size={17} strokeWidth={0.3} />,
+      icon: <FolderAddOutlined />,
       text: t("newFolder"),
       type: '',
       permission: permissions.create,
@@ -55,12 +48,12 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
 
   const toolbarRightItems = [
     {
-      icon: activeLayout === "grid" ? <BsGridFill size={16} /> : <FaListUl size={16} />,
+      icon: activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />,
       title: t("changeView"),
       onClick: () => setShowToggleViewMenu((prev) => !prev),
     },
     {
-      icon: <FiRefreshCw size={16} />,
+      icon: <SyncOutlined />,
       title: t("refresh"),
       onClick: () => {
         validateApiCallback(onRefresh, "onRefresh");
@@ -87,7 +80,7 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
             {clipBoard?.files?.length > 0 && (
               <Button
                 type='primary'
-                icon={<FaRegPaste size={18} />}
+                icon={<ImportOutlined />}
                 className="item-action file-action"
                 onClick={handleFilePasting}
               // disabled={!clipBoard}
@@ -95,19 +88,19 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
                 {t("paste")}
               </Button>
             )}
-            {permissions.move && (
+            {/* {permissions.move && (
               <Button icon={<BsScissors size={18} />} className="item-action file-action" onClick={() => handleCutCopy(true)}>
                 {t("cut")}
               </Button>
-            )}
+            )} */}
             {permissions.copy && (
-              <Button icon={<BsCopy size={18} />} className="item-action file-action" onClick={() => handleCutCopy(false)}>
+              <Button icon={<CopyOutlined />} className="item-action file-action" onClick={() => handleCutCopy(false)}>
                 {t("copy")}
               </Button>
             )}
             {selectedFiles.length === 1 && permissions.rename && (
               <Button
-                icon={<BiRename />}
+                icon={<EditOutlined />}
                 className="item-action file-action"
                 onClick={() => triggerAction.show("rename")}
               >
@@ -115,12 +108,13 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
               </Button>
             )}
             {permissions.download && (
-              <Button icon={<MdOutlineFileDownload size={18} />} className="item-action file-action" onClick={handleDownloadItems}>
+              <Button icon={<DownloadOutlined />} className="item-action file-action" onClick={handleDownloadItems}>
                 {t("download")}
               </Button>
             )}
             {permissions.delete && (
-              <Button icon={<MdOutlineDelete size={18} />}
+              <Button
+                icon={<DeleteOutlined />}
                 className="item-action file-action"
                 onClick={() => triggerAction.show("delete")}
               >
@@ -130,7 +124,7 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
           </div>
           <Button
             type="text"
-            icon={<MdClear size={18} />}
+            icon={<CloseOutlined />}
             iconPosition="end"
             className="item-action file-action"
             title={t("clearSelection")}

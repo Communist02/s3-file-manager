@@ -64,7 +64,7 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
     const value = e.target.value;
     const reg = /[\\/:*?"<>|]/;
     if (!reg.test(value)) {
-      setRenameFile(e.target.value);
+      setRenameFile(value);
       setFileRenameError(false);
     } else {
       // setRenameErrorMessage(t("invalidFileName"));

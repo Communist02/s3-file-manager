@@ -50,7 +50,7 @@ function History({ open, setOpen, collection_id, token }) {
                         if (record.message.path !== '') {
                             return `Загрузка в «${record.message.path}» файла «${record.message.file_name}»`;
                         } else {
-                            return `Загрузка в корень коллекции файла «${record.message.file_name}»`;
+                            return `Загрузка в «/» коллекции файла «${record.message.file_name}»`;
                         }
                     case 'rename':
                         return `Переименование «${record.message.path}» в «${record.message.new_name}»`;

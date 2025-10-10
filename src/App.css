@@ -28,6 +28,18 @@
   box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
 }
 
+.not-collections {
+  margin: 0;
+  min-height: calc(100vh - 38px - 70px) !important;
+  height: 200px !important;
+  box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.main-card>.ant-card-body {
+  padding: 0;
+}
+
 .header>h1 {
   margin: 0;
   padding: 0;
@@ -88,66 +100,4 @@
 .file-action-container>div:first-child {
   overflow-x: auto !important;
   overflow-y: hidden !important;
-}
-
-.fm-modal.dialog:has(.file-previewer) {
-  width: fit-content !important;
-}
-
-.fm-modal.dialog>.file-previewer {
-  height: auto !important;
-  width: auto !important;
-}
-
-.fm-modal.dialog>.file-previewer>img {
-  width: 100% !important;
-  height: 100% !important;
-  max-height: 80vh;
-}
-
-.file-previewer .audio-preview {
-  width: 100% !important;
-  padding: 0 !important;
-}
-
-.fm-modal.dialog>.file-previewer:has(.audio-preview) {
-  padding: 0;
-}
-
-.fm-modal.dialog:has(.file-previewer .audio-preview) {
-  width: 90% !important;
-  max-width: 768px;
-  /* margin-left: 10%;
-  margin-right: 10%; */
-}
-
-.video-preview {
-  width: 100% !important;
-  height: 100% !important;
-  max-height: 80vh !important;
-}
-
-.fm-modal.dialog>.file-previewer:has(.video-preview) {
-  padding: 0 !important;
-  height: 100% !important;
-}
-
-.fm-modal.dialog:has(.file-previewer>.photo-popup-iframe) {
-  width: 90% !important;
-  max-width: 768px;
-  /* margin-left: 10%;
-  margin-right: 10%; */
-}
-
-.fm-modal.dialog:has(.fm-upload-file) {
-  width: 90% !important;
-  max-width: 768px;
-}
-
-.fm-upload-file .btn-choose-file {
-  gap: 10px;
-}
-
-.fm-upload-file .files-progress ul {
-  height: 400px !important;
 }

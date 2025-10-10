@@ -153,7 +153,6 @@ function App() {
     }
 
     const handlePaste = async (copiedItems, destinationFolder, operationType) => {
-        setIsLoading(true);
         let copiedFiles = [];
         for (const file of copiedItems) {
             if (file.isDirectory) {
@@ -163,17 +162,16 @@ function App() {
             }
         }
         if (operationType === "copy") {
+            setIsLoading(true);
             const response = await copyItemAPI(copyCollection.current.id, copiedFiles, currentBucket.id, destinationFolder !== null ? destinationFolder.path : '/', tokenAuth);
-            if (response.status === 403) {
-                message.success('Нет прав доступа!');
-            }
-        } else {
-            const response = await moveItemAPI(copiedFiles, destinationFolder !== null ? destinationFolder.path : '/');
+            setIsLoading(false);
             if (response.status === 200) {
                 message.success('Файлы успешно скопированы!');
+                await getFiles(currentBucket, tokenAuth);
+            } else if (response.status === 403) {
+                message.error('Нет прав на копирование!');
             }
         }
-        await getFiles(currentBucket, tokenAuth);
     };
 
     const handleBucket = async (id, collections = null) => {
@@ -183,7 +181,11 @@ function App() {
         } else {
             collection = buckets.find(item => item.id === id);
         }
-        document.querySelector('.breadcrumb > div:nth-child(3) > span:nth-child(1)').click();
+        try {
+            document.querySelector('.breadcrumb > div:nth-child(3) > span:nth-child(1)').click();
+        } catch (error) {
+            console.error(error);
+        }
         setCurrentBucket(collection);
         await getFiles(collection, tokenAuth);
     }
@@ -205,11 +207,11 @@ function App() {
     const handleOk = async () => {
         let response = await createCollection(newCollectionName, tokenAuth);
         if (response.status === 200) {
+            setIsModalOpen(false);
             message.success('Коллекция успешно создана!');
             const collections = await getBuckets(tokenAuth);
-            await handleBucket(response.data, collections);
             setNewCollectionName('');
-            setIsModalOpen(false);
+            await handleBucket(response.data, collections);
         } else if (response.status === 406) {
             message.error('Имя может содержать только латинские буквы и цифры!');
         } else {
@@ -221,6 +223,7 @@ function App() {
         const personItems = [];
         const accessItems = [];
         const groupItems = [];
+        const accessToAllItems = [];
         const collections = buckets;
 
         for (let i = 0; i < collections.length; i++) {
@@ -233,18 +236,22 @@ function App() {
                 case 'person': personItems.push(item); break;
                 case 'access': accessItems.push(item); break;
                 case 'group': groupItems.push(item); break;
+                case 'access_to_all': accessToAllItems.push(item); break;
             }
         }
 
         const result = [];
         if (personItems.length > 0) {
-            result.push({ label: 'Персональные', options: personItems });
+            result.push({ label: 'Вы владелец', options: personItems });
         }
         if (accessItems.length > 0) {
             result.push({ label: 'Получен доступ', options: accessItems });
         }
         if (groupItems.length > 0) {
             result.push({ label: 'Групповые', options: groupItems });
+        }
+        if (accessToAllItems.length > 0) {
+            result.push({ label: 'Для всех', options: accessToAllItems });
         }
 
         return result;
@@ -339,7 +346,7 @@ function App() {
     const permissions = [
         { create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }, // owner
         { create: true, upload: true, move: false, copy: true, rename: true, download: true, delete: true }, // readwrite
-        { create: false, upload: false, move: false, copy: false, rename: false, download: true, delete: false }, // readonly
+        { create: false, upload: false, move: false, copy: true, rename: false, download: true, delete: false }, // readonly
         { create: true, upload: true, move: false, copy: false, rename: false, download: false, delete: false }, // writeonly
     ]
 
@@ -388,19 +395,11 @@ function App() {
                         permissions={currentBucket !== '' ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
                         onFolderChange={handleFolderChange}
                     /> :
-                    <Flex style={{ height: 'calc(100vh - 140px)' }} justify="center" align="center">
+                    <Flex className='not-collections' style={{ height: 'calc(100vh - 38px - 70px)' }} justify="center" align="center">
                         <Result
                             title="У вас нет доступных коллекций, но вы можете их создать!"
                             extra={
-                                <Button
-                                    onClick={
-                                        () => {
-                                            setIsModalOpen(true);
-                                        }
-                                    }
-                                    type="primary">
-                                    Создать коллекцию
-                                </Button>
+                                <Button type="primary" onClick={() => setIsModalOpen(true)}>Создать коллекцию</Button>
                             }
                         />
                     </Flex>
@@ -413,7 +412,7 @@ function App() {
     }
 
     return <ConfigProvider locale={ruRU} theme={{
-        components: { Layout: { headerBg: '#00000000' }, Card: { bodyPadding: 0 } },
+        components: { Layout: { headerBg: '#00000000' } },
         algorithm: darkTheme && theme.darkAlgorithm,
     }}>
         <AntApp>
@@ -459,7 +458,7 @@ function App() {
                     </Drawer>
                 </Layout.Header>}
                 <Layout.Content>
-                    <Card style={{ margin: '0 10px' }}>
+                    <Card className='main-card' style={{ margin: '0 10px', body: { padding: 0 } }}>
                         {page}
                     </Card>
                     <Uploader open={openUploader} setOpen={setOpenUploader} url={url} collection_id={currentBucket.id} path={currentPath} token={tokenAuth} updateCollection={updateCollection} setCurrentCountUploading={setCurrentCountUploading} />

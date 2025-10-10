@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Card, Input } from 'antd';
-import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType, changeCollectionInfo, getCollectionInfo } from '../api/api';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Input, Switch, Checkbox } from 'antd';
+import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType, changeCollectionInfo, getCollectionInfo, changeAccessToAll } from '../api/api';
 import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 
 function CollectionPage({ collection, getCollections, token, open, setOpen }) {
@@ -14,6 +14,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     const [accessTypes, setAccessTypes] = useState([]);
     const [accessTypeId, setAccessTypeId] = useState('');
     const [accessId, setAccessId] = useState('');
+    const [isAccessToAll, setIsAccessAll] = useState(collection.is_access_all);
     const [groupMode, setGroupMode] = useState(false);
     const lastId = useRef(-1);
     const [form] = Form.useForm();
@@ -162,6 +163,21 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
         }
     };
 
+    async function handleAccessAll(e) {
+        const response = await changeAccessToAll(collection.id, e.target.checked, token);
+        if (response.status === 200) {
+            if (e.target.checked) {
+                setIsAccessAll(true);
+                message.success('Доступ дан!');
+            } else {
+                message.success('Доступ отозван!');
+                setIsAccessAll(false);
+            }
+        } else {
+            message.error('Произошла ошибка! ' + response);
+        }
+    }
+
     const columns = [
         {
             title: 'Тип получателя',
@@ -295,7 +311,15 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
                         collectionInfo !== null &&
                         <Descriptions title='Информация' layout='vertical' items={itemsInfo} />
                     }
-                    <Table title={() => <div>{collection.access_type_id === 1 && <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>}</div>} rowKey="id" pagination={{ hideOnSinglePage: true }} columns={columns} dataSource={access} />
+                    <Space>
+                        {
+                            collection.access_type_id === 1 && <>
+                                <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>
+                                <Checkbox checked={isAccessToAll} onChange={handleAccessAll}>Сделать коллекцию доступной для чтения для всех</Checkbox>
+                            </>
+                        }
+                    </Space>
+                    <Table rowKey="id" pagination={{ hideOnSinglePage: true }} columns={columns} dataSource={access} />
                 </Flex>
                 <Modal
                     title="Удаление коллекции"

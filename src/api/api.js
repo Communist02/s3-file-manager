@@ -349,3 +349,13 @@ export const getCollectionInfo = async (collection_id, token) => {
     return error;
   }
 };
+
+export const changeAccessToAll = async (collection_id, is_access, token) => {
+  try {
+    const response = await api.post('/change_access_to_all' + '?token=' + token + '&collection_id=' + collection_id + '&is_access=' + is_access);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};

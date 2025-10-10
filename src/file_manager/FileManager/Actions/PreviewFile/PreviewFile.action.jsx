@@ -133,7 +133,7 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
               <Card style={{ width: "80%", height: '80%', maxWidth: 1080 }}>
                 {content !== '' ?
                   <Typography.Paragraph>
-                    <pre style={{ whiteSpace: 'pre-wrap', overflow: 'auto', height: 'calc(80vh - 25px)', margin: 5, textAlign: 'left' }}>
+                    <pre style={{ whiteSpace: 'pre-wrap', overflow: 'auto', height: 'calc(80vh - 70px)', margin: 5, textAlign: 'left' }}>
                       {content}
                     </pre>
                   </Typography.Paragraph>

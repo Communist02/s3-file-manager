@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import FileItem from "./FileItem";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { useLayout } from "../../contexts/LayoutContext";
@@ -23,6 +23,7 @@ const FileList = ({
   const filesViewRef = useRef(null);
   const { activeLayout } = useLayout();
   const t = useTranslation();
+  const [size, setSize] = useState({ x: 0, y: 0 })
 
   const {
     emptySelecCtxItems,
@@ -37,6 +38,26 @@ const FileList = ({
     isSelectionCtx,
   } = useFileList(onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen);
 
+  useEffect(() => {
+    const element = document.querySelector('.files');
+    if (!element) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (activeLayout !== "list") {
+          const { width, height } = entry.contentRect;
+          setSize({ x: width, y: height });
+        }
+      }
+    });
+
+    resizeObserver.observe(element);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [activeLayout]);
+
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -46,13 +67,12 @@ const FileList = ({
   };
 
   const contextMenuRef = useDetectOutsideClick(() => setVisible(false));
-  const viewElement = document.getElementsByClassName('files')[0];
   function getItem(value) {
     let index;
     if (activeLayout === "list") {
       index = value.index;
     } else {
-      index = value.columnIndex + value.rowIndex * ~~(viewElement.offsetWidth / 140);
+      index = value.columnIndex + value.rowIndex * ~~(size.x / 140);
       if (index >= currentPathFiles.length) {
         return;
       }
@@ -107,13 +127,13 @@ const FileList = ({
           </FixedSizeList> :
           <FixedSizeGrid
             className="virtual-grid"
-            columnCount={~~(viewElement.offsetWidth / 140)}
+            columnCount={~~(size.x / 140)}
             columnWidth={140}
-            height={viewElement.offsetHeight}
-            width={viewElement.offsetWidth}
+            height={size.y}
+            width={size.x}
             itemCount={currentPathFiles.length}
-            rowHeight={118}
-            rowCount={currentPathFiles.length / ~~(viewElement.offsetWidth / 140)}
+            rowHeight={100}
+            rowCount={Math.ceil(currentPathFiles.length / ~~(size.x / 140))}
           >
             {getItem}
           </FixedSizeGrid>

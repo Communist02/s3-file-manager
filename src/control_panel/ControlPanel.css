@@ -1,11 +1,15 @@
-.control-panel-main {
+/* .control-panel-main {
     padding: 0px 0px;
     border-radius: 8px;
     box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
     min-height: calc(100vh - 38px - 70px);
     position: relative;
-}
+} */
 
 .control-panel-main .ant-tabs-nav-wrap {
     visibility: hidden;
+}
+
+.control-panel-main .ant-tabs-nav {
+    margin: 0;
 }

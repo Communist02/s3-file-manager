@@ -5,7 +5,7 @@ import { Tabs, Layout, Menu, Modal, Input, Button, message } from 'antd';
 import { UsergroupAddOutlined, TeamOutlined } from '@ant-design/icons';
 import { getGroups, createGroup } from '../api/api';
 
-const ControlPanel = ({ page, token, getCollections }) => {
+const ControlPanel = ({ token, getCollections }) => {
     const [messageApi, contextHolder] = message.useMessage();
     const [isModalOpenCreateGroup, setIsModalOpenCreateGroup] = useState(false);
     const [groups, setGroups] = useState([]);
@@ -80,7 +80,7 @@ const ControlPanel = ({ page, token, getCollections }) => {
 
     const tabItems = [
         {
-            key: '3',
+            key: 'groups',
             label: 'Группы',
             icon: <TeamOutlined />,
             children:
@@ -103,16 +103,13 @@ const ControlPanel = ({ page, token, getCollections }) => {
     ];
 
     function getCreateButton() {
-        switch (page.toString()) {
-            case '3':
-                return <Button type="primary" style={{ marginLeft: 5 }} icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
-        }
+        return <Button type="primary" style={{ marginLeft: 5 }} icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>;
     }
 
     return (
         <div className="control-panel">
             <div className="control-panel-main">
-                <Tabs activeKey={page.toString()} items={tabItems} tabBarExtraContent={{ left: getCreateButton() }} />
+                <Tabs activeKey={'groups'} items={tabItems} tabBarExtraContent={{ left: getCreateButton() }} />
                 <Modal
                     title="Создание группы"
                     open={isModalOpenCreateGroup}

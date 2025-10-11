@@ -70,7 +70,6 @@ function Logs({ open, setOpen, token }) {
     return (
         <Drawer
             size='large'
-            style={{ padding: 0 }}
             title='Логи'
             onClose={() => setOpen(false)}
             open={open}

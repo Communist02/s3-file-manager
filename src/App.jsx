@@ -311,7 +311,6 @@ function App() {
                 setOpenProfile(true);
                 break;
             case 'groups':
-                setPageControl(3);
                 setShowControlPanel(true);
                 break;
             case 'logs':
@@ -337,8 +336,6 @@ function App() {
     let page = 'auth';
     if (!(tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '')) {
         page = 'auth';
-    } else if (showControlPanel) {
-        page = 'controlPanel';
     } else {
         page = 'fileManager';
     }
@@ -352,7 +349,7 @@ function App() {
 
     switch (page) {
         case 'auth':
-            page = <AuthPage authEvent={auth}></AuthPage>;
+            page = <AuthPage authEvent={auth} />;
             break;
         case 'fileManager':
             page = <>
@@ -406,9 +403,6 @@ function App() {
                 }
             </>;
             break;
-        case 'controlPanel':
-            page = <ControlPanel page={pageControl} username={username} outAccount={outAccount} showCtrlPanel={showCtrlPanel} collections={buckets} token={tokenAuth} getCollections={getBuckets} />;
-            break;
     }
 
     return <ConfigProvider locale={ruRU} theme={{
@@ -455,6 +449,9 @@ function App() {
                     </Drawer>
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
                         <ProfilePage token={tokenAuth} />
+                    </Drawer>
+                    <Drawer title='Группы' styles={{ body: { padding: 0 } }} width={1080} open={showControlPanel} onClose={() => setShowControlPanel(false)}>
+                        {showControlPanel && <ControlPanel token={tokenAuth} getCollections={getBuckets} />}
                     </Drawer>
                 </Layout.Header>}
                 <Layout.Content>

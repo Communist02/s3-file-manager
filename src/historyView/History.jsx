@@ -66,7 +66,6 @@ function History({ open, setOpen, collection_id, token }) {
     return (
         <Drawer
             size='large'
-            style={{ padding: 0 }}
             title='История'
             onClose={() => setOpen(false)}
             open={open}

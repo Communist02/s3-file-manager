@@ -65,7 +65,7 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
             open={true}
             onCancel={setShow}
             footer={[
-              <Button onClick={handleDownload} type="primary">
+              <Button key={'preview-download'} onClick={handleDownload} type="primary">
                 {t("download")}
               </Button>
             ]}
@@ -75,7 +75,6 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
               {selectedFiles[0].name}
               {selectedFiles[0].size && <Tag>{getDataSize(selectedFiles[0].size)}</Tag>}
             </Space>
-
           </Modal>
         ))}
       {imageExtensions.includes(extension) && (

@@ -6,7 +6,7 @@ import { useTranslation } from "../../../contexts/TranslationProvider";
 import "./PreviewFile.action.scss";
 import { validateApiCallback } from "../../../utils/validateApiCallback";
 import { Typography, Image, Card, Modal, Button, Tag, Space } from "antd";
-import { getIconForFile,  } from 'vscode-icons-js';
+import { getIconForFile, } from 'vscode-icons-js';
 
 const imageExtensions = ["jpg", "jpeg", "png", 'gif', 'svg', 'webp', 'avif'];
 const videoExtensions = ["mp4", "mov", "avi", 'webm', 'av1', '3gp'];
@@ -22,7 +22,7 @@ if (navigator.userAgent.toLowerCase().includes('firefox')) {
 const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, setShow, show }) => {
   const { selectedFiles } = useSelection();
   const extension = getFileExtension(selectedFiles[0].name)?.toLowerCase();
-  const filePath = [filePreviewPath.slice(0, filePreviewPath.indexOf('?')), selectedFiles[0].path, filePreviewPath.slice(filePreviewPath.indexOf('?'))].join('');
+  const filePath = [filePreviewPath.slice(0, filePreviewPath.indexOf('?')), encodeURIComponent(selectedFiles[0].path), filePreviewPath.slice(filePreviewPath.indexOf('?'))].join('');
   const [content, setContent] = useState('');
   const t = useTranslation();
 
@@ -42,15 +42,16 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
   }
 
   useEffect(() => {
-    if (textExtensions.includes(extension) || codeExtensions.includes(extension)) { }
-    fetch(filePath)
-      .then((res) => res.text())
-      .then((data) => setContent(data))
-      .catch((err) => console.error('Ошибка загрузки:', err));
+    if (textExtensions.includes(extension) || codeExtensions.includes(extension)) {
+      fetch(filePath)
+        .then((res) => res.text())
+        .then((data) => setContent(data))
+        .catch((err) => console.error('Ошибка загрузки:', err));
+    }
   }, [filePath]);
 
   return (
-    <section className={`file-previewer ${extension === "pdf" ? "pdf-previewer" : ""}`}>
+    <>
       {(![
         ...imageExtensions,
         ...videoExtensions,
@@ -145,7 +146,7 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
           alt={"Preview Unavailable"}
         />
       )}
-    </section>
+    </>
   );
 };
 

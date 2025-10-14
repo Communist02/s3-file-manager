@@ -153,7 +153,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                         } else {
                             filePath = path;
                         }
-                        return url + `/collections/${collection_id}/upload?token=${token}&path=${filePath}`
+                        return url + `/collections/${collection_id}/upload/${token}${filePath}`
                     }
                 }
                 onChange={(info, collection = collection_id) => onChange(info, collection)}

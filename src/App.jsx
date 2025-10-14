@@ -23,7 +23,6 @@ function App() {
     const [tokenAuth, setTokenAuth] = useState('');
     const [username, setUsername] = useState('');
     const [showControlPanel, setShowControlPanel] = useState(false);
-    const [pageControl, setPageControl] = useState();
     const copyCollection = useRef('');
     const [openUploader, setOpenUploader] = useState(false);
     const [openLogs, setOpenLogs] = useState(false);
@@ -49,9 +48,9 @@ function App() {
         }
     };
 
-    async function updateCollection(collection_id) {
+    async function updateCollection(collection_id, path = '') {
         if (collection_id === currentBucket.id) {
-            const response = await getAllFilesAPI(currentBucket.id, tokenAuth);
+            const response = await getAllFilesAPI(currentBucket.id, tokenAuth, path);
             if (response.status === 200) {
                 if (response.data.length > 0) {
                     setFiles(response.data);
@@ -387,7 +386,7 @@ function App() {
                         fileUploadConfig={{ url: url, method: 'PUT' }}
                         defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
                         collapsibleNav={true}
-                        filePreviewPath={url + `/collections/${currentBucket.id}?preview=true` + '&token=' + tokenAuth + '&file='}
+                        filePreviewPath={url + `/collections/${currentBucket.id}/file/${tokenAuth}?preview=true`}
                         primaryColor='#1677ff'
                         permissions={currentBucket !== '' ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
                         onFolderChange={handleFolderChange}

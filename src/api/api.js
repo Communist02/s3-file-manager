@@ -45,9 +45,9 @@ export const createFolderAPI = async (name, path, collection_id, token) => {
 };
 
 export const deleteAPI = async (collection_id, files, token) => {
-  const fileQuery = 'files=' + files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|');
+  const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
   try {
-    const response = await api.delete(`/collections/${collection_id}?${fileQuery}` + '&token=' + token);
+    const response = await api.delete(`/collections/${collection_id}/${token}?${fileQuery}`);
     return response;
   } catch (error) {
     return error;
@@ -59,10 +59,10 @@ export const downloadFile = async (files, collection_id, token) => {
   try {
     let url;
     if (files.length === 1 && !files[0].isDirectory) {
-      url = `${api.defaults.baseURL}/collections/${collection_id}${files[0].path}?token=${token}`;
+      url = `${api.defaults.baseURL}/collections/${collection_id}/file/${token}/${encodeURIComponent(files[0].path)}`;
     } else {
-      const fileQuery = 'files=' + files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|');
-      url = `${api.defaults.baseURL}/archive/collections/${collection_id}?${fileQuery}&token=${token}`;
+      const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
+      url = `${api.defaults.baseURL}/collections/${collection_id}/archive/${token}?${fileQuery}`;
     }
     window.location.href = url;
   } catch (error) {
@@ -90,9 +90,9 @@ export const moveItemAPI = async (bucket, sourcePaths, destinationPath) => {
   }
 };
 
-export const getAllFilesAPI = async (collection_id, token) => {
+export const getAllFilesAPI = async (collection_id, token, path = '', recursive = true) => {
   try {
-    const response = await api.get('/collections/' + collection_id + '?token=' + token);
+    const response = await api.get('/collections/' + collection_id + '/list/' + token + encodeURIComponent(path) + '?recursive=' + recursive);
     return response;
   } catch (error) {
     console.log(error);
@@ -102,7 +102,7 @@ export const getAllFilesAPI = async (collection_id, token) => {
 
 export const getBucketsAPI = async (token) => {
   try {
-    const response = await api.get('/collections' + '?token=' + token);
+    const response = await api.get('/collections/list/' + token);
     return response;
   } catch (error) {
     console.log(error);

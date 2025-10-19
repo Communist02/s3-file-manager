@@ -40,6 +40,10 @@
   padding: 0;
 }
 
+.main-card:has(.auth-page) {
+  margin: 0 !important;
+}
+
 .header>h1 {
   margin: 0;
   padding: 0;

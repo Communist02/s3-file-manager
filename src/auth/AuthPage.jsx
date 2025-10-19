@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button, Checkbox, Watermark, Form, Input, message, Spin } from 'antd';
+import { Button, Checkbox, Watermark, Form, Input, message, Spin, Select, Card } from 'antd';
 import { authAPI, checkTokenAPI } from '../api/api';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import './AuthPage.css';
@@ -7,6 +7,7 @@ import './AuthPage.css';
 function AuthPage({ authEvent }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [org, setOrg] = useState('default');
     const remember = useRef(true);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -36,7 +37,7 @@ function AuthPage({ authEvent }) {
 
     const auth = async () => {
         setIsLoading(true);
-        const response = await authAPI(username, password);
+        const response = await authAPI(`${username}/${org}`, password);
         setIsLoading(false);
         if (response.status === 200) {
             const token = response.data.token;
@@ -60,9 +61,9 @@ function AuthPage({ authEvent }) {
     }
 
     return (
-        <Watermark height={70} width={80} image='/favicon.svg'>
+        <Watermark height={70} width={100} image='/favicon.svg'>
             <div className='auth-page'>
-                <div className="auth-container">
+                <Card className="auth-container">
                     <h1>Вход в систему</h1>
 
                     <Form
@@ -70,7 +71,7 @@ function AuthPage({ authEvent }) {
                         onFinish={auth}
                         requiredMark='optional'
                         size='large'
-                        initialValues={{ remember: true }}
+                        initialValues={{ remember: true, org: 'default' }}
                     >
                         <Form.Item
                             label="Имя пользователя"
@@ -86,6 +87,20 @@ function AuthPage({ authEvent }) {
                         >
                             <Input.Password prefix={<LockOutlined />} onChange={(e) => setPassword(e.target.value)} />
                         </Form.Item>
+                        <Form.Item
+                            label="Организация"
+                            name="org"
+                            rules={[{ required: true, message: 'Выберите организацию!' }]}
+                        >
+                            <Select
+                                options={[
+                                    { value: 'default', label: 'Нет' },
+                                    { value: 'iapu_dvo_ran', label: 'ИАПУ ДВО РАН' },
+                                    { value: 'vvsu', label: 'ВВГУ' },
+                                ]}
+                                onChange={(value) => setOrg(value)}
+                            />
+                        </Form.Item>
                         <Form.Item name="remember" valuePropName="checked">
                             <Checkbox onChange={(value) => remember.current = value.target.checked}>Запомнить</Checkbox>
                         </Form.Item>
@@ -93,7 +108,7 @@ function AuthPage({ authEvent }) {
                             <Button style={{ width: '100%' }} htmlType="submit" type="primary">Войти</Button>
                         </Form.Item>
                     </Form>
-                </div>
+                </Card>
             </div>
             {isLoading && <Spin size="large" fullscreen />}
         </Watermark>

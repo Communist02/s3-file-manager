@@ -16,7 +16,7 @@ const codeExtensions = ['js', 'jsx', 'ts', 'tsx', 'py', 'pyw', 'pyi', 'pyc', 'py
 
 let docExtensions = [];
 if (navigator.userAgent.toLowerCase().includes('firefox')) {
-  docExtensions = ['pdf']
+  docExtensions = ['pdf'];
 }
 
 const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, setShow, show }) => {

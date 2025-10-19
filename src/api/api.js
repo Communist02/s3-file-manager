@@ -18,6 +18,7 @@ export const authAPI = async (username, password) => {
     if (error.code === "ERR_NETWORK") {
       window.alert('Не получилось подключится к серверу\nКод ошибки: ' + error.code);
     }
+    console.log(error);
     return error;
   }
 };
@@ -25,7 +26,19 @@ export const authAPI = async (username, password) => {
 export const checkTokenAPI = async (token) => {
   if (token !== null) {
     try {
-      const response = await api.get('/check_token?token=' + token);
+      const response = await api.get('/check_session?token=' + token);
+      return response;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  }
+};
+
+export const deleteSession = async (token) => {
+  if (token !== null) {
+    try {
+      const response = await api.get('/delete_session?token=' + token);
       return response;
     } catch (error) {
       console.log(error);
@@ -50,6 +63,7 @@ export const deleteAPI = async (collection_id, files, token) => {
     const response = await api.delete(`/collections/${collection_id}/${token}?${fileQuery}`);
     return response;
   } catch (error) {
+    console.log(error);
     return error;
   }
 };
@@ -66,6 +80,7 @@ export const downloadFile = async (files, collection_id, token) => {
     }
     window.location.href = url;
   } catch (error) {
+    console.log(error);
     return error;
   }
 };

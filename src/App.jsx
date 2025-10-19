@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, moveItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection } from './api/api'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
 import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined } from '@ant-design/icons';
@@ -190,6 +190,7 @@ function App() {
     }
 
     const outAccount = () => {
+        deleteSession(tokenAuth);
         localStorage.removeItem('token');
         localStorage.removeItem('login');
         setShowControlPanel(false);
@@ -197,10 +198,6 @@ function App() {
         setBuckets([]);
         setCurrentBucket('');
         setFiles([{}]);
-    }
-
-    function showCtrlPanel() {
-        setShowControlPanel(!showControlPanel);
     }
 
     const handleOk = async () => {
@@ -410,8 +407,8 @@ function App() {
     }}>
         <AntApp>
             <Layout>
-                {tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '' && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 20 }}>
-                    <Button type='text' style={{ height: 60, padding: 0, }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>
+                {tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '' && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0px 10px 0px 0px' }}>
+                    <Button type='text' style={{ height: 60, padding: 10, }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>
                         <img height='40px' width='40px' src={'./favicon.svg'} />
                         <h1>S3 File Manager</h1>
                     </Button>
@@ -437,7 +434,7 @@ function App() {
                         }
                         <Dropdown trigger={['click']} menu={{ items, onClick: onClickLogin }}>
                             <Button type="text" shape="circle">
-                                <Avatar size={40} style={{ backgroundColor: '#1677ff' }}>{username}</Avatar>
+                                <Avatar size={34} icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
                             </Button>
                         </Dropdown>
                     </Space>

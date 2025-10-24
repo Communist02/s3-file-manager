@@ -58,6 +58,8 @@ function History({ open, setOpen, collection_id, token }) {
                         return `Создание новой папки «${record.message.name}» в «${record.message.path}»`;
                     case 'change_collection_info':
                         return 'Изменена информация о коллекции';
+                    case 'create_collection':
+                        return 'Создана коллекция';
                 }
             }
         },

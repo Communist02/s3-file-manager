@@ -45,6 +45,20 @@ function App() {
             } else {
                 setFiles([{}]);
             };
+        } else if (response.status === 410) {
+            setFiles([{}]);
+            Modal.error({
+                title: "Фатальная ошибка!",
+                centered: true,
+                content: 'Коллекция не существует, данные утеряны!\nПожалуйста удалите коллекцию через меню "Управление" или обратитесь в службу поддержки!'
+            });
+        } else {
+            setFiles([{}]);
+            Modal.error({
+                title: "Ошибка сервера!",
+                centered: true,
+                content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
+            });
         }
     };
 
@@ -77,7 +91,11 @@ function App() {
                 }
             }
         } else if (response.status === 500) {
-            window.alert("Ошибка сервера. Обратитесь в службу поддержки!");
+            Modal.error({
+                title: "Ошибка сервера!",
+                centered: true,
+                content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
+            });
         }
         setBuckets(result);
         return result;
@@ -118,7 +136,11 @@ function App() {
             await getFiles(currentBucket, tokenAuth);
             message.success(`Успешно удалено!`);
         } else if (response.status === 500) {
-            window.alert("Ошибка сервера. Обратитесь в службу поддержки!");
+            Modal.error({
+                title: "Ошибка сервера!",
+                centered: true,
+                content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
+            });
         }
     };
 
@@ -198,9 +220,9 @@ function App() {
         setBuckets([]);
         setCurrentBucket('');
         setFiles([{}]);
-    }
+    };
 
-    const handleOk = async () => {
+    const handleOkCreateCollection = async () => {
         let response = await createCollection(newCollectionName, tokenAuth);
         if (response.status === 200) {
             setIsModalOpen(false);
@@ -210,13 +232,15 @@ function App() {
             await handleBucket(response.data, collections);
         } else if (response.status === 406) {
             message.error('Имя может содержать только латинские буквы и цифры!');
+        } else if (response.status === 409) {
+            message.error('Коллекция с таким именем уже существует в системе!');
         } else {
             message.error('Произошла ошибка! ' + response);
         }
     };
 
     function getCollectionItems() {
-        const personItems = [];
+        const ownerItems = [];
         const accessItems = [];
         const groupItems = [];
         const accessToAllItems = [];
@@ -229,7 +253,7 @@ function App() {
             };
 
             switch (collections[i].type) {
-                case 'person': personItems.push(item); break;
+                case 'owner': ownerItems.push(item); break;
                 case 'access': accessItems.push(item); break;
                 case 'group': groupItems.push(item); break;
                 case 'access_to_all': accessToAllItems.push(item); break;
@@ -237,8 +261,8 @@ function App() {
         }
 
         const result = [];
-        if (personItems.length > 0) {
-            result.push({ label: 'Вы владелец', options: personItems });
+        if (ownerItems.length > 0) {
+            result.push({ label: 'Вы владелец', options: ownerItems });
         }
         if (accessItems.length > 0) {
             result.push({ label: 'Получен доступ', options: accessItems });
@@ -352,7 +376,7 @@ function App() {
                 <Modal
                     title="Создание коллекции"
                     open={isModalOpen}
-                    onOk={handleOk}
+                    onOk={handleOkCreateCollection}
                     onCancel={
                         () => {
                             setIsModalOpen(false);
@@ -425,7 +449,7 @@ function App() {
                                             <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} >
                                                 Создать коллекцию
                                             </Button>
-                                            <Button icon={<HistoryOutlined />} onClick={() => setOpenHistory(true)}>История</Button>
+                                            {currentBucket.type === 'owner' && <Button icon={<HistoryOutlined />} onClick={() => setOpenHistory(true)}>История</Button>}
                                             <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)}>Управление</Button>
                                         </Flex>
                                     </>

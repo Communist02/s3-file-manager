@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Input, Switch, Checkbox } from 'antd';
 import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType, changeCollectionInfo, getCollectionInfo, changeAccessToAll } from '../api/api';
 import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
@@ -133,7 +133,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
         const response = await deleteAccessToCollection(access_id, token);
         if (response.status === 200) {
             message.success('Доступ успешно удален!');
-            if (collection.type !== 'person') {
+            if (collection.type !== 'owner') {
                 await getCollections(token, true);
             }
             await getAccess();
@@ -168,10 +168,12 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
         if (response.status === 200) {
             if (e.target.checked) {
                 setIsAccessAll(true);
+                collection.is_access_all = true;
                 message.success('Доступ дан!');
             } else {
-                message.success('Доступ отозван!');
                 setIsAccessAll(false);
+                collection.is_access_all = false;
+                message.success('Доступ отозван!');
             }
         } else {
             message.error('Произошла ошибка! ' + response);

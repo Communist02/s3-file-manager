@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button, Checkbox, Watermark, Form, Input, message, Spin, Select, Card } from 'antd';
+import { Button, Checkbox, Watermark, Form, Input, message, Spin, Select, Card, Modal } from 'antd';
 import { authAPI, checkTokenAPI } from '../api/api';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import './AuthPage.css';
@@ -54,7 +54,7 @@ function AuthPage({ authEvent }) {
         } else if (response.status === 401) {
             window.alert("Неверно введен логин или пароль!")
         } else if (response.status === 500) {
-            window.alert("Ошибка сервера. Обратитесь в службу поддержки!")
+            window.alert("Ошибка сервера! Обратитесь в службу поддержки!")
         } else {
             message.error(response.message);
         }

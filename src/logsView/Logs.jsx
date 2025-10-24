@@ -56,6 +56,8 @@ function Logs({ open, setOpen, token }) {
                     case 404:
                     case 406:
                     case 403:
+                    case 409:
+                    case 410:
                         color = 'orange';
                         break;
                     case 500:
@@ -78,7 +80,6 @@ function Logs({ open, setOpen, token }) {
                     padding: 0,
                 }
             }}
-            // placement='top'
             extra={<Button type='primary' onClick={updateLogs}>Обновить</Button>}
         >
             {open ? <Table

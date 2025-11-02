@@ -17,7 +17,7 @@ const ControlPanel = ({ token, getCollections }) => {
         const response = await getGroups(token);
         if (response.status === 200) {
             setGroups(response.data);
-            if (currentGroup === -1 && response.data.length > 0) {
+            if (currentGroup === -1 && response.data !== null && response.data.length > 0) {
                 setCurrentGroup(0);
             }
         }

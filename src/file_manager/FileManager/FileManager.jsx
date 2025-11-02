@@ -32,6 +32,7 @@ const FileManager = ({
   onCopy,
   onPaste,
   onRename,
+  onShowProperties,
   onDownload,
   onDelete = () => null,
   onLayoutChange = () => { },
@@ -124,6 +125,7 @@ const FileManager = ({
                           enableFilePreview={enableFilePreview}
                           triggerAction={triggerAction}
                           permissions={permissions}
+                          onShowProperties={onShowProperties}
                         />
                       </div>
                     </section>

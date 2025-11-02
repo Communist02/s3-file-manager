@@ -7,9 +7,9 @@ import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { duplicateNameHandler } from "../../utils/duplicateNameHandler";
 import { validateApiCallback } from "../../utils/validateApiCallback";
 import { useTranslation } from "../../contexts/TranslationProvider";
-import { AppstoreOutlined, BarsOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FileOutlined, FolderAddOutlined, FolderOpenOutlined, ImportOutlined, SelectOutlined, SyncOutlined, UploadOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, BarsOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FileOutlined, FolderAddOutlined, FolderOpenOutlined, ImportOutlined, InfoCircleOutlined, SelectOutlined, SyncOutlined, UploadOutlined } from '@ant-design/icons'
 
-const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen) => {
+const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen, onShowProperties) => {
   const [selectedFileIndexes, setSelectedFileIndexes] = useState([]);
   const [visible, setVisible] = useState(false);
   const [isSelectionCtx, setIsSelectionCtx] = useState(false);
@@ -72,6 +72,13 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
     setVisible(false);
     validateApiCallback(onRefresh, "onRefresh");
     setClipBoard(null);
+  };
+
+  const handleProperties = () => {
+    onShowProperties(lastSelectedFile);
+    setVisible(false);
+    // validateApiCallback(onRefresh, "onRefresh");
+    // setClipBoard(null);
   };
 
   const handleCreateNewFolder = () => {
@@ -197,6 +204,12 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
       icon: <DeleteOutlined />,
       onClick: handleDelete,
       hidden: !permissions.delete,
+    },
+    {
+      title: t("properties"),
+      icon: <InfoCircleOutlined />,
+      onClick: handleProperties,
+      hidden: selectedFiles.length > 1,
     },
   ];
   //

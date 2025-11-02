@@ -365,6 +365,16 @@ export const getCollectionInfo = async (collection_id, token) => {
   }
 };
 
+export const getFileInfo = async (collection_id, token, path) => {
+  try {
+    const response = await api.get('/collections/' + collection_id + '/file_info/' + token + encodeURIComponent(path));
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
 export const changeAccessToAll = async (collection_id, is_access, token) => {
   try {
     const response = await api.post('/change_access_to_all' + '?token=' + token + '&collection_id=' + collection_id + '&is_access=' + is_access);

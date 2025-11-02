@@ -18,6 +18,7 @@ const FileList = ({
   enableFilePreview,
   triggerAction,
   permissions,
+  onShowProperties
 }) => {
   const { currentPathFiles, sortConfig, setSortConfig } = useFileNavigation();
   const filesViewRef = useRef(null);
@@ -36,7 +37,7 @@ const FileList = ({
     selectedFileIndexes,
     clickPosition,
     isSelectionCtx,
-  } = useFileList(onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen);
+  } = useFileList(onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen, onShowProperties);
 
   useEffect(() => {
     const element = document.querySelector('.files');

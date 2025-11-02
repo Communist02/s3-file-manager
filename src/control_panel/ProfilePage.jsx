@@ -39,9 +39,9 @@ function ProfilePage({ token }) {
 
     return <>
         <Space size='large' align='start'>
-            <Avatar size={160} icon={<UserOutlined />}>{user.login}</Avatar>
+            <Avatar size={160} icon={<UserOutlined />}>{user.username}</Avatar>
             <Typography.Title className='profile-username'>
-                {user.login}
+                {user.username}
             </Typography.Title>
         </Space>
         <Divider />

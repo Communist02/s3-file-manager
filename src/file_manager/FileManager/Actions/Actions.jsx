@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Modal from "../../components/Modal/Modal";
 import DeleteAction from "./Delete/Delete.action";
 import UploadFileAction from "./UploadFile/UploadFile.action";
 import PreviewFileAction from "./PreviewFile/PreviewFile.action";

@@ -35,7 +35,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
             const usersList = response.data;
             for (const user of usersList) {
                 usersOptions.push({
-                    label: user.login,
+                    label: user.username,
                     value: user.id,
                 });
             }
@@ -49,7 +49,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
         for (const user of members) {
             if (user.role_id !== 1) {
                 usersOptions.push({
-                    label: user.login,
+                    label: user.username,
                     value: user.id,
                 });
             }
@@ -147,7 +147,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
         },
         {
             title: 'Имя пользователя',
-            dataIndex: 'login',
+            dataIndex: 'username',
         },
         {
             title: 'Роль',
@@ -188,7 +188,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
                             <a>Повысить</a>
                         </Popconfirm>
                     }
-                    <Popconfirm title="Вы действительно хотите выгнать?" okText="Выгнать" onConfirm={() => handleDeleteUser(record.id, record.login)}>
+                    <Popconfirm title="Вы действительно хотите выгнать?" okText="Выгнать" onConfirm={() => handleDeleteUser(record.id, record.username)}>
                         <a>Выгнать</a>
                     </Popconfirm>
                 </Space>

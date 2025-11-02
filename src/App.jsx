@@ -2,9 +2,9 @@ import { useState, useRef } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession } from './api/api'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession, getFileInfo } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
-import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton } from 'antd';
+import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton, Typography, Descriptions } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
@@ -214,7 +214,7 @@ function App() {
     const outAccount = () => {
         deleteSession(tokenAuth);
         localStorage.removeItem('token');
-        localStorage.removeItem('login');
+        localStorage.removeItem('username');
         setShowControlPanel(false);
         setTokenAuth('');
         setBuckets([]);
@@ -234,6 +234,37 @@ function App() {
             message.error('Имя может содержать только латинские буквы и цифры!');
         } else if (response.status === 409) {
             message.error('Коллекция с таким именем уже существует в системе!');
+        } else {
+            message.error('Произошла ошибка! ' + response);
+        }
+    };
+
+    const handleProperties = async (file) => {
+        let response = await getFileInfo(currentBucket.id, tokenAuth, file['path']);
+        if (response.status === 200) {
+            if (response.data !== null) {
+                const items = [];
+            for (let [key, value] of Object.entries(response.data)) {
+                items.push({
+                    key: key,
+                    label: key,
+                    children: typeof value === 'object' ? <Typography><pre style={{margin: 0}}>{JSON.stringify(value, null, 4)}</pre></Typography> : value,
+                })
+            }
+            Modal.info({
+                title: "Свойства " + file['name'],
+                icon: null,
+                centered: true,
+                content: <Descriptions size={'small'} column={1} items={items} />,
+            });
+            } else {
+                Modal.warning({
+                title: "Свойства " + file['name'],
+                centered: true,
+                content: "Файл не индексирован",
+            });
+            }
+            
         } else {
             message.error('Произошла ошибка! ' + response);
         }
@@ -401,6 +432,7 @@ function App() {
                         onCopy={handleCopy}
                         onPaste={handlePaste}
                         onRename={handleRename}
+                        onShowProperties={handleProperties}
                         onFileUploading={handleFileUploading}
                         onFileUploaded={handleFileUploaded}
                         onCreateFolder={handleCreateFolder}

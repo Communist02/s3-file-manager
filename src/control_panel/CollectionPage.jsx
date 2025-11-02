@@ -48,7 +48,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
             const usersList = response.data;
             for (const user of usersList) {
                 usersOptions.push({
-                    label: user.login,
+                    label: user.username,
                     value: user.id,
                 });
             }
@@ -387,7 +387,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
                         setIsModalOpenEditCollection(false);
                         form.resetFields();
                     }}
-                    width={700}
+                    width={1000}
                 >
                     <Form
                         form={form}
@@ -446,14 +446,14 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
                         <Form.Item label="Описание типов файлов">
                             <Form.List name='types'>
                                 {(subFields, subOpt) => (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8}}>
                                         {subFields.map(subField => (
                                             <Space key={subField.key} align='start'>
-                                                <Form.Item style={{ width: '50%' }} noStyle name={[subField.name, 'type']}>
-                                                    <Input placeholder="Тип файла" />
+                                                <Form.Item noStyle name={[subField.name, 'type']} initialValue={''}>
+                                                    <Input style={{ width: '120px' }} placeholder="Тип файла" />
                                                 </Form.Item>
-                                                <Form.Item style={{ width: '50%' }} noStyle name={[subField.name, 'description']}>
-                                                    <Input.TextArea placeholder="Описание" />
+                                                <Form.Item noStyle name={[subField.name, 'description']} initialValue={''}>
+                                                    <Input.TextArea style={{ resize: 'both' }} placeholder="Описание" />
                                                 </Form.Item>
                                                 <CloseOutlined
                                                     onClick={() => {

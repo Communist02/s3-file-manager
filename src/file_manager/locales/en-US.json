@@ -54,5 +54,6 @@
   "expandNavigationPane": "Expand Navigation Pane",
   "hide": "Hide",
   "dragAndDropFilesHere": "Drag and drop files here",
-  "loading": "loading"
+  "loading": "loading",
+  "properties": "Properties"
 }

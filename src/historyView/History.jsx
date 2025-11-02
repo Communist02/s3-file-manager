@@ -34,7 +34,7 @@ function History({ open, setOpen, collection_id, token }) {
         },
         {
             title: 'Пользователь',
-            dataIndex: 'login',
+            dataIndex: 'username',
             width: '20%',
         },
         {

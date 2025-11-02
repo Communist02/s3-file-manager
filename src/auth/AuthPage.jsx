@@ -17,12 +17,12 @@ function AuthPage({ authEvent }) {
             const response = await checkTokenAPI(token);
             setIsLoading(false);
             if (response.status === 200) {
-                const login = localStorage.getItem('login');
+                const login = localStorage.getItem('username');
                 authEvent(token, login);
             } else if (response.status === 401) {
                 message.info('Сессия устарела');
                 localStorage.removeItem('token');
-                localStorage.removeItem('login');
+                localStorage.removeItem('username');
             } else {
                 message.error(response.message);
             }
@@ -43,13 +43,13 @@ function AuthPage({ authEvent }) {
             const token = response.data.token;
             if (remember.current) {
                 localStorage.setItem('token', token);
-                localStorage.setItem('login', response.data.login);
+                localStorage.setItem('username', response.data.username);
             } else {
                 localStorage.removeItem('token');
-                localStorage.removeItem('login');
+                localStorage.removeItem('username');
             }
             if (token !== null && token !== '') {
-                await authEvent(token, response.data.login)
+                await authEvent(token, response.data.username)
             }
         } else if (response.status === 401) {
             window.alert("Неверно введен логин или пароль!")

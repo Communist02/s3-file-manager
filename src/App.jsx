@@ -2,10 +2,10 @@ import { useState, useRef } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession, getFileInfo } from './api/api'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
 import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton, Typography, Descriptions } from 'antd';
-import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined } from '@ant-design/icons';
+import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
 import '@ant-design/v5-patch-for-react-19';
@@ -14,6 +14,7 @@ import Logs from './logsView/Logs'
 import History from './historyView/History'
 import CollectionPage from './control_panel/CollectionPage'
 import ProfilePage from './control_panel/ProfilePage'
+import CollectionsSearch from './collectionsSearch/CollectionsSearch'
 
 function App() {
     const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +29,7 @@ function App() {
     const [openLogs, setOpenLogs] = useState(false);
     const [openProfile, setOpenProfile] = useState(false);
     const [openCollection, setOpenCollection] = useState(false);
+    const [openSearchCollections, setOpenSearchCollections] = useState(false);
     const [openHistory, setOpenHistory] = useState(false);
     const [currentPath, setCurrentPath] = useState('');
     const [darkTheme, setDarkTheme] = useState(localStorage.getItem('darkTheme') === 'true');
@@ -79,10 +81,18 @@ function App() {
         let result = [];
         setIsLoading(true);
         const response = await getBucketsAPI(token);
+        let responseFree = null;
+        const freeCollectionIds = localStorage.getItem('freeCollectionIds');
+        if (freeCollectionIds !== null) {
+            responseFree = await getFreeCollections(token, JSON.parse(freeCollectionIds));
+        }
         setIsLoading(false);
         if (response.status === 200) {
             result = response.data;
-            if (response.data.length > 0) {
+            if (responseFree !== null && responseFree.status === 200) {
+                result = result.concat(responseFree.data);
+            }
+            if (result.length > 0) {
                 if (currentBucket === '' || clear) {
                     setCurrentBucket(result[0]);
                 }
@@ -244,27 +254,27 @@ function App() {
         if (response.status === 200) {
             if (response.data !== null) {
                 const items = [];
-            for (let [key, value] of Object.entries(response.data)) {
-                items.push({
-                    key: key,
-                    label: key,
-                    children: typeof value === 'object' ? <Typography><pre style={{margin: 0}}>{JSON.stringify(value, null, 4)}</pre></Typography> : value,
-                })
-            }
-            Modal.info({
-                title: "Свойства " + file['name'],
-                icon: null,
-                centered: true,
-                content: <Descriptions size={'small'} column={1} items={items} />,
-            });
+                for (let [key, value] of Object.entries(response.data)) {
+                    items.push({
+                        key: key,
+                        label: key,
+                        children: typeof value === 'object' ? <Typography><pre style={{ margin: 0 }}>{JSON.stringify(value, null, 4)}</pre></Typography> : value,
+                    })
+                }
+                Modal.info({
+                    title: "Свойства " + file['name'],
+                    icon: null,
+                    centered: true,
+                    content: <Descriptions size={'small'} column={1} items={items} />,
+                });
             } else {
                 Modal.warning({
-                title: "Свойства " + file['name'],
-                centered: true,
-                content: "Файл не индексирован",
-            });
+                    title: "Свойства " + file['name'],
+                    centered: true,
+                    content: "Файл не индексирован",
+                });
             }
-            
+
         } else {
             message.error('Произошла ошибка! ' + response);
         }
@@ -318,6 +328,11 @@ function App() {
             type: 'divider',
         },
         {
+            key: 'search',
+            label: 'Поиск коллекций',
+            icon: <SearchOutlined />,
+        },
+        {
             key: 'profile',
             label: 'Профиль',
             icon: <UserOutlined />,
@@ -357,6 +372,9 @@ function App() {
         switch (e.key) {
             case 'fileManager':
                 setShowControlPanel(false);
+                break;
+            case 'search':
+                setOpenSearchCollections(true);
                 break;
             case 'profile':
                 setOpenProfile(true);
@@ -500,10 +518,13 @@ function App() {
                         {openCollection && <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} token={tokenAuth} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
                     </Drawer>
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
-                        <ProfilePage token={tokenAuth} />
+                        {openProfile && <ProfilePage token={tokenAuth} />}
                     </Drawer>
                     <Drawer title='Группы' styles={{ body: { padding: 0 } }} width={1080} open={showControlPanel} onClose={() => setShowControlPanel(false)}>
                         {showControlPanel && <ControlPanel token={tokenAuth} getCollections={getBuckets} />}
+                    </Drawer>
+                    <Drawer title='Поиск коллекций' width={1080} open={openSearchCollections} onClose={() => setOpenSearchCollections(false)}>
+                        {openSearchCollections && <CollectionsSearch token={tokenAuth} getCollections={getBuckets} />}
                     </Drawer>
                 </Layout.Header>}
                 <Layout.Content>

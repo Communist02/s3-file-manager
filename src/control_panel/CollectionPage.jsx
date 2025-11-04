@@ -262,8 +262,8 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
         itemsInfo = [
             {
                 key: 'collection-name',
-                label: 'Имя',
-                children: collectionInfo.name,
+                label: 'Тема',
+                children: collectionInfo.title,
             },
             {
                 key: 'collection-description',
@@ -301,6 +301,23 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
                                     <Tooltip title='Редактировать информацию'><Button onClick={() => setIsModalOpenEditCollection(true)} icon={<EditOutlined />} /></Tooltip>
                                     <Tooltip title="Удалить коллекцию"><Button color="danger" variant="outlined" icon={<DeleteOutlined />} onClick={() => setIsModalOpenRemove(true)} /></Tooltip>
                                 </>}
+                                {collection.type === 'access_to_all' &&
+                                    <Popconfirm title="Вы действительно хотите скрыть коллекцию из общего списка?" onConfirm={() => {
+                                        let ids = localStorage.getItem('freeCollectionIds');
+                                        if (ids !== null) {
+                                            ids = JSON.parse(ids);
+                                            ids = ids.filter(element => element !== collection.id);
+                                            localStorage.setItem('freeCollectionIds', JSON.stringify(ids));
+                                        } else {
+                                            localStorage.setItem('freeCollectionIds', '[]');
+                                        }
+                                        message.success('Коллекция успешно скрыта!');
+                                        getCollections(token, true);
+                                        setOpen(false);
+                                    }}>
+                                        <a>Скрыть коллекцию</a>
+                                    </Popconfirm>
+                                }
                             </Space>
                         }
                         items={[
@@ -393,7 +410,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
                         form={form}
                         name="dynamic_form_complex"
                         autoComplete="off"
-                        initialValues={collectionInfo === null ? { collection_id: collection.id } : collectionInfo}
+                        initialValues={collectionInfo === null ? { collection_id: collection.id, collection_name: collection.name } : collectionInfo}
                         onFieldsChange={(_, allFields) => {
                             // setFields(allFields);
                         }}
@@ -401,13 +418,22 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
                         <Form.Item
                             name="collection_id"
                             label="ID Коллекции"
+                            initialValue={collection.id}
                         >
                             <Input disabled />
                         </Form.Item>
 
                         <Form.Item
-                            name="name"
+                            name="collection_name"
                             label="Название коллекции"
+                            initialValue={collection.name}
+                        >
+                            <Input disabled />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="title"
+                            label="Тема"
                             rules={[{ required: true }]}
                         >
                             <Input />
@@ -446,7 +472,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
                         <Form.Item label="Описание типов файлов">
                             <Form.List name='types'>
                                 {(subFields, subOpt) => (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8}}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                         {subFields.map(subField => (
                                             <Space key={subField.key} align='start'>
                                                 <Form.Item noStyle name={[subField.name, 'type']} initialValue={''}>

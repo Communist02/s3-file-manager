@@ -125,6 +125,26 @@ export const getBucketsAPI = async (token) => {
   }
 };
 
+export const getFreeCollections = async (token, collection_ids) => {
+  try {
+    const response = await api.post('/collections/specific_list', { token, collection_ids });
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+export const searchCollections = async (text, token) => {
+  try {
+    const response = await api.get('/search_collections?token=' + token + '&text=' + text);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
 export const renameAPI = async (path, new_name, collection_id, token) => {
   try {
     const response = await api.post('/collections/' + collection_id + '/rename', { path, new_name, token });

@@ -19,6 +19,13 @@ function CollectionsSearch({ token, getCollections }) {
         let tags = [];
         let types = [];
 
+        let ids = localStorage.getItem('freeCollectionIds');
+        if (ids !== null) {
+            ids = JSON.parse(ids);
+        } else {
+            ids = [];
+        }
+
         for (const collection of collections) {
             if (collection.index.tags) {
                 for (const item of collection.index.tags) {
@@ -61,10 +68,8 @@ function CollectionsSearch({ token, getCollections }) {
 
             listCards.push(
                 <Card size="small" title={collection.name} extra={
-                    <Popconfirm title="Вы действительно хотите добавить в общий список?" onConfirm={async () => {
-                        let ids = localStorage.getItem('freeCollectionIds');
-                        if (ids !== null) {
-                            ids = JSON.parse(ids);
+                    <Popconfirm disabled={ids.includes(collection.id)} title="Вы действительно хотите добавить в общий список?" onConfirm={async () => {
+                        if (ids.length > 0) {
                             ids.push(collection.id);
                             ids = [...new Set(ids)];
                             localStorage.setItem('freeCollectionIds', JSON.stringify(ids));
@@ -74,7 +79,7 @@ function CollectionsSearch({ token, getCollections }) {
                         message.success('Коллекция успешно добавлена!');
                         await getCollections(token, true);
                     }}>
-                        <a>Добавить в общий список</a>
+                        <a>{ids.includes(collection.id) ? 'Уже находится в общем списке' : 'Добавить в общий список'}</a>
                     </Popconfirm>
                 }>
                     <Descriptions layout='vertical' items={itemsInfo} />

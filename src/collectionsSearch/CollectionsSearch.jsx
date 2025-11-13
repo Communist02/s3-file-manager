@@ -79,7 +79,7 @@ function CollectionsSearch({ token, getCollections }) {
                         message.success('Коллекция успешно добавлена!');
                         await getCollections(token, true);
                     }}>
-                        <a>{ids.includes(collection.id) ? 'Уже находится в общем списке' : 'Добавить в общий список'}</a>
+                        <a>{ids.includes(collection.id) || collection.type !== 'access_to_all' ? 'Уже находится в общем списке' : 'Добавить в общий список'}</a>
                     </Popconfirm>
                 }>
                     <Descriptions layout='vertical' items={itemsInfo} />

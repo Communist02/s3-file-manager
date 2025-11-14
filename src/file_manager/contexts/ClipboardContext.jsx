@@ -9,15 +9,19 @@ export const ClipBoardProvider = ({ children, onPaste, onCut, onCopy }) => {
   const { selectedFiles, setSelectedFiles } = useSelection();
 
   const handleCutCopy = (isMoving) => {
-    setClipBoard({
-      files: selectedFiles,
-      isMoving: isMoving,
-    });
-
-    if (isMoving) {
-      !!onCut && onCut(selectedFiles);
+    if (selectedFiles.length === 0) {
+      setClipBoard(null);
     } else {
-      !!onCopy && onCopy(selectedFiles);
+      setClipBoard({
+        files: selectedFiles,
+        isMoving: isMoving,
+      });
+
+      if (isMoving) {
+        !!onCut && onCut(selectedFiles);
+      } else {
+        !!onCopy && onCopy(selectedFiles);
+      }
     }
   };
 

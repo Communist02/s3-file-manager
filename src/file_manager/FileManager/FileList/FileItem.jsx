@@ -9,7 +9,6 @@ import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { useSelection } from "../../contexts/SelectionContext";
 import { useClipBoard } from "../../contexts/ClipboardContext";
 import { useLayout } from "../../contexts/LayoutContext";
-// import Checkbox from "../../components/Checkbox/Checkbox";
 import { Checkbox } from "antd";
 import { getIconForFile, getIconForFolder } from 'vscode-icons-js';
 
@@ -92,14 +91,14 @@ const FileItem = ({
     e.stopPropagation();
     if (file.isEditing) return;
 
+    const currentTime = new Date().getTime();
     if (e.shiftKey || e.ctrlKey || !fileSelected) {
       handleFileRangeSelection(e.shiftKey, e.ctrlKey);
-    }
-
-    const currentTime = new Date().getTime();
-    if (fileSelected && (currentTime - lastClickTime.current < 400)) {
-      handleFileAccess();
-      return;
+    } else {
+      if (fileSelected && (currentTime - lastClickTime.current < 400)) {
+        handleFileAccess();
+        return;
+      }
     }
     lastClickTime.current = currentTime;
   };
@@ -209,7 +208,7 @@ const FileItem = ({
             className={`selection-checkbox ${checkboxClassName}`}
             onChange={handleCheckboxChange}
             onClick={(e) => e.stopPropagation()}
-            style={{scale: 1.2}}
+            style={{ scale: 1.2 }}
           />
         )}
         {file.isDirectory ? (

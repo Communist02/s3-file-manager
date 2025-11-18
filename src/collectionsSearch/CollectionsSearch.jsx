@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Descriptions, Space, Input, Card, Tag, Popconfirm, message, Collapse, Table } from 'antd';
+import { Descriptions, Space, Input, Card, Tag, Popconfirm, message, Table, Typography } from 'antd';
 import { searchCollections } from '../api/api';
 
 function CollectionsSearch({ token, getCollections }) {
@@ -28,13 +28,17 @@ function CollectionsSearch({ token, getCollections }) {
         {
             title: 'Тема',
             dataIndex: 'index',
-            render: (value) => value.title
+            render: (value) => {
+                if (value !== undefined) return value.title
+            }
         },
         {
             title: 'Описание',
             dataIndex: 'index',
             width: '50%',
-            render: (value) => value.description
+            render: (value) => {
+                if (value !== undefined) return value.description
+            }
         },
         // {
         //     title: 'Ключевые слова',
@@ -51,87 +55,124 @@ function CollectionsSearch({ token, getCollections }) {
         // },
     ];
 
-    const cards = () => {
-        const listCards = []
-        let tags = [];
-        let types = [];
-
-        let ids = localStorage.getItem('freeCollectionIds');
-        if (ids !== null) {
-            ids = JSON.parse(ids);
-        } else {
-            ids = [];
-        }
-
-        for (const collection of collections) {
-            if (collection.index.tags) {
-                for (const item of collection.index.tags) {
-                    tags.push(<Tag>{item}</Tag>);
-                }
+        const columnsFile = [
+        {
+            title: 'Путь',
+            dataIndex: 'path',
+            width: '50%',
+        },
+        {
+            title: 'Размер',
+            dataIndex: 'size',
+            render: (value) => {
+                return value
             }
+        },
+        // {
+        //     title: 'Описание',
+        //     dataIndex: 'index',
+        //     width: '50%',
+        //     render: (value) => {
+        //         if (value !== undefined) return value.description
+        //     }
+        // },
+        // {
+        //     title: 'Ключевые слова',
+        //     dataIndex: 'index',
+        //     render: (value, record) => {
+        //         const tags = [];
+        //         if (value.tags) {
+        //             for (const item of value.tags) {
+        //                 tags.push(<Tag>{item}</Tag>);
+        //             }
+        //         }
+        //         return <Space size={0}>{tags}</Space>;
+        //     }
+        // },
+    ];
 
-            if (collection.index.types) {
-                for (const item of collection.index.types) {
-                    types.push(<Tag>{item.type}: {item.description}</Tag>);
-                }
-            }
-            const itemsInfo = [
-                {
-                    key: 'collection-id',
-                    label: 'ID',
-                    children: collection.id,
-                },
-                {
-                    key: 'collection-name',
-                    label: 'Тема',
-                    children: collection.index.title,
-                },
-                {
-                    key: 'collection-description',
-                    label: 'Описание',
-                    children: collection.index.description,
-                },
-                {
-                    key: 'collection-tags',
-                    label: 'Ключевые слова',
-                    children: <Space size={0}>{tags}</Space>,
-                },
-                {
-                    key: 'collection-types',
-                    label: 'Описание файлов',
-                    children: <Space size={0}>{types}</Space>,
-                },
-            ];
 
-            listCards.push(
-                <Card size="small" title={collection.name} extra={
-                    <Popconfirm disabled={ids.includes(collection.id)} title="Вы действительно хотите добавить в общий список?" onConfirm={async () => {
-                        if (ids.length > 0) {
-                            ids.push(collection.id);
-                            ids = [...new Set(ids)];
-                            localStorage.setItem('freeCollectionIds', JSON.stringify(ids));
-                        } else {
-                            localStorage.setItem('freeCollectionIds', JSON.stringify([collection.id]));
-                        }
-                        message.success('Коллекция успешно добавлена!');
-                        await getCollections(token, true);
-                    }}>
-                        <a>{ids.includes(collection.id) || collection.type !== 'access_to_all' ? 'Уже находится в общем списке' : 'Добавить в общий список'}</a>
-                    </Popconfirm>
-                }>
-                    <Descriptions layout='vertical' items={itemsInfo} />
-                </Card>
-            );
-            tags = [];
-            types = [];
-        }
-        return listCards;
-    }
+
+    // const cards = () => {
+    //     const listCards = []
+    //     let tags = [];
+    //     let types = [];
+
+    //     let ids = localStorage.getItem('freeCollectionIds');
+    //     if (ids !== null) {
+    //         ids = JSON.parse(ids);
+    //     } else {
+    //         ids = [];
+    //     }
+
+    //     for (const collection of collections) {
+    //         if (collection.index.tags) {
+    //             for (const item of collection.index.tags) {
+    //                 tags.push(<Tag>{item}</Tag>);
+    //             }
+    //         }
+
+    //         if (collection.index.types) {
+    //             for (const item of collection.index.types) {
+    //                 types.push(<Tag>{item.type}: {item.description}</Tag>);
+    //             }
+    //         }
+    //         const itemsInfo = [
+    //             {
+    //                 key: 'collection-id',
+    //                 label: 'ID',
+    //                 children: collection.id,
+    //             },
+    //             {
+    //                 key: 'collection-name',
+    //                 label: 'Тема',
+    //                 children: collection.index.title,
+    //             },
+    //             {
+    //                 key: 'collection-description',
+    //                 label: 'Описание',
+    //                 children: collection.index.description,
+    //             },
+    //             {
+    //                 key: 'collection-tags',
+    //                 label: 'Ключевые слова',
+    //                 children: <Space size={0}>{tags}</Space>,
+    //             },
+    //             {
+    //                 key: 'collection-types',
+    //                 label: 'Описание файлов',
+    //                 children: <Space size={0}>{types}</Space>,
+    //             },
+    //         ];
+
+    //         listCards.push(
+    //             <Card size="small" title={collection.name} extra={
+    //                 <Popconfirm disabled={ids.includes(collection.id)} title="Вы действительно хотите добавить в общий список?" onConfirm={async () => {
+    //                     if (ids.length > 0) {
+    //                         ids.push(collection.id);
+    //                         ids = [...new Set(ids)];
+    //                         localStorage.setItem('freeCollectionIds', JSON.stringify(ids));
+    //                     } else {
+    //                         localStorage.setItem('freeCollectionIds', JSON.stringify([collection.id]));
+    //                     }
+    //                     message.success('Коллекция успешно добавлена!');
+    //                     await getCollections(token, true);
+    //                 }}>
+    //                     <a>{ids.includes(collection.id) || collection.type !== 'access_to_all' ? 'Уже находится в общем списке' : 'Добавить в общий список'}</a>
+    //                 </Popconfirm>
+    //             }>
+    //                 <Descriptions layout='vertical' items={itemsInfo} />
+    //             </Card>
+    //         );
+    //         tags = [];
+    //         types = [];
+    //     }
+    //     return listCards;
+    // }
 
     const getItems = (collection) => {
         let tags = [];
         let types = [];
-        const items = []
 
         let ids = localStorage.getItem('freeCollectionIds');
         if (ids !== null) {
@@ -140,13 +181,13 @@ function CollectionsSearch({ token, getCollections }) {
             ids = [];
         }
 
-        if (collection.index.tags) {
+        if (collection.index !== undefined && collection.index.tags) {
             for (const item of collection.index.tags) {
                 tags.push(<Tag>{item}</Tag>);
             }
         }
 
-        if (collection.index.types) {
+        if (collection.index !== undefined && collection.index.types) {
             for (const item of collection.index.types) {
                 types.push(<Tag>{item.type}: {item.description}</Tag>);
             }
@@ -174,44 +215,48 @@ function CollectionsSearch({ token, getCollections }) {
                 label: 'ID',
                 children: collection.id,
             },
-            {
-                key: 'collection-name',
-                label: 'Тема',
-                children: collection.index.title,
-            },
-            {
-                key: 'collection-description',
-                label: 'Описание',
-                children: collection.index.description,
-            },
-            {
-                key: 'collection-tags',
-                label: 'Ключевые слова',
-                children: <Space size={0}>{tags}</Space>,
-            },
-            {
-                key: 'collection-types',
-                label: 'Описание файлов',
-                children: <Space size={0}>{types}</Space>,
-            },
         ];
+        if (collection.index !== undefined) {
+            itemsInfo.push(
+                // {
+                //     key: 'collection-name',
+                //     label: 'Тема',
+                //     children: collection.index !== undefined && collection.index.title,
+                // },
+                // {
+                //     key: 'collection-description',
+                //     label: 'Описание',
+                //     children: collection.index !== undefined && collection.index.description,
+                // },
+                {
+                    key: 'collection-tags',
+                    label: 'Ключевые слова',
+                    children: <Space size={0}>{tags}</Space>,
+                },
+                {
+                    key: 'collection-types',
+                    label: 'Описание файлов',
+                    children: <Space size={0}>{types}</Space>,
+                },
+            )
+        }
 
-        items.push(
-            {
-                key: collection.name,
-                label: collection.name + ' | ' + collection.index.title,
-                children: <Descriptions layout='vertical' items={itemsInfo} />,
-            }
-            // }
-            // <Card size="small" title={collection.name} extra={
 
-            // }>
-            //     <Descriptions layout='vertical' items={itemsInfo} />
-            // </Card>
-        );
-        tags = [];
-        types = [];
-        return <Descriptions layout='vertical' items={itemsInfo} />;
+        return <>
+            <Descriptions layout='vertical' items={itemsInfo} />
+            <Table
+                rowKey="path"
+                size="small"
+                dataSource={collection.files}
+                columns={columnsFile}
+                bordered
+                pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default' }}
+                expandable={{
+                    expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>,
+                    // rowExpandable: record => record.message !== null && record.message !== ''
+                }}
+            />
+        </>;
     }
 
     return <>

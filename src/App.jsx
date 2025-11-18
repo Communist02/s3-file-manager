@@ -266,6 +266,7 @@ function App() {
                     icon: null,
                     centered: true,
                     content: <Descriptions size={'small'} column={1} items={items} />,
+                    width: 720
                 });
             } else {
                 Modal.warning({

@@ -181,13 +181,13 @@ function CollectionsSearch({ token, getCollections }) {
             ids = [];
         }
 
-        if (collection.index !== undefined && collection.index.tags) {
+        if (collection.index !== undefined && collection.index.tags !== undefined && collection.index.tags) {
             for (const item of collection.index.tags) {
                 tags.push(<Tag>{item}</Tag>);
             }
         }
 
-        if (collection.index !== undefined && collection.index.types) {
+        if (collection.index !== undefined && collection.index.types !== undefined && collection.index.types) {
             for (const item of collection.index.types) {
                 types.push(<Tag>{item.type}: {item.description}</Tag>);
             }
@@ -240,7 +240,6 @@ function CollectionsSearch({ token, getCollections }) {
                 },
             )
         }
-
 
         return <>
             <Descriptions layout='vertical' items={itemsInfo} />

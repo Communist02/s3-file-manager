@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections } from './api/api'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
 import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton, Typography, Descriptions } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
@@ -269,13 +269,22 @@ function App() {
                     width: 720
                 });
             } else {
-                Modal.warning({
+                Modal.confirm({
                     title: "Свойства " + file['name'],
                     centered: true,
                     content: "Файл не индексирован",
+                    cancelText: 'Закрыть',
+                    okText: 'Индексировать',
+                    onOk: async () => {
+                        let response = await indexFile(currentBucket.id, tokenAuth, file['path']);
+                        if (response.status === 200) {
+                            handleProperties(file);
+                        } else {
+                            message.error('Не удалость индексировать файл!')
+                        }
+                    }
                 });
             }
-
         } else {
             message.error('Произошла ошибка! ' + response);
         }
@@ -330,7 +339,7 @@ function App() {
         },
         {
             key: 'search',
-            label: 'Поиск коллекций',
+            label: 'Поиск',
             icon: <SearchOutlined />,
         },
         {
@@ -488,6 +497,7 @@ function App() {
                         <h1>S3 File Manager</h1>
                     </Button>
                     <Space className='header-left'>
+                        <Button type="primary" icon={<SearchOutlined />} onClick={() => setOpenSearchCollections(true)}>Поиск</Button>
                         {
                             buckets.length > 0 && !showControlPanel && <>
                                 <FloatButton id='upload-button' type='primary' badge={{ count: currentCountUploading }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />

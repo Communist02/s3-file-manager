@@ -55,7 +55,7 @@ function CollectionsSearch({ token, getCollections }) {
         // },
     ];
 
-        const columnsFile = [
+    const columnsFile = [
         {
             title: 'Путь',
             dataIndex: 'path',
@@ -65,7 +65,16 @@ function CollectionsSearch({ token, getCollections }) {
             title: 'Размер',
             dataIndex: 'size',
             render: (value) => {
-                return value
+                const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+                let index = 0
+
+                for (let i = 0; i < 4; i++) {
+                    if (value >= 1024) {
+                        value = value / 1024;
+                        index += 1;
+                    }
+                }
+                return `${Math.round(value)} ${sizes[index]}`
             }
         },
         // {

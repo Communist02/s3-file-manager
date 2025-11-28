@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { InboxOutlined } from '@ant-design/icons'
-import { Drawer, Upload, message, Checkbox, notification } from 'antd';
+import { Drawer, Upload, message, Checkbox, notification, Card, Progress, Button } from 'antd';
+import { FixedSizeList } from 'react-window';
 
 const useUploadSpeed = (uid, percent, size) => {
     const prevPercentRef = useRef(0);
@@ -48,7 +49,7 @@ const useUploadSpeed = (uid, percent, size) => {
 
 function Uploader({ open, setOpen, url, token, collection_id, path, updateCollection, setCurrentCountUploading }) {
     const [dirMode, setDirMode] = useState(false);
-    const [uploadingFiles, setUploadingFiles] = useState(new Set());
+    const [uploadingFiles, setUploadingFiles] = useState([]);
 
     // Функция для форматирования размера файла
     const formatFileSize = (bytes) => {
@@ -61,30 +62,93 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
+    // Функции для работы с файлами
+    const addUploadingFile = (fileInfo) => {
+        setUploadingFiles(prev => {
+            const exists = prev.find(f => f.uid === fileInfo.uid);
+            if (exists) return prev;
+            return [...prev, fileInfo];
+        });
+        !open && setCurrentCountUploading(uploadingFiles.length + 1);
+    };
+
+    const updateUploadingFile = (uid, updates) => {
+        setUploadingFiles(prev =>
+            prev.map(file =>
+                file.uid === uid ? { ...file, ...updates } : file
+            )
+        );
+    };
+
+    const removeUploadingFile = (uid) => {
+        setUploadingFiles(prev => {
+            const newFiles = prev.filter(file => file.uid !== uid);
+            !open && setCurrentCountUploading(newFiles.length);
+            return newFiles;
+        });
+    };
+
+    const removeDoneFiles = () => {
+        setUploadingFiles(prev => {
+            const newFiles = prev.filter(file => file.status !== 'done');
+            !open && setCurrentCountUploading(newFiles.length);
+            return newFiles;
+        });
+    };
+
     function onChange(info, collection_id) {
         if (info.file.status === 'done') {
-            // Удаляем файл из трекера при успешной загрузке
-            !open && setCurrentCountUploading(uploadingFiles.size - 1);
-            setUploadingFiles(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(info.file.uid);
-                return newSet;
+            updateUploadingFile(info.file.uid, {
+                status: 'done',
+                percent: 100
             });
-            notification.success({ key: 'uploading-done', message: `Успешно загружен!`, description: info.file.name, placement: 'topLeft' });
+
+            // Удаляем через некоторое время или оставляем в списке
+            // setTimeout(() => {
+            //     removeUploadingFile(info.file.uid);
+            // }, 3000); // Удаляем через 3 секунды после успешной загрузки
+
+            notification.success({
+                key: 'uploading-done',
+                message: `Успешно загружен!`,
+                description: info.file.name,
+                placement: 'topLeft'
+            });
             updateCollection(collection_id);
+
         } else if (info.file.status === 'error') {
-            // Удаляем файл из трекера при ошибке
-            !open && setCurrentCountUploading(uploadingFiles.size - 1);
-            setUploadingFiles(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(info.file.uid);
-                return newSet;
+            updateUploadingFile(info.file.uid, {
+                status: 'error',
+                percent: 0
             });
+
+            // Оставляем файлы с ошибкой в списке или удаляем через время
+            setTimeout(() => {
+                removeUploadingFile(info.file.uid);
+            }, 5000);
+
             message.error(`${info.file.name} не удалось загрузить.`);
+
         } else if (info.file.status === 'uploading') {
-            // Добавляем файл в трекер при начале загрузки
-            !open && setCurrentCountUploading(uploadingFiles.size + 1);
-            setUploadingFiles(prev => new Set(prev).add(info.file.uid));
+            console.log(info.file.percent || 0)
+            // Обновляем проценты при загрузке
+            updateUploadingFile(info.file.uid, {
+                status: 'uploading',
+                percent: info.file.percent || 0,
+                name: info.file.name,
+                size: info.file.size
+            });
+
+            // Если файл еще не добавлен, добавляем его
+            if (!uploadingFiles.find(f => f.uid === info.file.uid)) {
+                addUploadingFile({
+                    uid: info.file.uid,
+                    name: info.file.name,
+                    size: info.file.size,
+                    status: 'uploading',
+                    percent: info.file.percent || 0
+                });
+            }
         }
     };
 
@@ -94,11 +158,21 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             message.error('Не может быть загружен пустой файл!');
             return false;
         }
+
+        // Добавляем файл в список сразу при выборе
+        addUploadingFile({
+            uid: file.uid,
+            name: file.name,
+            size: file.size,
+            status: 'pending', // Новый статус - ожидание загрузки
+            percent: 0
+        });
+
         return true;
     };
 
     // Кастомный элемент для отображения в списке загрузок
-    const renderUploadListExtra = ({ uid, size = 0, percent, status }) => {
+    const renderUploadListExtra = ({ uid, percent, status, size = 0 }) => {
         const speed = useUploadSpeed(uid, percent, size);
         const formattedSize = formatFileSize(size);
 
@@ -106,8 +180,16 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             const uploadedSize = formatFileSize((size * percent) / 100);
             return (
                 <div style={{ display: 'flex', gap: 10 }}>
+                    <Progress percent={Math.round(percent)} />
                     <div style={{ fontSize: '12px', color: '#666' }}>{uploadedSize} / {formattedSize}</div>
                     <div style={{ color: '#1890ff', fontSize: '12px' }}>{speed}</div>
+                </div>
+            );
+        } else if (status === 'uploading') {
+            return (
+                <div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{formattedSize}</div>
+                    <div style={{ fontSize: '12px', color: '#1a72c4ff' }}>Обработка</div>
                 </div>
             );
         } else if (status !== 'done') {
@@ -122,13 +204,28 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         }
     };
 
+    function getItem(value) {
+        const index = value.index;
+        const file = uploadingFiles[index];
+
+        if (!file) return null;
+
+        return (
+            <div style={value.style}>
+                <Card size="small" title={file.name} extra={file.status == 'done' && <Button onClick={() => removeUploadingFile(file.uid)}>Скрыть</Button>} style={{ width: '100%', marginTop: 10, height: 100 }}>
+                    {renderUploadListExtra(file)}
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <Drawer
             size='large'
             title='Загрузки'
             onClose={() => {
                 setOpen(false);
-                setCurrentCountUploading(uploadingFiles.size);
+                setCurrentCountUploading(uploadingFiles.length);
             }
             }
             open={open}
@@ -137,8 +234,9 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                     <Checkbox checked={dirMode} onChange={(e) => setDirMode(e.target.checked)}>
                         Режим директории
                     </Checkbox>
+                    {uploadingFiles.length > 0 && <Button onClick={removeDoneFiles}>Очистить завершенные</Button>}
                     <div style={{ marginTop: 4, fontSize: '12px', color: '#666', textAlign: 'right', marginRight: 8 }}>
-                        Сейчас загружается: {uploadingFiles.size}
+                        Количество загрузок: {uploadingFiles.length}
                     </div>
                 </div>
             }
@@ -159,10 +257,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 onChange={(info, collection = collection_id) => onChange(info, collection)}
                 beforeUpload={beforeUpload}
                 listType="picture"
-                showUploadList={{
-                    showRemoveIcon: true,
-                    extra: renderUploadListExtra,
-                }}
+                showUploadList={false}
                 directory={dirMode}
                 multiple
             >
@@ -176,6 +271,18 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                     Файлы будут загружены в текущую директорию{path !== '' ? ` ${path}` : ''}.
                 </p>
             </Upload.Dragger>
+            {uploadingFiles.length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                    <FixedSizeList
+                        className="upload-virtual-list"
+                        height={window.outerHeight - 620}
+                        itemCount={uploadingFiles.length}
+                        itemSize={110}
+                    >
+                        {getItem}
+                    </FixedSizeList>
+                </div>
+            )}
         </Drawer>
     );
 };

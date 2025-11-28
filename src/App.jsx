@@ -4,11 +4,10 @@ import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
-import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton, Typography, Descriptions } from 'antd';
+import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
-import '@ant-design/v5-patch-for-react-19';
 import Uploader from './uploader/Uploader'
 import Logs from './logsView/Logs'
 import History from './historyView/History'
@@ -500,21 +499,16 @@ function App() {
                         <Button type="primary" icon={<SearchOutlined />} onClick={() => setOpenSearchCollections(true)}>Поиск</Button>
                         {
                             buckets.length > 0 && !showControlPanel && <>
-                                <FloatButton id='upload-button' type='primary' badge={{ count: currentCountUploading }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
                                 {['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
-                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} popupRender={(menu) => (
-                                    <>
-                                        {menu}
-                                        <Divider style={{ margin: '8px 0' }} />
-                                        <Flex vertical gap={3} style={{ width: '100%' }}>
-                                            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} >
-                                                Создать коллекцию
-                                            </Button>
-                                            {currentBucket.type === 'owner' && <Button icon={<HistoryOutlined />} onClick={() => setOpenHistory(true)}>История</Button>}
-                                            <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)}>Управление</Button>
-                                        </Flex>
-                                    </>
-                                )} />
+                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} />
+                                <Tooltip title='Создать коллекцию'>
+                                    <Button icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} />
+                                </Tooltip>
+                                {currentBucket.type === 'owner' && <Tooltip title='История'><Button icon={<HistoryOutlined />} onClick={() => setOpenHistory(true)} /></Tooltip>}
+                                <Tooltip title='Управление коллекцией'>
+                                    <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)} />
+                                </Tooltip>
+                                <FloatButton id='upload-button' type='primary' badge={{ count: currentCountUploading }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
                             </>
                         }
                         <Dropdown trigger={['click']} menu={{ items, onClick: onClickLogin }}>

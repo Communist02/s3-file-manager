@@ -107,7 +107,7 @@ export const moveItemAPI = async (bucket, sourcePaths, destinationPath) => {
 
 export const getAllFilesAPI = async (collection_id, token, path = '', recursive = true) => {
   try {
-    const response = await api.get('/collections/' + collection_id + '/list/' + token + encodeURIComponent(path) + '?recursive=' + recursive);
+    const response = await api.get('/collections/' + collection_id + '/list/' + token + '/' + encodeURIComponent(path) + '?recursive=' + recursive);
     return response;
   } catch (error) {
     console.log(error);

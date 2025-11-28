@@ -1,51 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { InboxOutlined } from '@ant-design/icons'
-import { Drawer, Upload, message, Checkbox, notification, Card, Progress, Button } from 'antd';
-import { FixedSizeList } from 'react-window';
-
-const useUploadSpeed = (uid, percent, size) => {
-    const prevPercentRef = useRef(0);
-    const prevTimeRef = useRef(Date.now());
-    const speedRef = useRef('0 B/s');
-
-    const formatSpeed = (bytesPerSecond) => {
-        if (bytesPerSecond === 0) return '0 B/s';
-
-        const k = 1024;
-        const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
-
-        const i = Math.floor(Math.log(bytesPerSecond) / Math.log(k));
-
-        return parseFloat((bytesPerSecond / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
-    useEffect(() => {
-        if (percent > prevPercentRef.current) {
-            const currentTime = Date.now();
-            const timeDiff = (currentTime - prevTimeRef.current) / 1000; // в секундах
-            const percentDiff = percent - prevPercentRef.current;
-
-            if (timeDiff > 0.5) { // Обновляем скорость каждые 0.5 секунды минимум
-                const bytesUploaded = (size * percentDiff) / 100;
-                const speedBps = bytesUploaded / timeDiff;
-
-                speedRef.current = formatSpeed(speedBps);
-
-                prevPercentRef.current = percent;
-                prevTimeRef.current = currentTime;
-            }
-        }
-
-        if (percent === 0) {
-            // Сброс при начале новой загрузки
-            prevPercentRef.current = 0;
-            prevTimeRef.current = Date.now();
-            speedRef.current = '0 B/s';
-        }
-    }, [percent, size, uid]);
-
-    return speedRef.current;
-};
+import { Drawer, Upload, message, Checkbox, notification, Card, Progress, Button, Table } from 'antd';
+import { List } from 'react-window';
 
 function Uploader({ open, setOpen, url, token, collection_id, path, updateCollection, setCurrentCountUploading }) {
     const [dirMode, setDirMode] = useState(false);
@@ -86,7 +42,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
     const updateUploadingFile = (uid, updates) => {
         const currentTime = new Date().getTime()
         const fileIndex = uploadingFiles.findIndex(file =>
-            file.uid === uid && (file.lastUpdateInfo === undefined || currentTime - file.lastUpdateInfo > 500 || updates.procent === 100)
+            file.uid === uid && (updates.procent === 100 || file.lastUpdateInfo === undefined || currentTime - file.lastUpdateInfo > 500)
         )
 
         function getSpeed(size, percent, oldPercent, lastUpdateInfo) {
@@ -99,8 +55,13 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             return `${speed}/s`
         }
 
-        if (fileIndex !== -1) {
+        if (fileIndex !== -1 || updates.status !== 'uploading') {
             const oldFile = uploadingFiles[fileIndex];
+            // uploadingFilesRef.current = (prev =>
+            //     prev.map(file =>
+            //         file.uid === uid ? { ...file, ...{ lastUpdateInfo: currentTime, lastPercent: oldFile.percent, speed: getSpeed(file.size, updates.percent, oldFile.percent, file.lastUpdateInfo) }, ...updates } : file
+            //     )
+            // );
             setUploadingFiles(prev =>
                 prev.map(file =>
                     file.uid === uid ? { ...file, ...{ lastUpdateInfo: currentTime, lastPercent: oldFile.percent, speed: getSpeed(file.size, updates.percent, oldFile.percent, file.lastUpdateInfo) }, ...updates } : file
@@ -230,14 +191,11 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         }
     };
 
-    const getItem = useCallback(({ index, style }) => {
+    const getItem = ({ index, style, files }) => {
         // const index = index;
-        const file = uploadingFiles[index];
+        const file = files[index];
 
         if (!file) return null;
-        const speed = useUploadSpeed(file.uid, file.percent, file.size);
-        const formattedSize = formatFileSize(file.size);
-        const uploadedSize = formatFileSize((file.size * file.percent) / 100);
 
         return (
             <div style={style}>
@@ -252,12 +210,50 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 </Card>
             </div>
         );
-    }, [uploadingFiles]);
+    };
+
+    const columns = [
+        {
+            title: 'Имя',
+            dataIndex: 'name',
+        },
+        {
+            title: 'Размер',
+            dataIndex: 'size',
+            render: (value) => {
+                return formatFileSize(value);
+            }
+        },
+        {
+            title: 'Процесс',
+            dataIndex: 'percent',
+            render: (value) => {
+                return <Progress size={{ width: 150 }} percent={Math.round(value)} />;
+            }
+        },
+        {
+            title: 'Скорость',
+            dataIndex: 'speed'
+        },
+        {
+            title: 'Действие',
+            dataIndex: 'status',
+            render: (value, record) => {
+                if (record.status === 'done') {
+                    return <Button onClick={() => removeUploadingFile(record.uid)}>Скрыть</Button>
+                } else if (record.percent === 100) {
+                    return <div style={{ fontSize: '12px', color: '#1a72c4ff' }}>Обработка</div>
+                } else {
+                    return <Button danger onClick={() => cancelUpload(record.uid)}>Отмена</Button>
+                }
+            }
+        },
+    ];
 
     return (
         <Drawer
             id='drawer-upload'
-            size='large'
+            size={900}
             title='Загрузки'
             onClose={
                 () => {
@@ -295,6 +291,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 beforeUpload={beforeUpload}
                 showUploadList={false}
                 directory={dirMode}
+                // fileList={uploadingFiles}
                 multiple
                 customRequest={({ action, data, file, filename, onError, onProgress, onSuccess }) => {
                     const formData = new FormData();
@@ -351,15 +348,26 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             </Upload.Dragger>
             {uploadingFiles.length > 0 && (
                 <div style={{ marginTop: 10 }}>
-                    <FixedSizeList
+                    {/* <List
                         className="upload-virtual-list"
-                        height={window.innerHeight - 440}
-                        itemCount={uploadingFiles.length}
-                        itemSize={110}
-                        itemKey={index => uploadingFiles[index]?.uid || index}
-                    >
-                        {getItem}
-                    </FixedSizeList>
+                        rowCount={uploadingFiles.length}
+                        rowHeight={110}
+                        rowComponent={getItem}
+                        rowProps={{ files: uploadingFiles }}
+                    // itemKey={index => uploadingFiles[index]?.uid || index}
+                    /> */}
+                    <Table
+                        scroll={{ y: 'calc(100vh - 520px)' }}
+                        rowKey="uid"
+                        size="small"
+                        dataSource={uploadingFiles}
+                        columns={columns}
+                        pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default', style: {margin: 0, marginTop: 10} }}
+                        // expandable={{
+                        //     expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>,
+                        //     // rowExpandable: record => record.message !== null && record.message !== ''
+                        // }}
+                    />
                 </div>
             )}
         </Drawer>

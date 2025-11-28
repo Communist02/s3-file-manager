@@ -8,7 +8,7 @@ import useFileList from "./useFileList";
 import FilesHeader from "./FilesHeader";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./FileList.scss";
-import { FixedSizeList, FixedSizeGrid } from 'react-window';
+import { List, Grid } from 'react-window';
 
 const FileList = ({
   onCreateFolder,
@@ -68,17 +68,18 @@ const FileList = ({
   };
 
   const contextMenuRef = useDetectOutsideClick(() => setVisible(false));
+
   function getItem(value) {
     let index;
     if (activeLayout === "list") {
       index = value.index;
     } else {
       index = value.columnIndex + value.rowIndex * ~~(size.x / 140);
-      if (index >= currentPathFiles.length) {
+      if (index >= value.currentPathFiles.length) {
         return;
       }
     }
-    const file = currentPathFiles[index];
+    const file = value.currentPathFiles[index];
     return <div style={value.style}>
       <FileItem
         key={index}
@@ -117,27 +118,27 @@ const FileList = ({
 
       {currentPathFiles?.length > 0 ? (
         activeLayout === "list" ?
-          <FixedSizeList
+          <List
             className="virtual-list"
-            height={window.outerHeight}
-            itemCount={currentPathFiles.length}
-            itemSize={34}
+            rowComponent={getItem}
+            // height={window.outerHeight}
+            rowCount={currentPathFiles.length}
+            rowHeight={34}
+            rowProps={{ currentPathFiles }}
           // width={300}
-          >
-            {getItem}
-          </FixedSizeList> :
-          <FixedSizeGrid
+          /> :
+          <Grid
             className="virtual-grid"
             columnCount={~~(size.x / 140)}
             columnWidth={140}
-            height={size.y}
-            width={size.x}
-            itemCount={currentPathFiles.length}
+            // height={size.y}
+            // width={size.x}
+            // itemCount={currentPathFiles.length}
             rowHeight={100}
             rowCount={Math.ceil(currentPathFiles.length / ~~(size.x / 140))}
-          >
-            {getItem}
-          </FixedSizeGrid>
+            cellComponent={getItem}
+            cellProps={{ currentPathFiles }}
+          />
       ) : (
         <div className="empty-folder">{t("folderEmpty")}</div>
       )}

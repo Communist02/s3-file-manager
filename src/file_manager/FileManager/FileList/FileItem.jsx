@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { FaRegFile, FaRegFolderOpen, FaRegFolder } from "react-icons/fa6";
+import { FaRegFile, FaRegFolderOpen } from "react-icons/fa6";
 import { useFileIcons } from "../../hooks/useFileIcons";
 import CreateFolderAction from "../Actions/CreateFolder/CreateFolder.action";
 import RenameAction from "../Actions/Rename/Rename.action";
@@ -35,7 +35,6 @@ const FileItem = ({
   const lastClickTime = useRef(new Date().getTime());
   const { activeLayout } = useLayout();
   const iconSize = activeLayout === "grid" ? 48 : 28;
-  const fileIcons = useFileIcons(iconSize);
   const { setCurrentPath, currentPathFiles, onFolderChange } = useFileNavigation();
   const { setSelectedFiles } = useSelection();
   const { clipBoard, handleCutCopy, setClipBoard, handlePasting } = useClipBoard();
@@ -145,41 +144,41 @@ const FileItem = ({
   };
   //
 
-  const handleDragStart = (e) => {
-    e.dataTransfer.setDragImage(dragIconRef.current, 30, 50);
-    e.dataTransfer.effectAllowed = "copy";
-    handleCutCopy(true);
-  };
+  // const handleDragStart = (e) => {
+  //   e.dataTransfer.setDragImage(dragIconRef.current, 30, 50);
+  //   e.dataTransfer.effectAllowed = "copy";
+  //   handleCutCopy(true);
+  // };
 
-  const handleDragEnd = () => setClipBoard(null);
+  // const handleDragEnd = () => setClipBoard(null);
 
-  const handleDragEnterOver = (e) => {
-    e.preventDefault();
-    if (fileSelected || !file.isDirectory) {
-      e.dataTransfer.dropEffect = "none";
-    } else {
-      setTooltipPosition({ x: e.clientX, y: e.clientY + 12 });
-      e.dataTransfer.dropEffect = "copy";
-      setDropZoneClass("file-drop-zone");
-    }
-  };
+  // const handleDragEnterOver = (e) => {
+  //   e.preventDefault();
+  //   if (fileSelected || !file.isDirectory) {
+  //     e.dataTransfer.dropEffect = "none";
+  //   } else {
+  //     setTooltipPosition({ x: e.clientX, y: e.clientY + 12 });
+  //     e.dataTransfer.dropEffect = "copy";
+  //     setDropZoneClass("file-drop-zone");
+  //   }
+  // };
 
-  const handleDragLeave = (e) => {
-    // To stay in dragging state for the child elements of the target drop-zone
-    if (!e.currentTarget.contains(e.relatedTarget)) {
-      setDropZoneClass((prev) => (prev ? "" : prev));
-      setTooltipPosition(null);
-    }
-  };
+  // const handleDragLeave = (e) => {
+  //   // To stay in dragging state for the child elements of the target drop-zone
+  //   if (!e.currentTarget.contains(e.relatedTarget)) {
+  //     setDropZoneClass((prev) => (prev ? "" : prev));
+  //     setTooltipPosition(null);
+  //   }
+  // };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    if (fileSelected || !file.isDirectory) return;
+  // const handleDrop = (e) => {
+  //   e.preventDefault();
+  //   if (fileSelected || !file.isDirectory) return;
 
-    handlePasting(file);
-    setDropZoneClass((prev) => (prev ? "" : prev));
-    setTooltipPosition(null);
-  };
+  //   handlePasting(file);
+  //   setDropZoneClass((prev) => (prev ? "" : prev));
+  //   setTooltipPosition(null);
+  // };
 
   return (
     <div
@@ -217,7 +216,7 @@ const FileItem = ({
           <img src={'/icons/' + getIconForFile(file.name)} width={iconSize} height={iconSize} />
         )}
 
-        {file.isEditing ? (
+        {/* {file.isEditing ? (
           <div className={`rename-file-container ${activeLayout}`}>
             {triggerAction.actionType === "createFolder" ? (
               <CreateFolderAction
@@ -235,14 +234,14 @@ const FileItem = ({
               />
             )}
           </div>
-        ) : (
+        ) : ( */}
           <>
             <span className="text-truncate file-name">{file.name}</span>
             {activeLayout !== "list" && (
               <span className="text-truncate file-size">{file?.size > 0 ? getDataSize(file?.size) : ""}</span>
             )}
           </>
-        )}
+        {/* )} */}
       </div>
 
       {activeLayout === "list" && (

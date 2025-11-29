@@ -9,6 +9,9 @@ import FilesHeader from "./FilesHeader";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./FileList.scss";
 import { List, Grid } from 'react-window';
+import CreateFolderAction from "../Actions/CreateFolder/CreateFolder.action";
+import RenameAction from "../Actions/Rename/Rename.action";
+import { duplicateNameHandler } from "../../utils/duplicateNameHandler";
 
 const FileList = ({
   onCreateFolder,
@@ -20,7 +23,7 @@ const FileList = ({
   permissions,
   onShowProperties
 }) => {
-  const { currentPathFiles, sortConfig, setSortConfig } = useFileNavigation();
+  const { currentPathFiles, sortConfig, setSortConfig, currentPath } = useFileNavigation();
   const filesViewRef = useRef(null);
   const { activeLayout } = useLayout();
   const t = useTranslation();
@@ -37,6 +40,7 @@ const FileList = ({
     selectedFileIndexes,
     clickPosition,
     isSelectionCtx,
+    lastSelectedFile
   } = useFileList(onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen, onShowProperties);
 
   useEffect(() => {
@@ -115,6 +119,32 @@ const FileList = ({
           unselectFiles={unselectFiles}
         />
       }
+
+      <div className={`rename-file-container ${activeLayout}`}>
+        {triggerAction.actionType === "createFolder" && (
+          <CreateFolderAction
+            filesViewRef={filesViewRef}
+            file={{
+              name: duplicateNameHandler("New Folder", true, currentPathFiles),
+              isDirectory: true,
+              path: currentPath,
+              isEditing: true,
+              key: new Date().valueOf(),
+            }}
+            onCreateFolder={onCreateFolder}
+            triggerAction={triggerAction}
+          />
+        )}
+        {/* {console.log(lastSelectedFile)}
+        {triggerAction.actionType === "rename" && (
+          <RenameAction
+            filesViewRef={filesViewRef}
+            file={currentPathFiles[selectedFileIndexes.at(-1)]}
+            onRename={onRename}
+            triggerAction={triggerAction}
+          />
+        )} */}
+      </div>
 
       {currentPathFiles?.length > 0 ? (
         activeLayout === "list" ?

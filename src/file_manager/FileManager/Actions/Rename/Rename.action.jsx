@@ -5,16 +5,18 @@ import { getFileExtension } from "../../../utils/getFileExtension";
 import { useFileNavigation } from "../../../contexts/FileNavigationContext";
 import { validateApiCallback } from "../../../utils/validateApiCallback";
 import { useTranslation } from "../../../contexts/TranslationProvider";
+import { useSelection } from "../../../contexts/SelectionContext";
 
 const maxNameLength = 220;
 
-const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
-  const [renameFile, setRenameFile] = useState(file?.name);
+const RenameAction = ({ onRename, triggerAction }) => {
   const [renameFileWarning, setRenameFileWarning] = useState(false);
   const [fileRenameError, setFileRenameError] = useState(false);
-  const { currentPathFiles, setCurrentPathFiles } = useFileNavigation();
+  const { selectedFiles, setSelectedFiles } = useSelection();
+  const { currentPathFiles, setCurrentPathFiles, selectedFileIndexes } = useFileNavigation();
   const t = useTranslation();
-
+  const file = selectedFiles.at(-1);
+  const [renameFile, setRenameFile] = useState(file?.name);
   const warningModalRef = useRef(null);
 
   // Auto hide error message after 5 seconds
@@ -58,6 +60,7 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
     validateApiCallback(onRename, "onRename", file, renameFile);
     setCurrentPathFiles((prev) => prev.filter((f) => f.key !== file.key)); // Todo: Should only filter on success API call
     triggerAction.close();
+    setSelectedFiles([]);
   }
 
   function handleChange(e) {
@@ -74,7 +77,6 @@ const RenameAction = ({ filesViewRef, file, onRename, triggerAction }) => {
 
   return (
     <>
-      {renameFile}
       <Modal
         centered
         title={t('rename')}

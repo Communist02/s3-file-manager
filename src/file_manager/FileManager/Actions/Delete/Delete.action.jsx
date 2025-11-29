@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Button, Modal } from 'antd';
+import { useEffect, useState } from "react";
+import { Modal } from 'antd';
 import { useSelection } from "../../../contexts/SelectionContext";
 import { useTranslation } from "../../../contexts/TranslationProvider";
 import "./Delete.action.scss";

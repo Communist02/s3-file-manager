@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Collapse from "../../components/Collapse/Collapse";
-import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
+
 import { MdKeyboardArrowRight } from "react-icons/md";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
-import { getIconForFile, getIconForFolder, getIconForOpenFolder } from 'vscode-icons-js';
+import { getIconForFolder, getIconForOpenFolder } from 'vscode-icons-js';
 
 const FolderTree = ({ folder, onFileOpen }) => {
   const [isOpen, setIsOpen] = useState(false);

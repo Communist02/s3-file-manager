@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { InboxOutlined } from '@ant-design/icons'
-import { Drawer, Upload, message, Checkbox, notification, Card, Progress, Button, Table } from 'antd';
-import { List } from 'react-window';
+import { Drawer, message, Checkbox, notification, Progress, Button, Table } from 'antd';
+import CustomUploader from './CustomUploader';
+
 
 function Uploader({ open, setOpen, url, token, collection_id, path, updateCollection, setCurrentCountUploading }) {
     const [dirMode, setDirMode] = useState(false);
@@ -31,49 +32,45 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
 
     // Функции для работы с файлами
     const addUploadingFile = (fileInfo) => {
-        setUploadingFiles(prev => {
-            const exists = prev.find(f => f.uid === fileInfo.uid);
-            if (exists) return prev;
-            return [...prev, fileInfo];
-        });
-        !open && setCurrentCountUploading(uploadingFiles.length + 1);
+        uploadingFiles.push(fileInfo);
+        setUploadingFiles(uploadingFiles);
+        !open && setCurrentCountUploading(uploadRequestsRef.current.size + 1);
     };
 
-    const updateUploadingFile = (uid, updates) => {
+    function updateUploadingFile(uid, updates) {
         const currentTime = new Date().getTime()
         const fileIndex = uploadingFiles.findIndex(file =>
-            file.uid === uid && (updates.procent === 100 || file.lastUpdateInfo === undefined || currentTime - file.lastUpdateInfo > 500)
-        )
+            file.uid === uid && (updates.procent === 100 || updates.status === 'done' || file.lastUpdateInfo === undefined || currentTime - file.lastUpdateInfo > 500)
+        );
 
         function getSpeed(size, percent, oldPercent, lastUpdateInfo) {
             const uploadedSize = (size * percent);
             const oldUploadedSize = (size * oldPercent);
-            if (percent === 0) {
+            if (percent === 0 || percent === 100) {
                 return ''
             }
             const speed = formatFileSize((uploadedSize - oldUploadedSize) / ((currentTime - lastUpdateInfo) / 10));
             return `${speed}/s`
         }
 
-        if (fileIndex !== -1 || updates.status !== 'uploading') {
-            const oldFile = uploadingFiles[fileIndex];
-            // uploadingFilesRef.current = (prev =>
-            //     prev.map(file =>
-            //         file.uid === uid ? { ...file, ...{ lastUpdateInfo: currentTime, lastPercent: oldFile.percent, speed: getSpeed(file.size, updates.percent, oldFile.percent, file.lastUpdateInfo) }, ...updates } : file
-            //     )
-            // );
+        if (fileIndex !== -1) {
+            uploadingFiles[fileIndex].lastPercent = uploadingFiles[fileIndex].percent;
+            uploadingFiles[fileIndex].percent = updates.percent;
+            const speed = getSpeed(uploadingFiles[fileIndex].size, updates.percent, uploadingFiles[fileIndex].lastPercent, uploadingFiles[fileIndex].lastUpdateInfo)
+            uploadingFiles[fileIndex].lastUpdateInfo = currentTime;
+            uploadingFiles[fileIndex].status = updates.status;
+
             setUploadingFiles(prev =>
                 prev.map(file =>
-                    file.uid === uid ? { ...file, ...{ lastUpdateInfo: currentTime, lastPercent: oldFile.percent, speed: getSpeed(file.size, updates.percent, oldFile.percent, file.lastUpdateInfo) }, ...updates } : file
+                    file.uid === uid ? { ...file, ...{ lastUpdateInfo: currentTime, lastPercent: uploadingFiles[fileIndex].lastPercent, speed: speed }, ...updates } : file
                 )
             );
         }
-    };
+    }
 
     const removeUploadingFile = (uid) => {
         setUploadingFiles(prev => {
             const newFiles = prev.filter(file => file.uid !== uid);
-            !open && setCurrentCountUploading(newFiles.length);
             return newFiles;
         });
     };
@@ -81,7 +78,6 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
     const removeDoneFiles = () => {
         setUploadingFiles(prev => {
             const newFiles = prev.filter(file => file.status !== 'done');
-            !open && setCurrentCountUploading(newFiles.length);
             return newFiles;
         });
     };
@@ -94,17 +90,13 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             });
             uploadRequestsRef.current.delete(info.file.uid);
 
-            // Удаляем через некоторое время или оставляем в списке
-            // setTimeout(() => {
-            //     removeUploadingFile(info.file.uid);
-            // }, 3000); // Удаляем через 3 секунды после успешной загрузки
-
             notification.success({
                 key: 'uploading-done',
-                message: `Успешно загружен!`,
+                title: `Успешно загружен!`,
                 description: info.file.name,
                 placement: 'topLeft'
             });
+            setCurrentCountUploading(uploadRequestsRef.current.size);
             updateCollection(collection_id);
 
         } else if (info.file.status === 'error') {
@@ -112,6 +104,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 status: 'error',
                 percent: 0
             });
+            uploadRequestsRef.current.delete(info.file.uid);
 
             // Оставляем файлы с ошибкой в списке или удаляем через время
             setTimeout(() => {
@@ -142,8 +135,8 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
     };
 
     // Функция для проверки, можно ли начать загрузку файла
-    const beforeUpload = (file, fileList) => {
-        if (!dirMode && file.size === 0) {
+    const beforeUpload = (file) => {
+        if (file.size === 0) {
             message.error('Не может быть загружен пустой файл!');
             return false;
         }
@@ -160,58 +153,6 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         return true;
     };
 
-    // Кастомный элемент для отображения в списке загрузок
-    const renderUploadListExtra = ({ uid, percent, status, speed, size = 0 }) => {
-        const formattedSize = formatFileSize(size);
-
-        if (percent < 100 && status === 'uploading') {
-            const uploadedSize = formatFileSize((size * percent) / 100);
-            return (
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <div style={{ fontSize: '12px', color: '#666' }}>{uploadedSize} / {formattedSize}</div>
-                    <div style={{ color: '#1890ff', fontSize: '12px' }}>{speed}</div>
-                </div>
-            );
-        } else if (status === 'uploading') {
-            return (
-                <div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>{formattedSize}</div>
-                    <div style={{ fontSize: '12px', color: '#1a72c4ff' }}>Обработка</div>
-                </div>
-            );
-        } else if (status !== 'done') {
-            return <div style={{ fontSize: '12px', color: '#666' }}>{formattedSize}</div>;
-        } else if (status === 'done') {
-            return (
-                <div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>{formattedSize}</div>
-                    <div style={{ fontSize: '12px', color: '#52c41a' }}>✓ Завершено</div>
-                </div>
-            );
-        }
-    };
-
-    const getItem = ({ index, style, files }) => {
-        // const index = index;
-        const file = files[index];
-
-        if (!file) return null;
-
-        return (
-            <div style={style}>
-                <Card size="small" title={file.name} about='iuoi' extra={file.status == 'done' ?
-                    <Button onClick={() => removeUploadingFile(file.uid)}>Скрыть</Button> :
-                    <div style={{ display: 'flex', gap: 10 }}>
-                        <Progress size={{ width: 150 }} percent={Math.round(file.percent)} />
-                        <Button danger onClick={() => cancelUpload(file.uid)}>Отмена</Button>
-                    </div>
-                } style={{ width: '100%', marginTop: 10, height: 100 }}>
-                    {renderUploadListExtra(file)}
-                </Card>
-            </div>
-        );
-    };
-
     const columns = [
         {
             title: 'Имя',
@@ -220,6 +161,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         {
             title: 'Размер',
             dataIndex: 'size',
+            width: 100,
             render: (value) => {
                 return formatFileSize(value);
             }
@@ -227,24 +169,27 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         {
             title: 'Процесс',
             dataIndex: 'percent',
+            width: 130,
             render: (value) => {
                 return <Progress size={{ width: 150 }} percent={Math.round(value)} />;
             }
         },
         {
             title: 'Скорость',
-            dataIndex: 'speed'
+            dataIndex: 'speed',
+            width: 100
         },
         {
             title: 'Действие',
             dataIndex: 'status',
+            width: 100,
             render: (value, record) => {
                 if (record.status === 'done') {
-                    return <Button onClick={() => removeUploadingFile(record.uid)}>Скрыть</Button>
+                    return <Button style={{ height: 22, padding: 4 }} onClick={() => removeUploadingFile(record.uid)}>Скрыть</Button>
                 } else if (record.percent === 100) {
                     return <div style={{ fontSize: '12px', color: '#1a72c4ff' }}>Обработка</div>
                 } else {
-                    return <Button danger onClick={() => cancelUpload(record.uid)}>Отмена</Button>
+                    return <Button style={{ height: 22, padding: 4 }} danger onClick={() => cancelUpload(record.uid)}>Отмена</Button>
                 }
             }
         },
@@ -258,7 +203,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             onClose={
                 () => {
                     setOpen(false);
-                    setCurrentCountUploading(uploadingFiles.length);
+                    setCurrentCountUploading(uploadRequestsRef.current.size);
                 }
             }
             open={open}
@@ -267,106 +212,45 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                     <Checkbox checked={dirMode} onChange={(e) => setDirMode(e.target.checked)}>
                         Режим директории
                     </Checkbox>
-                    {uploadingFiles.length > 0 && <Button style={{ height: 24, padding: 4 }} onClick={removeDoneFiles}>Очистить завершенные</Button>}
+                    {uploadingFiles.filter((file) => file.status === 'done').length > 0 && <Button style={{ height: 24, padding: 4 }} onClick={removeDoneFiles}>Очистить завершенные</Button>}
                     <div style={{ marginTop: 4, fontSize: '12px', color: '#666', textAlign: 'right', marginRight: 8 }}>
-                        Количество загрузок: {uploadingFiles.length}
+                        Количество загрузок: {uploadRequestsRef.current.size}
                     </div>
                 </div>
             }
         >
-            <Upload.Dragger
-                height={300}
-                action={
-                    (file) => {
-                        let filePath;
-                        if (dirMode) {
-                            filePath = path + '/' + file.webkitRelativePath.substring(0, file.webkitRelativePath.lastIndexOf('/'));
-                        } else {
-                            filePath = path + '/';
-                        }
-                        return url + `/collections/${collection_id}/upload/${token}${filePath}`
-                    }
-                }
-                onChange={(info, collection = collection_id) => onChange(info, collection)}
+            <CustomUploader
+                url={url}
+                path={path}
+                token={token}
+                collection_id={collection_id}
+                dirMode={dirMode}
                 beforeUpload={beforeUpload}
-                showUploadList={false}
-                directory={dirMode}
-                // fileList={uploadingFiles}
-                multiple
-                customRequest={({ action, data, file, filename, onError, onProgress, onSuccess }) => {
-                    const formData = new FormData();
-
-                    if (data) {
-                        Object.keys(data).forEach(key => {
-                            formData.append(key, data[key]);
-                        });
-                    }
-
-                    formData.append(filename, file);
-
-                    const xhr = new XMLHttpRequest();
-                    uploadRequestsRef.current.set(file.uid, xhr);
-
-                    xhr.upload.onprogress = (event) => {
-                        if (event.lengthComputable) {
-                            const percent = (event.loaded / event.total) * 100;
-                            onProgress({ percent }, file);
-                        }
-                    };
-
-                    xhr.onload = () => {
-                        if (xhr.status < 200 || xhr.status >= 300) {
-                            onError(new Error('Upload failed'), file);
-                        } else {
-                            onSuccess(xhr.response, file);
-                        }
-                    };
-
-                    xhr.onerror = () => {
-                        onError(new Error('Upload failed'), file);
-                    };
-
-                    xhr.open('POST', action, true);
-                    xhr.send(formData);
-
-                    return {
-                        abort() {
-                            xhr.abort();
-                        }
-                    };
-                }}
+                onChange={(info, collection) => onChange(info, collection)}
+                onCreateXhr={(uid, xhr) => { uploadRequestsRef.current.set(uid, xhr) }}
             >
-                <p className="ant-upload-drag-icon">
+                <p style={{ fontSize: 80, margin: 0 }} className="ant-upload-drag-icon">
                     <InboxOutlined />
                 </p>
-                <p className="ant-upload-text">Нажмите или перетащите файлы в эту область для загрузки</p>
+                <p className="ant-upload-text">
+                    Нажмите или перетащите файлы в эту область для загрузки
+                </p>
                 <p className="ant-upload-hint">
                     Поддерживается один или несколько файлов.
                     Включите режим директории, чтобы загрузить папку.
-                    Файлы будут загружены в текущую директорию{path !== '' ? ` ${path}` : ''}.
+                    Файлы будут загружены в текущую директорию
+                    {path !== '' ? ` ${path}` : ''}.
                 </p>
-            </Upload.Dragger>
+            </CustomUploader>
             {uploadingFiles.length > 0 && (
                 <div style={{ marginTop: 10 }}>
-                    {/* <List
-                        className="upload-virtual-list"
-                        rowCount={uploadingFiles.length}
-                        rowHeight={110}
-                        rowComponent={getItem}
-                        rowProps={{ files: uploadingFiles }}
-                    // itemKey={index => uploadingFiles[index]?.uid || index}
-                    /> */}
                     <Table
-                        scroll={{ y: 'calc(100vh - 520px)' }}
+                        scroll={{ y: 'calc(100vh - 505px)' }}
                         rowKey="uid"
                         size="small"
                         dataSource={uploadingFiles}
                         columns={columns}
-                        pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default', style: {margin: 0, marginTop: 10} }}
-                        // expandable={{
-                        //     expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>,
-                        //     // rowExpandable: record => record.message !== null && record.message !== ''
-                        // }}
+                        pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default', style: { margin: 0, marginTop: 10 } }}
                     />
                 </div>
             )}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import DeleteAction from "./Delete/Delete.action";
 import UploadFileAction from "./UploadFile/UploadFile.action";
 import PreviewFileAction from "./PreviewFile/PreviewFile.action";
+import RenameAction from "./Rename/Rename.action";
 import { useSelection } from "../../contexts/SelectionContext";
 import { useShortcutHandler } from "../../hooks/useShortcutHandler";
 import { useTranslation } from "../../contexts/TranslationProvider";
@@ -13,6 +14,7 @@ const Actions = ({
   onDelete,
   onDownload,
   onRefresh,
+  onRename,
   maxFileSize,
   filePreviewPath,
   filePreviewComponent,
@@ -45,6 +47,10 @@ const Actions = ({
       title: t("delete"),
       component: <DeleteAction triggerAction={triggerAction} onDelete={onDelete} />,
       width: "25%",
+    },
+    rename: {
+      title: t("R"),
+      component: <RenameAction onRename={onRename} triggerAction={triggerAction} />
     },
     previewFile: {
       title: t("preview"),
@@ -85,8 +91,8 @@ const Actions = ({
   //     </Modal>
   //   );
   // } else
-    if (activeAction) {
-    return activeAction.component
+  if (activeAction) {
+    return activeAction.component;
   }
 };
 

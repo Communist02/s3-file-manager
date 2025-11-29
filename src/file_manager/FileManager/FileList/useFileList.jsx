@@ -214,20 +214,20 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
   ];
   //
 
-  const handleFolderCreating = () => {
-    setCurrentPathFiles((prev) => {
-      return [
-        ...prev,
-        {
-          name: duplicateNameHandler("New Folder", true, prev),
-          isDirectory: true,
-          path: currentPath,
-          isEditing: true,
-          key: new Date().valueOf(),
-        },
-      ];
-    });
-  };
+  // const handleFolderCreating = () => {
+  //   setCurrentPathFiles((prev) => {
+  //     return [
+  //       ...prev,
+  //       {
+  //         name: duplicateNameHandler("New Folder", true, prev),
+  //         isDirectory: true,
+  //         path: currentPath,
+  //         isEditing: true,
+  //         key: new Date().valueOf(),
+  //       },
+  //     ];
+  //   });
+  // };
 
   const handleItemRenaming = () => {
     setCurrentPathFiles((prev) => {
@@ -260,18 +260,18 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
     }
   };
 
-  useEffect(() => {
-    if (triggerAction.isActive) {
-      switch (triggerAction.actionType) {
-        case "createFolder":
-          handleFolderCreating();
-          break;
-        case "rename":
-          handleItemRenaming();
-          break;
-      }
-    }
-  }, [triggerAction.isActive]);
+  // useEffect(() => {
+  //   if (triggerAction.isActive) {
+  //     switch (triggerAction.actionType) {
+  //       // case "createFolder":
+  //       //   handleFolderCreating();
+  //       //   break;
+  //       case "rename":
+  //         handleItemRenaming();
+  //         break;
+  //     }
+  //   }
+  // }, [triggerAction.isActive]);
 
   useEffect(() => {
     setSelectedFileIndexes([]);

@@ -1,0 +1,15 @@
+.drag-and-drop-uploader {
+    height: 200px;
+	background: var(--ant-color-fill-alter);
+	border: var(--ant-line-width) dashed var(--ant-color-border);
+	border-radius: var(--ant-border-radius-lg);
+	transition: border-color var(--ant-motion-duration-slow);
+}
+
+.drag-and-drop-uploader:hover {
+	border-color:var(--ant-color-primary-hover);
+}
+
+.drag-and-drop-uploader:focus-visible {
+	outline:var(--ant-line-width-focus) solid var(--ant-color-primary-border);
+}

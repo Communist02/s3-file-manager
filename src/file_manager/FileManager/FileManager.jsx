@@ -135,6 +135,7 @@ const FileManager = ({
                       onFileUploading={onFileUploading}
                       onFileUploaded={onFileUploaded}
                       onDelete={onDelete}
+                      onRename={onRename}
                       onDownload={onDownload}
                       onRefresh={onRefresh}
                       maxFileSize={maxFileSize}

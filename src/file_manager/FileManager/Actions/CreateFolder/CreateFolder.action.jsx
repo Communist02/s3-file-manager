@@ -24,34 +24,6 @@ const CreateFolderAction = ({ filesViewRef, file, onCreateFolder, triggerAction 
       setFolderNameError(true);
     }
   };
-  //
-
-  // Validate folder name and call "onCreateFolder" function
-  const handleValidateFolderName = (e) => {
-    e.stopPropagation();
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleFolderCreating();
-      return;
-    }
-
-    if (e.key === "Escape") {
-      e.preventDefault();
-      triggerAction.close();
-      setCurrentPathFiles((prev) => prev.filter((f) => f.key !== file.key));
-      return;
-    }
-
-    const invalidCharsRegex = /[\\/:*?"<>|]/;
-    if (invalidCharsRegex.test(e.key)) {
-      e.preventDefault();
-      setFolderErrorMessage(t("invalidFileName"));
-      setFolderNameError(true);
-    } else {
-      setFolderNameError(false);
-      setFolderErrorMessage("");
-    }
-  };
 
   // Auto hide error message after 7 seconds
   useEffect(() => {

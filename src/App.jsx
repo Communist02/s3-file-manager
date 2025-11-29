@@ -508,7 +508,7 @@ function App() {
                                 <Tooltip title='Управление коллекцией'>
                                     <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)} />
                                 </Tooltip>
-                                <FloatButton id='upload-button' type='primary' badge={{ count: currentCountUploading }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
+                                <FloatButton id='upload-button' type='primary' badge={{ count: currentCountUploading, overflowCount: 9999 }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
                             </>
                         }
                         <Dropdown trigger={['click']} menu={{ items, onClick: onClickLogin }}>

@@ -1,27 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { MdHome, MdMoreHoriz, MdOutlineNavigateNext } from "react-icons/md";
-import { TbLayoutSidebarLeftExpand, TbLayoutSidebarLeftCollapseFilled } from "react-icons/tb";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
-import { useDetectOutsideClick } from "../../hooks/useDetectOutsideClick";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./BreadCrumb.scss";
+import {
+  HomeOutlined,
+  EllipsisOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+} from "@ant-design/icons";
+import { Breadcrumb, Dropdown, Menu, Button, Tooltip } from "antd";
 
 const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpen }) => {
   const [folders, setFolders] = useState([]);
   const [hiddenFolders, setHiddenFolders] = useState([]);
   const [hiddenFoldersWidth, setHiddenFoldersWidth] = useState([]);
-  const [showHiddenFolders, setShowHiddenFolders] = useState(false);
 
   const { currentPath, setCurrentPath, onFolderChange } = useFileNavigation();
-  const breadCrumbRef = useRef(null);
-  const foldersRef = useRef([]);
-  const moreBtnRef = useRef(null);
-  const popoverRef = useDetectOutsideClick(() => {
-    setShowHiddenFolders(false);
-  });
   const t = useTranslation();
-  const navTogglerRef = useRef(null);
 
   useEffect(() => {
     setFolders(() => {
@@ -42,114 +38,90 @@ const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpe
     onFolderChange?.(path);
   };
 
-  const getBreadCrumbWidth = () => {
-    const containerWidth = breadCrumbRef.current.clientWidth;
-    const containerStyles = getComputedStyle(breadCrumbRef.current);
-    const paddingLeft = parseFloat(containerStyles.paddingLeft);
-    const navTogglerGap = collapsibleNav ? 2 : 0;
-    const navTogglerDividerWidth = 1;
-    const navTogglerWidth = collapsibleNav
-      ? navTogglerRef.current?.clientWidth + navTogglerDividerWidth
-      : 0;
-    const moreBtnGap = hiddenFolders.length > 0 ? 1 : 0;
-    const flexGap = parseFloat(containerStyles.gap) * (folders.length + moreBtnGap + navTogglerGap);
-    return containerWidth - (paddingLeft + flexGap + navTogglerWidth);
-  };
+  const hiddenMenu = (
+    <Menu
+      items={hiddenFolders.map((folder, index) => ({
+        key: index,
+        label: (
+          <span
+            onClick={() => switchPath(folder.path)}
+            style={{ cursor: "pointer" }}
+          >
+            {folder.name}
+          </span>
+        ),
+      }))}
+    />
+  );
 
-  const checkAvailableSpace = () => {
-    const availableSpace = getBreadCrumbWidth();
-    const remainingFoldersWidth = foldersRef.current.reduce((prev, curr) => {
-      if (!curr) return prev;
-      return prev + curr.clientWidth;
-    }, 0);
-    const moreBtnWidth = moreBtnRef.current?.clientWidth || 0;
-    return availableSpace - (remainingFoldersWidth + moreBtnWidth);
-  };
+  const breadcrumb_items = [];
+  folders.map((folder, index) => {
+    const isRoot = index === 0;
+    const showMore = hiddenFolders?.length > 0 && isRoot;
+    breadcrumb_items.push({
+      key: index,
+      onClick: () => switchPath(folder.path),
+      title: (folders.length - 1 !== index ? <a>
+        {isRoot && <HomeOutlined style={{ marginRight: 4 }} />}
+        <span>{folder.name}</span>
+      </a> : <>
+        {isRoot && <HomeOutlined style={{ marginRight: 4 }} />}
+        {folder.name}
+      </>
+      )
+    });
+    // < Breadcrumb.Item key = { index } >
+    //   <span
+    //     style={{ cursor: "pointer" }}
+    //     onClick={() => switchPath(folder.path)}
+    //   >
+    //     {isRoot ? <HomeOutlined /> : null} {folder.name}
+    //   </span>
 
-  const isBreadCrumbOverflowing = () => {
-    return breadCrumbRef.current.scrollWidth > breadCrumbRef.current.clientWidth;
-  };
-
-  useEffect(() => {
-    if (isBreadCrumbOverflowing()) {
-      const hiddenFolder = folders[1];
-      const hiddenFolderWidth = foldersRef.current[1]?.clientWidth;
-      setHiddenFoldersWidth((prev) => [...prev, hiddenFolderWidth]);
-      setHiddenFolders((prev) => [...prev, hiddenFolder]);
-      setFolders((prev) => prev.filter((_, index) => index !== 1));
-    } else if (hiddenFolders.length > 0 && checkAvailableSpace() > hiddenFoldersWidth.at(-1)) {
-      const newFolders = [folders[0], hiddenFolders.at(-1), ...folders.slice(1)];
-      setFolders(newFolders);
-      setHiddenFolders((prev) => prev.slice(0, -1));
-      setHiddenFoldersWidth((prev) => prev.slice(0, -1));
-    }
-  }, [isBreadCrumbOverflowing]);
+    {/* --- Кнопка "ещё" для скрытых папок --- */ }
+    // {
+    //   showMore && (
+    //     <Dropdown overlay={hiddenMenu} placement="bottomLeft">
+    //       <Button
+    //         type="text"
+    //         icon={<EllipsisOutlined />}
+    //         title={t("showMoreFolder")}
+    //       />
+    //     </Dropdown>
+    //   )
+    // }
+    //   </Breadcrumb.Item >
+  });
 
   return (
-    <div className="bread-crumb-container">
-      <div className="breadcrumb" ref={breadCrumbRef}>
-        {collapsibleNav && (
-          <>
-            <div
-              ref={navTogglerRef}
-              className="nav-toggler"
-              title={`${
-                isNavigationPaneOpen ? t("collapseNavigationPane") : t("expandNavigationPane")
-              }`}
-            >
-              <span
-                className="folder-name folder-name-btn"
-                onClick={() => setNavigationPaneOpen((prev) => !prev)}
-              >
-                {isNavigationPaneOpen ? (
-                  <TbLayoutSidebarLeftCollapseFilled />
+    <div className="bread-crumb-container" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* --- Кнопка сворачивания навигации --- */}
+      {collapsibleNav && (
+        <>
+          <Tooltip
+            title={
+              isNavigationPaneOpen
+                ? t("collapseNavigationPane")
+                : t("expandNavigationPane")
+            }
+          >
+            <Button
+              type="text"
+              icon={
+                isNavigationPaneOpen ? (
+                  <MenuFoldOutlined />
                 ) : (
-                  <TbLayoutSidebarLeftExpand />
-                )}
-              </span>
-            </div>
-            <div className="divider" />
-          </>
-        )}
-        {folders.map((folder, index) => (
-          <div key={index} style={{ display: "contents" }}>
-            <span
-              className="folder-name"
-              onClick={() => switchPath(folder.path)}
-              ref={(el) => (foldersRef.current[index] = el)}
-            >
-              {index === 0 ? <MdHome /> : <MdOutlineNavigateNext />}
-              {folder.name}
-            </span>
-            {hiddenFolders?.length > 0 && index === 0 && (
-              <button
-                className="folder-name folder-name-btn"
-                onClick={() => setShowHiddenFolders(true)}
-                ref={moreBtnRef}
-                title={t("showMoreFolder")}
-              >
-                <MdMoreHoriz size={22} className="hidden-folders" />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {showHiddenFolders && (
-        <ul ref={popoverRef.ref} className="hidden-folders-container">
-          {hiddenFolders.map((folder, index) => (
-            <li
-              key={index}
-              onClick={() => {
-                switchPath(folder.path);
-                setShowHiddenFolders(false);
-              }}
-            >
-              {folder.name}
-            </li>
-          ))}
-        </ul>
+                  <MenuUnfoldOutlined />
+                )
+              }
+              onClick={() => setNavigationPaneOpen((prev) => !prev)}
+            />
+          </Tooltip>
+        </>
       )}
+
+      {/* --- Breadcrumb --- */}
+      <Breadcrumb items={breadcrumb_items} className="breadcrumb-file-path" ></Breadcrumb>
     </div>
   );
 };

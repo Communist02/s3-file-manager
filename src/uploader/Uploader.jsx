@@ -198,7 +198,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
     return (
         <Drawer
             id='drawer-upload'
-            size={900}
+            size='large'
             title='Загрузки'
             onClose={
                 () => {

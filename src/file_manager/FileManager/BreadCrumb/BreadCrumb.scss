@@ -2,68 +2,9 @@
 
 .bread-crumb-container {
   position: relative;
-
-  .breadcrumb {
-    height: 35px;
-    min-height: 35px;
-    max-height: 35px;
-    display: flex;
-    gap: 0.5rem;
-    border-bottom: 1px solid $border-color;
-    padding: 6px 0 6PX 15px;
-    overflow-x: hidden;
-
-    &::-webkit-scrollbar {
-      height: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: var(--file-manager-primary-color) !important;
-    }
-
-    .nav-toggler {
-      display: flex;
-      align-items: center;
-    }
-
-    .divider {
-      width: 1px;
-      background-color: $border-color;
-    }
-
-    .folder-name {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-weight: 500;
-      min-width: fit-content;
-
-      &:hover {
-        cursor: pointer;
-        color: var(--file-manager-primary-color);
-      }
-    }
-
-    .hidden-folders {
-      padding: 0 4px;
-    }
-
-    .folder-name-btn {
-      background-color: transparent;
-      border: none;
-      padding: 0;
-
-      &:hover,
-      &:focus {
-        cursor: pointer;
-        color: var(--file-manager-primary-color);
-        background-color: #dddcdc;
-        border-radius: 5px;
-      }
-    }
-
-  }
+  border-bottom: 1px solid $border-color;
 }
+
 
 .hidden-folders-container {
   position: absolute;

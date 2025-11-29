@@ -212,7 +212,7 @@ function App() {
             collection = buckets.find(item => item.id === id);
         }
         try {
-            document.querySelector('.breadcrumb > div:nth-child(3) > span:nth-child(1)').click();
+            document.querySelector('.breadcrumb-file-path .ant-breadcrumb-link span').click();
         } catch (error) {
             console.error(error);
         }
@@ -525,10 +525,10 @@ function App() {
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
                         {openProfile && <ProfilePage token={tokenAuth} />}
                     </Drawer>
-                    <Drawer title='Группы' styles={{ body: { padding: 0 } }} width={1080} open={showControlPanel} onClose={() => setShowControlPanel(false)}>
+                    <Drawer title='Группы' styles={{ body: { padding: 0 } }} size={1080} open={showControlPanel} onClose={() => setShowControlPanel(false)}>
                         {showControlPanel && <ControlPanel token={tokenAuth} getCollections={getBuckets} />}
                     </Drawer>
-                    <Drawer title='Поиск коллекций' width={1080} open={openSearchCollections} onClose={() => setOpenSearchCollections(false)}>
+                    <Drawer title='Поиск коллекций' size={1080} open={openSearchCollections} onClose={() => setOpenSearchCollections(false)}>
                         {openSearchCollections && <CollectionsSearch token={tokenAuth} getCollections={getBuckets} />}
                     </Drawer>
                 </Layout.Header>}

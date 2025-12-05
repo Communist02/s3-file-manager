@@ -44,13 +44,13 @@ function History({ open, setOpen, collection_id, token }) {
                 switch (value) {
                     case 'copy':
                         return `Копирование ${JSON.stringify(record.message.source_paths, null, 1).replace('[', '').replace(']', '')} из коллекции ${record.message.source_collection_id} в «${record.message.destination_path}»`
-                    case 'delete':
+                    case 'delete_files':
                         return `Удаление ${JSON.stringify(record.message.files, null, 1).replace('[', '').replace(']', '')}`;
                     case 'upload':
                         if (record.message.path !== '') {
                             return `Загрузка в «${record.message.path}» файла «${record.message.file_name}»`;
                         } else {
-                            return `Загрузка в «/» коллекции файла «${record.message.file_name}»`;
+                            return `Загрузка в «/» файла «${record.message.file_name}»`;
                         }
                     case 'rename':
                         return `Переименование «${record.message.path}» в «${record.message.new_name}»`;

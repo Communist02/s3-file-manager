@@ -164,13 +164,12 @@ function App() {
         setIsLoading(true);
         const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.id, tokenAuth);
         if (response.status === 200 || response.status === 201) {
-            getFiles(currentBucket, tokenAuth);
+            await getFiles(currentBucket, tokenAuth);
             message.success(`Папка "${name}" создана!`);
         } else {
             console.error(response.data);
         }
         setIsLoading(false);
-
     };
 
     function handleCopy(files) {

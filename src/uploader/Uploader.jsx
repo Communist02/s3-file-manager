@@ -46,7 +46,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         function getSpeed(size, percent, oldPercent, lastUpdateInfo) {
             const uploadedSize = (size * percent);
             const oldUploadedSize = (size * oldPercent);
-            if (percent === 0 || percent === 100) {
+            if (percent === 100 || percent === undefined || oldPercent === undefined || lastUpdateInfo === undefined) {
                 return ''
             }
             const speed = formatFileSize((uploadedSize - oldUploadedSize) / ((currentTime - lastUpdateInfo) / 10));
@@ -97,7 +97,9 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 placement: 'topLeft'
             });
             setCurrentCountUploading(uploadRequestsRef.current.size);
-            updateCollection(collection_id);
+            if (uploadRequestsRef.current.size == 0) {
+                updateCollection(collection_id);
+            }
 
         } else if (info.file.status === 'error') {
             updateUploadingFile(info.file.uid, {
@@ -226,7 +228,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 collection_id={collection_id}
                 dirMode={dirMode}
                 beforeUpload={beforeUpload}
-                onChange={(info, collection) => onChange(info, collection)}
+                onChange={(info) => onChange(info, collection_id)}
                 onCreateXhr={(uid, xhr) => { uploadRequestsRef.current.set(uid, xhr) }}
             >
                 <p style={{ fontSize: 80, margin: 0 }} className="ant-upload-drag-icon">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import "./CustomUploader.css";
 
 export default function CustomUploader({
@@ -16,10 +16,11 @@ export default function CustomUploader({
     children
 }) {
     const [dragActive, setDragActive] = useState(false);
+    const currentUid = useRef(0);
 
     const handleFiles = (files) => {
         [...files].forEach((file) => {
-            file.uid = crypto.randomUUID(); // UID как в Ant Upload
+            file.uid = currentUid.current++;
             uploadFile(file);
         });
     };
@@ -56,11 +57,8 @@ export default function CustomUploader({
         if (beforeUpload(file) === false) return;
 
         let filePath = path + '/';
-
         const action = `${url}/collections/${collection_id}/upload/${token}${filePath}`;
-
         const formData = new FormData();
-
         formData.append('file', file);
 
         const xhr = new XMLHttpRequest();
@@ -79,7 +77,8 @@ export default function CustomUploader({
                             status: 'uploading',
                             percent: percent ?? 0,
                             // response: xhr.response
-                        }
+                        },
+                        collection_id: collection_id
                     }
                 );
             }

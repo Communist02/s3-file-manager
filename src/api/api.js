@@ -385,9 +385,9 @@ export const getCollectionInfo = async (collection_id, token) => {
   }
 };
 
-export const getFileInfo = async (collection_id, token, path) => {
+export const getFileInfo = async (collection_id, token, path, is_dir) => {
   try {
-    const response = await api.get('/collections/' + collection_id + '/file_info/' + token + encodeURIComponent(path));
+    const response = await api.get('/collections/' + collection_id + '/file_info/' + token + encodeURIComponent(path) + '?is_dir=' + is_dir);
     return response;
   } catch (error) {
     console.log(error);

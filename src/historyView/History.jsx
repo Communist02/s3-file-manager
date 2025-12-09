@@ -60,6 +60,8 @@ function History({ open, setOpen, collection_id, token }) {
                         return 'Изменена информация о коллекции';
                     case 'create_collection':
                         return 'Создана коллекция';
+                    default:
+                        return value
                 }
             }
         },

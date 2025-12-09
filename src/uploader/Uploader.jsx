@@ -3,22 +3,21 @@ import { InboxOutlined } from '@ant-design/icons'
 import { Drawer, message, Checkbox, notification, Progress, Button, Table } from 'antd';
 import CustomUploader from './CustomUploader';
 
+// Функция для форматирования размера файла
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 B';
+
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 function Uploader({ open, setOpen, url, token, collection_id, path, updateCollection, setCurrentCountUploading }) {
     const [dirMode, setDirMode] = useState(false);
     const [uploadingFiles, setUploadingFiles] = useState([]);
     const uploadRequestsRef = useRef(new Map()); // Храним XMLHttpRequest для отмены
-
-    // Функция для форматирования размера файла
-    const formatFileSize = (bytes) => {
-        if (bytes === 0) return '0 B';
-
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
 
     const cancelUpload = (uid) => {
         const request = uploadRequestsRef.current.get(uid);

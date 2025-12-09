@@ -247,12 +247,29 @@ function App() {
         }
     };
 
+    // Функция для форматирования размера файла
+    const formatFileSize = (bytes) => {
+        if (bytes === 0) return '0 B';
+
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
     const handleProperties = async (file) => {
-        let response = await getFileInfo(currentBucket.id, tokenAuth, file['path']);
+        let response = await getFileInfo(currentBucket.id, tokenAuth, file['path'], file['isDirectory']);
         if (response.status === 200) {
             if (response.data !== null) {
                 const items = [];
                 for (let [key, value] of Object.entries(response.data)) {
+                    switch (key) {
+                        case "size":
+                        case "sum_size": {
+                            value = formatFileSize(value);
+                        }
+                    }
                     items.push({
                         key: key,
                         label: key,

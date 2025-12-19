@@ -6,7 +6,6 @@ import { UsergroupAddOutlined, TeamOutlined } from '@ant-design/icons';
 import { getGroups, createGroup } from '../api/api';
 
 const ControlPanel = ({ token, getCollections }) => {
-    const [messageApi, contextHolder] = message.useMessage();
     const [isModalOpenCreateGroup, setIsModalOpenCreateGroup] = useState(false);
     const [groups, setGroups] = useState([]);
     const [newGroupTitle, setNewGroupTitle] = useState('');
@@ -30,19 +29,19 @@ const ControlPanel = ({ token, getCollections }) => {
     const handleOkCreateGroup = async () => {
         let response = await createGroup(newGroupTitle, newGroupDescription, token);
         if (response.status === 200) {
-            messageApi.success('Группа успешно создана!');
+            message.success('Группа успешно создана!');
             setNewGroupTitle('');
             setNewGroupDescription('');
             setIsModalOpenCreateGroup(false);
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
 
         response = await getGroups(token);
         if (response.status === 200) {
             setGroups(response.data);
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     };
 

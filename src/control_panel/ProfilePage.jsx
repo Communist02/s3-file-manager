@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Descriptions, Avatar, Space, Typography, Divider, Input } from 'antd';
+import { Descriptions, Avatar, Space, Typography, Divider, Input, message } from 'antd';
 import { getUserInfo } from '../api/api';
 import { UserOutlined } from '@ant-design/icons';
 import './ProfilePage.css';
@@ -12,7 +12,7 @@ function ProfilePage({ token }) {
         if (response.status === 200) {
             setUser(response.data);
         } else {
-            messageApi.error('Произошла ошибка! ' + response);
+            message.error('Произошла ошибка! ' + response);
         }
     }
 

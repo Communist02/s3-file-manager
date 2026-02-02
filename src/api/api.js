@@ -38,7 +38,7 @@ export const checkTokenAPI = async (token) => {
 export const deleteSession = async (token) => {
   if (token !== null) {
     try {
-      const response = await api.get('/delete_session?token=' + token);
+      const response = await api.delete('/delete_session?token=' + token);
       return response;
     } catch (error) {
       console.log(error);
@@ -397,7 +397,7 @@ export const getFileInfo = async (collection_id, token, path, is_dir) => {
 
 export const indexFile = async (collection_id, token, path) => {
   try {
-    const response = await api.post('/collections/' + collection_id + '/file_index/' + token + encodeURIComponent(path));
+    const response = await api.post('/collections/' + collection_id + '/indexing_file/' + token + encodeURIComponent(path));
     return response;
   } catch (error) {
     console.log(error);

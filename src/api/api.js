@@ -26,7 +26,7 @@ export const authAPI = async (username, password) => {
 export const checkTokenAPI = async (token) => {
   if (token !== null) {
     try {
-      const response = await api.get('/check_session?token=' + token);
+      const response = await api.get('/session?token=' + token);
       return response;
     } catch (error) {
       console.log(error);
@@ -38,7 +38,7 @@ export const checkTokenAPI = async (token) => {
 export const deleteSession = async (token) => {
   if (token !== null) {
     try {
-      const response = await api.delete('/delete_session?token=' + token);
+      const response = await api.delete('/session?token=' + token);
       return response;
     } catch (error) {
       console.log(error);

@@ -1,13 +1,17 @@
 import axios from "axios";
-import { url } from "../url";
+import { url, urlAuth } from "../url";
 
 export const api = axios.create({
   baseURL: url,
 });
 
+export const apiAuth = axios.create({
+  baseURL: urlAuth,
+});
+
 export const authAPI = async (username, password) => {
   try {
-    const response = await api.get('/auth', {
+    const response = await apiAuth.get('/auth', {
       auth: {
         username: username,
         password: password,

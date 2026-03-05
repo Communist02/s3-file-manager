@@ -3,7 +3,7 @@ import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Emp
 import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType, changeCollectionInfo, getCollectionInfo, changeAccessToAll } from '../api/api';
 import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 
-function CollectionPage({ collection, getCollections, token, open, setOpen }) {
+function CollectionPage({ collection, getCollections, open, setOpen }) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
     const [isModalOpenAccess, setIsModalOpenAccess] = useState(false);
     const [isModalOpenEditCollection, setIsModalOpenEditCollection] = useState(false);
@@ -20,14 +20,14 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     const [form] = Form.useForm();
 
     const getAccess = async () => {
-        const response = await getAccessToCollection(collection.id, token);
+        const response = await getAccessToCollection(collection.id);
         if (response.status === 200) {
             setAccess(response.data);
         }
     }
 
     async function getInfo() {
-        const response = await getCollectionInfo(collection.id, token);
+        const response = await getCollectionInfo(collection.id);
         if (response.status === 200) {
             setCollectionInfo(response.data);
         } else if (response.status === 404) {
@@ -42,7 +42,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     }
 
     async function showModalAccess() {
-        let response = await getOtherUsers(token);
+        let response = await getOtherUsers();
         if (response.status === 200) {
             let usersOptions = [];
             const usersList = response.data;
@@ -54,7 +54,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
             }
             setUsers(usersOptions);
         }
-        response = await getGroups(token);
+        response = await getGroups();
         if (response.status === 200) {
             let groupsOptions = [];
             const groupsList = response.data;
@@ -66,7 +66,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
             }
             setGroups(groupsOptions);
         }
-        response = await getAccessTypes(token);
+        response = await getAccessTypes();
         if (response.status === 200) {
             let accessTypesOptions = [];
             const accessTypesList = response.data;
@@ -97,10 +97,10 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     }
 
     const handleOkRemove = async () => {
-        const response = await removeCollection(collection.id, token);
+        const response = await removeCollection(collection.id);
         if (response.status === 200) {
             message.success('Коллекция успешно удалена!');
-            await getCollections(token, true);
+            await getCollections(true);
             setIsModalOpenRemove(false);
             setOpen(false);
         } else if (response.status === 406) {
@@ -113,9 +113,9 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     const handleOkAccess = async () => {
         let response;
         if (!groupMode) {
-            response = await giveAccessUserToCollection(collection.id, accessId, accessTypeId, token);
+            response = await giveAccessUserToCollection(collection.id, accessId, accessTypeId);
         } else {
-            response = await giveAccessGroupToCollection(collection.id, accessId, accessTypeId, token);
+            response = await giveAccessGroupToCollection(collection.id, accessId, accessTypeId);
         }
         if (response.status === 200) {
             message.success('Доступ успешно предоставлен!');
@@ -130,11 +130,11 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     };
 
     async function handleDeleteAccess(access_id) {
-        const response = await deleteAccessToCollection(access_id, token);
+        const response = await deleteAccessToCollection(access_id);
         if (response.status === 200) {
             message.success('Доступ успешно удален!');
             if (collection.type !== 'owner') {
-                await getCollections(token, true);
+                await getCollections(true);
             }
             await getAccess();
         } else {
@@ -143,7 +143,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     };
 
     async function handleChangeAccess(access_id, accessTypeId) {
-        const response = await changeAccessType(access_id, accessTypeId, token);
+        const response = await changeAccessType(access_id, accessTypeId);
         if (response.status === 200) {
             message.success('Доступ успешно изменен!');
             await getAccess();
@@ -153,7 +153,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     };
 
     async function handleOkChangeInfo(data) {
-        const response = await changeCollectionInfo(collection.id, data, token);
+        const response = await changeCollectionInfo(collection.id, data);
         if (response.status === 200) {
             message.success('Описание изменено!');
             setIsModalOpenEditCollection(false);
@@ -164,7 +164,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
     };
 
     async function handleAccessAll(e) {
-        const response = await changeAccessToAll(collection.id, e.target.checked, token);
+        const response = await changeAccessToAll(collection.id, e.target.checked);
         if (response.status === 200) {
             if (e.target.checked) {
                 setIsAccessAll(true);
@@ -312,7 +312,7 @@ function CollectionPage({ collection, getCollections, token, open, setOpen }) {
                                             localStorage.setItem('freeCollectionIds', '[]');
                                         }
                                         message.success('Коллекция успешно скрыта!');
-                                        getCollections(token, true);
+                                        getCollections(true);
                                         setOpen(false);
                                     }}>
                                         <a>Скрыть коллекцию</a>

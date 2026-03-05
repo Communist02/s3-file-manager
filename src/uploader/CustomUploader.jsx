@@ -57,7 +57,7 @@ export default function CustomUploader({
         if (beforeUpload(file) === false) return;
 
         let filePath = path + '/';
-        const action = `${url}/collections/${collection_id}/upload/${token}${filePath}`;
+        const action = `${url}/collections/${collection_id}/upload/${filePath}`;
         const formData = new FormData();
         formData.append('file', file);
 
@@ -109,6 +109,7 @@ export default function CustomUploader({
         };
 
         xhr.open('POST', action, true);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
         xhr.send(formData);
 
         return {

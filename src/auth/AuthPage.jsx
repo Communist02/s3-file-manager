@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button, Checkbox, Watermark, Form, Input, message, Spin, Select, Card, Modal } from 'antd';
-import { authAPI, checkTokenAPI } from '../api/api';
+import { Button, Checkbox, Watermark, Form, Input, message, Spin, Select, Card } from 'antd';
+import { authAPI, checkTokenAPI, update_token } from '../api/api';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import './AuthPage.css';
 
@@ -18,7 +18,7 @@ function AuthPage({ authEvent }) {
             setIsLoading(false);
             if (response.status === 200) {
                 const login = localStorage.getItem('username');
-                authEvent(token, login);
+                authEvent(token);
             } else if (response.status === 401) {
                 message.info('Сессия устарела');
                 localStorage.removeItem('token');
@@ -41,6 +41,7 @@ function AuthPage({ authEvent }) {
         setIsLoading(false);
         if (response.status === 200) {
             const token = response.data.token;
+            update_token(token);
             if (remember.current) {
                 localStorage.setItem('token', token);
                 localStorage.setItem('username', response.data.username);

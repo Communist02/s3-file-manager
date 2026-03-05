@@ -2,9 +2,9 @@ import { useState, useRef } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getBucketsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile } from './api/api'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getCollectionsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
-import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Divider, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip } from 'antd';
+import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
@@ -17,13 +17,12 @@ import CollectionsSearch from './collectionsSearch/CollectionsSearch'
 
 function App() {
     const [isLoading, setIsLoading] = useState(false);
-    const [files, setFiles] = useState([]);
+    const [files, setFiles] = useState<Collection[]>([]);
     const [buckets, setBuckets] = useState([]);
-    const [currentBucket, setCurrentBucket] = useState('');
+    const [currentBucket, setCurrentBucket] = useState<Collection | null>(null);
     const [tokenAuth, setTokenAuth] = useState('');
-    const [username, setUsername] = useState('');
     const [showControlPanel, setShowControlPanel] = useState(false);
-    const copyCollection = useRef('');
+    const copyCollection = useRef<Collection | null>(null);
     const [openUploader, setOpenUploader] = useState(false);
     const [openLogs, setOpenLogs] = useState(false);
     const [openProfile, setOpenProfile] = useState(false);
@@ -36,9 +35,17 @@ function App() {
     const [newCollectionName, setNewCollectionName] = useState('');
     const [currentCountUploading, setCurrentCountUploading] = useState(0);
 
-    const getFiles = async (collection, token) => {
+    interface Collection {
+        id: number;
+        name: string;
+        path: string;
+        access_type_id: number;
+        type: string;
+    }
+
+    const getFiles = async (collection: Collection) => {
         setIsLoading(true);
-        const response = await getAllFilesAPI(collection.id, token);
+        const response = await getAllFilesAPI(collection.id);
         setIsLoading(false);
         if (response.status === 200) {
             if (response.data.length > 0) {
@@ -63,9 +70,9 @@ function App() {
         }
     };
 
-    async function updateCollection(collection_id, path = '') {
-        if (collection_id === currentBucket.id) {
-            const response = await getAllFilesAPI(currentBucket.id, tokenAuth, path);
+    async function updateCollection(collection_id: number, path: string = '') {
+        if (currentBucket !== null && collection_id === currentBucket.id) {
+            const response = await getAllFilesAPI(currentBucket.id, path);
             if (response.status === 200) {
                 if (response.data.length > 0) {
                     setFiles(response.data);
@@ -76,14 +83,14 @@ function App() {
         }
     };
 
-    const getBuckets = async (token, clear = false) => {
+    const getBuckets = async (clear = false) => {
         let result = [];
         setIsLoading(true);
-        const response = await getBucketsAPI(token);
+        const response = await getCollectionsAPI();
         let responseFree = null;
         const freeCollectionIds = localStorage.getItem('freeCollectionIds');
         if (freeCollectionIds !== null) {
-            responseFree = await getFreeCollections(token, JSON.parse(freeCollectionIds));
+            responseFree = await getFreeCollections(JSON.parse(freeCollectionIds));
         }
         setIsLoading(false);
         if (response.status === 200) {
@@ -92,11 +99,11 @@ function App() {
                 result = result.concat(responseFree.data);
             }
             if (result.length > 0) {
-                if (currentBucket === '' || clear) {
+                if (currentBucket === null || clear) {
                     setCurrentBucket(result[0]);
                 }
                 if (clear) {
-                    getFiles(result[0], token);
+                    getFiles(result[0]);
                 }
             }
         } else if (response.status === 500) {
@@ -112,24 +119,24 @@ function App() {
 
     // Refresh Files
     const handleRefresh = () => {
-        getFiles(currentBucket, tokenAuth);
+        currentBucket !== null && getFiles(currentBucket);
     };
 
     const handleDownload = async (files) => {
-        await downloadFile(files, currentBucket.id, tokenAuth);
+        currentBucket !== null && await downloadFile(files, currentBucket.id);
     };
 
     // File Upload Handlers
     const handleFileUploading = (file, parentFolder) => {
         console.log(file);
-        return { bucket: currentBucket.name, path: parentFolder !== null ? parentFolder.path : '/', token: tokenAuth };
+        return { bucket: currentBucket.name, path: parentFolder !== null ? parentFolder.path : '/' };
     };
 
     const handleFileUploaded = async (response) => {
         console.log(response);
         // const uploadedFile = JSON.parse(response);
         // setFiles((prev) => [...prev, uploadedFile]);
-        await getFiles(currentBucket, tokenAuth);
+        currentBucket !== null && await getFiles(currentBucket);
     };
 
     const handleError = (error, file) => {
@@ -139,10 +146,10 @@ function App() {
     // Delete File/Folder
     const handleDelete = async (files) => {
         setIsLoading(true);
-        const response = await deleteAPI(currentBucket.id, files, tokenAuth);
+        const response = await deleteAPI(currentBucket.id, files);
         setIsLoading(false);
         if (response.status === 200) {
-            await getFiles(currentBucket, tokenAuth);
+            currentBucket !== null && await getFiles(currentBucket);
             message.success(`Успешно удалено!`);
         } else if (response.status === 500) {
             Modal.error({
@@ -153,18 +160,18 @@ function App() {
         }
     };
 
-    const handleRename = async (file, newName) => {
+    const handleRename = async (file, newName: string) => {
         setIsLoading(true);
-        await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket.id, tokenAuth);
-        await getFiles(currentBucket, tokenAuth);
+        await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket.id);
+        currentBucket !== null && await getFiles(currentBucket);
     };
 
     // Create Folder
     const handleCreateFolder = async (name, parentFolder) => {
         setIsLoading(true);
-        const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.id, tokenAuth);
+        const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.id);
         if (response.status === 200 || response.status === 201) {
-            await getFiles(currentBucket, tokenAuth);
+            currentBucket !== null && await getFiles(currentBucket);
             message.success(`Папка "${name}" создана!`);
         } else {
             console.error(response.data);
@@ -190,20 +197,20 @@ function App() {
                 copiedFiles.push(file.path);
             }
         }
-        if (operationType === "copy") {
+        if (operationType === "copy" && copyCollection.current !== null && currentBucket !== null) {
             setIsLoading(true);
-            const response = await copyItemAPI(copyCollection.current.id, copiedFiles, currentBucket.id, destinationFolder !== null ? destinationFolder.path : '/', tokenAuth);
+            const response = await copyItemAPI(copyCollection.current.id, copiedFiles, currentBucket.id, destinationFolder !== null ? destinationFolder.path : '/');
             setIsLoading(false);
             if (response.status === 200) {
                 message.success('Файлы успешно скопированы!');
-                await getFiles(currentBucket, tokenAuth);
+                await getFiles(currentBucket);
             } else if (response.status === 403) {
                 message.error('Нет прав на копирование!');
             }
         }
     };
 
-    const handleBucket = async (id, collections = null) => {
+    const handleBucket = async (id: number, collections: Collection[] | null = null) => {
         let collection;
         if (collections !== null) {
             collection = collections.find(item => item.id === id);
@@ -215,27 +222,29 @@ function App() {
         } catch (error) {
             console.error(error);
         }
-        setCurrentBucket(collection);
-        await getFiles(collection, tokenAuth);
+        if (collection) {
+            setCurrentBucket(collection);
+            await getFiles(collection);
+        }
     }
 
     const outAccount = () => {
-        deleteSession(tokenAuth);
+        deleteSession();
         localStorage.removeItem('token');
         localStorage.removeItem('username');
         setShowControlPanel(false);
         setTokenAuth('');
         setBuckets([]);
-        setCurrentBucket('');
+        setCurrentBucket(null);
         setFiles([{}]);
     };
 
     const handleOkCreateCollection = async () => {
-        let response = await createCollection(newCollectionName, tokenAuth);
+        let response = await createCollection(newCollectionName);
         if (response.status === 200) {
             setIsModalOpen(false);
             message.success('Коллекция успешно создана!');
-            const collections = await getBuckets(tokenAuth);
+            const collections = await getBuckets();
             setNewCollectionName('');
             await handleBucket(response.data, collections);
         } else if (response.status === 406) {
@@ -259,7 +268,7 @@ function App() {
     };
 
     const handleProperties = async (file) => {
-        let response = await getFileInfo(currentBucket.id, tokenAuth, file['path'], file['isDirectory']);
+        let response = await getFileInfo(currentBucket.id, file['path'], file['isDirectory']);
         if (response.status === 200) {
             if (response.data !== null) {
                 const items = [];
@@ -291,7 +300,7 @@ function App() {
                     cancelText: 'Закрыть',
                     okText: 'Индексировать',
                     onOk: async () => {
-                        let response = await indexFile(currentBucket.id, tokenAuth, file['path']);
+                        let response = await indexFile(currentBucket.id, file['path']);
                         if (response.status === 200) {
                             handleProperties(file);
                         } else {
@@ -310,11 +319,11 @@ function App() {
         const accessItems = [];
         const groupItems = [];
         const accessToAllItems = [];
-        const collections = buckets;
+        const collections: Collection[] = buckets;
 
         for (let i = 0; i < collections.length; i++) {
             const item = {
-                label: collections[i].name || collection[i].id,
+                label: collections[i].name || collections[i].id,
                 value: collections[i].id,
             };
 
@@ -411,7 +420,7 @@ function App() {
                 setOpenLogs(!openLogs);
                 break;
             case 'theme':
-                localStorage.setItem('darkTheme', !darkTheme);
+                localStorage.setItem('darkTheme', (!darkTheme).toString());
                 setDarkTheme(!darkTheme);
                 break;
             case 'exit':
@@ -420,10 +429,9 @@ function App() {
         }
     }
 
-    async function auth(token, username) {
+    async function auth(token: string) {
         setTokenAuth(token);
-        setUsername(username);
-        const buckets = await getBuckets(token, true);
+        const buckets = await getBuckets(true);
         setBuckets(buckets);
     }
 
@@ -502,7 +510,7 @@ function App() {
 
     return <ConfigProvider locale={ruRU} theme={{
         components: { Layout: { headerBg: '#00000000' } },
-        algorithm: darkTheme && theme.darkAlgorithm,
+        algorithm: darkTheme ? theme.darkAlgorithm : undefined,
     }}>
         <AntApp>
             <Layout>
@@ -515,12 +523,12 @@ function App() {
                         <Button type="primary" icon={<SearchOutlined />} onClick={() => setOpenSearchCollections(true)}>Поиск</Button>
                         {
                             buckets.length > 0 && !showControlPanel && <>
-                                {['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
+                                {currentBucket !== null && ['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
                                 <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} />
                                 <Tooltip title='Создать коллекцию'>
                                     <Button icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} />
                                 </Tooltip>
-                                {currentBucket.type === 'owner' && <Tooltip title='История'><Button icon={<HistoryOutlined />} onClick={() => setOpenHistory(true)} /></Tooltip>}
+                                {currentBucket !== null && currentBucket.type === 'owner' && <Tooltip title='История'><Button icon={<HistoryOutlined />} onClick={() => setOpenHistory(true)} /></Tooltip>}
                                 <Tooltip title='Управление коллекцией'>
                                     <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)} />
                                 </Tooltip>
@@ -534,25 +542,25 @@ function App() {
                         </Dropdown>
                     </Space>
                     <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
-                    <History collection_id={currentBucket.id} token={tokenAuth} open={openHistory} setOpen={setOpenHistory} />
+                    {currentBucket !== null && <History collection_id={currentBucket.id} open={openHistory} setOpen={setOpenHistory} />}
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
-                        {openCollection && <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} token={tokenAuth} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
+                        {openCollection && <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
                     </Drawer>
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
                         {openProfile && <ProfilePage token={tokenAuth} />}
                     </Drawer>
                     <Drawer title='Группы' styles={{ body: { padding: 0 } }} size={1080} open={showControlPanel} onClose={() => setShowControlPanel(false)}>
-                        {showControlPanel && <ControlPanel token={tokenAuth} getCollections={getBuckets} />}
+                        {showControlPanel && <ControlPanel getCollections={getBuckets} />}
                     </Drawer>
                     <Drawer title='Поиск коллекций' size={1080} open={openSearchCollections} onClose={() => setOpenSearchCollections(false)}>
-                        {openSearchCollections && <CollectionsSearch token={tokenAuth} getCollections={getBuckets} />}
+                        {openSearchCollections && <CollectionsSearch getCollections={getBuckets} />}
                     </Drawer>
                 </Layout.Header>}
                 <Layout.Content>
                     <Card className='main-card' style={{ margin: '0 10px', body: { padding: 0 } }}>
                         {page}
                     </Card>
-                    <Uploader open={openUploader} setOpen={setOpenUploader} url={url} collection_id={currentBucket.id} path={currentPath} token={tokenAuth} updateCollection={updateCollection} setCurrentCountUploading={setCurrentCountUploading} />
+                    <Uploader open={openUploader} setOpen={setOpenUploader} url={url} collection_id={currentBucket !== null ? currentBucket.id : null} path={currentPath} token={tokenAuth} updateCollection={updateCollection} setCurrentCountUploading={setCurrentCountUploading} />
                 </Layout.Content>
                 <Layout.Footer style={{ padding: '10px 50px', textAlign: 'center', color: 'grey' }}>S3 File Manager © 2025 Created by Denis Mazur</Layout.Footer>
             </Layout>

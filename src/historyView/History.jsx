@@ -2,12 +2,12 @@ import { useState, useRef } from 'react';
 import { Button, Drawer, Table } from 'antd';
 import { getHistoryCollection } from '../api/api';
 
-function History({ open, setOpen, collection_id, token }) {
+function History({ open, setOpen, collection_id }) {
     const [logs, setLogs] = useState([]);
     const last_collection_id = useRef(null);
 
     async function updateLogs() {
-        const response = await getHistoryCollection(collection_id, token);
+        const response = await getHistoryCollection(collection_id);
         setLogs(response.data);
     }
 

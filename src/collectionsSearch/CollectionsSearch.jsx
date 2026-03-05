@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Descriptions, Space, Input, Card, Tag, Popconfirm, message, Table, Typography } from 'antd';
 import { searchCollections } from '../api/api';
 
-function CollectionsSearch({ token, getCollections }) {
+function CollectionsSearch({ getCollections }) {
     const [collections, setCollections] = useState([]);
 
     const onSearch = async (value, _e, info) => {
-        const response = await searchCollections(value, token);
+        const response = await searchCollections(value);
         if (response.status === 200) {
             if (response.data.length === 0) {
                 message.info('Ничего не найдено!');
@@ -165,7 +165,7 @@ function CollectionsSearch({ token, getCollections }) {
     //                         localStorage.setItem('freeCollectionIds', JSON.stringify([collection.id]));
     //                     }
     //                     message.success('Коллекция успешно добавлена!');
-    //                     await getCollections(token, true);
+    //                     await getCollections(true);
     //                 }}>
     //                     <a>{ids.includes(collection.id) || collection.type !== 'access_to_all' ? 'Уже находится в общем списке' : 'Добавить в общий список'}</a>
     //                 </Popconfirm>
@@ -214,7 +214,7 @@ function CollectionsSearch({ token, getCollections }) {
                         localStorage.setItem('freeCollectionIds', JSON.stringify([collection.id]));
                     }
                     message.success('Коллекция успешно добавлена!');
-                    await getCollections(token, true);
+                    await getCollections(true);
                 }}>
                     <a>{ids.includes(collection.id) || collection.type !== 'access_to_all' ? 'Уже находится в общем списке' : 'Добавить в общий список'}</a>
                 </Popconfirm>,

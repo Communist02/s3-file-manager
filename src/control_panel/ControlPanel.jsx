@@ -5,7 +5,7 @@ import { Tabs, Layout, Menu, Modal, Input, Button, message } from 'antd';
 import { UsergroupAddOutlined, TeamOutlined } from '@ant-design/icons';
 import { getGroups, createGroup } from '../api/api';
 
-const ControlPanel = ({ token, getCollections }) => {
+const ControlPanel = ({ getCollections }) => {
     const [isModalOpenCreateGroup, setIsModalOpenCreateGroup] = useState(false);
     const [groups, setGroups] = useState([]);
     const [newGroupTitle, setNewGroupTitle] = useState('');
@@ -13,7 +13,7 @@ const ControlPanel = ({ token, getCollections }) => {
     const [currentGroup, setCurrentGroup] = useState(-1);
 
     const updateGroups = async () => {
-        const response = await getGroups(token);
+        const response = await getGroups();
         if (response.status === 200) {
             setGroups(response.data);
             if (currentGroup === -1 && response.data !== null && response.data.length > 0) {
@@ -27,7 +27,7 @@ const ControlPanel = ({ token, getCollections }) => {
     }, []);
 
     const handleOkCreateGroup = async () => {
-        let response = await createGroup(newGroupTitle, newGroupDescription, token);
+        let response = await createGroup(newGroupTitle, newGroupDescription);
         if (response.status === 200) {
             message.success('Группа успешно создана!');
             setNewGroupTitle('');
@@ -37,7 +37,7 @@ const ControlPanel = ({ token, getCollections }) => {
             message.error('Произошла ошибка! ' + response);
         }
 
-        response = await getGroups(token);
+        response = await getGroups();
         if (response.status === 200) {
             setGroups(response.data);
         } else {
@@ -95,7 +95,7 @@ const ControlPanel = ({ token, getCollections }) => {
                         />
                     </Layout.Sider>
                     <Layout.Content style={{ padding: '10px 10px 0', overflow: 'auto', height: 'calc(100vh - 180px)' }}>
-                        <GroupPage index={currentGroup} groups={groups} getCollections={getCollections} updateGroups={updateGroups} token={token} />
+                        <GroupPage index={currentGroup} groups={groups} getCollections={getCollections} updateGroups={updateGroups} />
                     </Layout.Content>
                 </Layout>,
         },

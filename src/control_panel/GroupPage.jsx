@@ -3,7 +3,7 @@ import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Sp
 import { getOtherUsers, addUserToGroup, getGroupUsers, deleteUserToGroup, transferPowerToGroup, exitGroup, changeRoleInGroup, changeGroupInfo } from '../api/api';
 import { EditOutlined, UserAddOutlined } from '@ant-design/icons';
 
-function GroupPage({ index, groups, getCollections, updateGroups, token }) {
+function GroupPage({ index, groups, getCollections, updateGroups }) {
     const [users, setUsers] = useState([]);
     const [members, setMembers] = useState([]);
     const [userId, setUserId] = useState('');
@@ -17,7 +17,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     const [description, setDescription] = useState('');
 
     const getMembers = async () => {
-        const response = await getGroupUsers(groups[index].id, token);
+        const response = await getGroupUsers(groups[index].id);
         if (response.status === 200) {
             setMembers(response.data);
         }
@@ -29,7 +29,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     }
 
     async function showModalAddUser() {
-        let response = await getOtherUsers(token);
+        let response = await getOtherUsers();
         if (response.status === 200) {
             let usersOptions = [];
             const usersList = response.data;
@@ -59,7 +59,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     }
 
     async function handleOkAddUser() {
-        const response = await addUserToGroup(groups[index].id, userId, roleId, token);
+        const response = await addUserToGroup(groups[index].id, userId, roleId);
         if (response.status === 200) {
             message.success('Пользователь успешно добавлен в группу!');
             setUserId('');
@@ -72,7 +72,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     }
 
     async function handleOkTransferPower() {
-        const response = await transferPowerToGroup(groups[index].id, newOwnerUserId, token);
+        const response = await transferPowerToGroup(groups[index].id, newOwnerUserId);
         if (response.status === 200) {
             message.success('Власть успешно передана!');
             setNewOwnerUserId('');
@@ -85,10 +85,10 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     }
 
     async function handleDeleteUser(userId, name) {
-        const response = await deleteUserToGroup(groups[index].id, userId, token);
+        const response = await deleteUserToGroup(groups[index].id, userId);
         if (response.status === 200) {
             message.success('Пользователь ' + name + ' успешно покинул группу!');
-            await getCollections(token);
+            await getCollections();
             getMembers();
         } else {
             message.error('Произошла ошибка! ' + response);
@@ -96,10 +96,10 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     }
 
     async function handleExitGroup() {
-        const response = await exitGroup(groups[index].id, token);
+        const response = await exitGroup(groups[index].id);
         if (response.status === 200) {
             message.success('Вы успешно покинули группу!');
-            await getCollections(token);
+            await getCollections();
             updateGroups();
             getMembers();
         } else {
@@ -108,7 +108,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     }
 
     async function handleChangeRole(userId, roleId) {
-        const response = await changeRoleInGroup(groups[index].id, userId, roleId, token);
+        const response = await changeRoleInGroup(groups[index].id, userId, roleId);
         if (response.status === 200) {
             if (roleId === 2) {
                 message.success('Участник успешно повышен до админа!');
@@ -122,7 +122,7 @@ function GroupPage({ index, groups, getCollections, updateGroups, token }) {
     }
 
     async function handleOkEditGroup() {
-        const response = await changeGroupInfo(groups[index].id, title, description, token);
+        const response = await changeGroupInfo(groups[index].id, title, description);
         if (response.status === 200) {
             message.success('Данные успешно изменены!');
             setTitle('');

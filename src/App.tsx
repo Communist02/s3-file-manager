@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getCollectionsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile } from './api/api'
+import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getCollectionsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile, update_token } from './api/api'
 import ControlPanel from './control_panel/ControlPanel';
 import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
@@ -14,6 +14,7 @@ import History from './historyView/History'
 import CollectionPage from './control_panel/CollectionPage'
 import ProfilePage from './control_panel/ProfilePage'
 import CollectionsSearch from './collectionsSearch/CollectionsSearch'
+import { useAuth } from 'react-oidc-context'
 
 function App() {
     const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +35,14 @@ function App() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCollectionName, setNewCollectionName] = useState('');
     const [currentCountUploading, setCurrentCountUploading] = useState(0);
+    const auth = useAuth();
+
+    useEffect(() => {
+        if (auth.user) {
+            //update_token(auth.user?.access_token)
+            login(auth.user?.access_token);
+        }
+    }, [auth.isAuthenticated]);
 
     interface Collection {
         id: number;
@@ -167,7 +176,7 @@ function App() {
     };
 
     // Create Folder
-    const handleCreateFolder = async (name, parentFolder) => {
+    const handleCreateFolder = async (name: string, parentFolder) => {
         setIsLoading(true);
         const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.id);
         if (response.status === 200 || response.status === 201) {
@@ -184,7 +193,7 @@ function App() {
         message.success('Готово к вставке!');
     }
 
-    function handleFolderChange(path) {
+    function handleFolderChange(path: string) {
         setCurrentPath(path);
     }
 
@@ -229,9 +238,7 @@ function App() {
     }
 
     const outAccount = () => {
-        deleteSession();
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
+        auth.removeUser();
         setShowControlPanel(false);
         setTokenAuth('');
         setBuckets([]);
@@ -257,7 +264,7 @@ function App() {
     };
 
     // Функция для форматирования размера файла
-    const formatFileSize = (bytes) => {
+    const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 B';
 
         const k = 1024;
@@ -429,17 +436,11 @@ function App() {
         }
     }
 
-    async function auth(token: string) {
+    async function login(token: string) {
         setTokenAuth(token);
+        update_token(token);
         const buckets = await getBuckets(true);
         setBuckets(buckets);
-    }
-
-    let page = 'auth';
-    if (!(tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '')) {
-        page = 'auth';
-    } else {
-        page = 'fileManager';
     }
 
     const permissions = [
@@ -449,63 +450,61 @@ function App() {
         { create: true, upload: true, move: false, copy: false, rename: false, download: false, delete: false }, // writeonly
     ]
 
-    switch (page) {
-        case 'auth':
-            page = <AuthPage authEvent={auth} />;
-            break;
-        case 'fileManager':
-            page = <>
-                <Modal
-                    title="Создание коллекции"
-                    open={isModalOpen}
-                    onOk={handleOkCreateCollection}
-                    onCancel={
-                        () => {
-                            setIsModalOpen(false);
-                            setNewCollectionName('');
-                        }
+    let page = <></>;
+    if (!tokenAuth) {
+        page = <AuthPage />;
+    } else {
+        page = <>
+            <Modal
+                title="Создание коллекции"
+                open={isModalOpen}
+                onOk={handleOkCreateCollection}
+                onCancel={
+                    () => {
+                        setIsModalOpen(false);
+                        setNewCollectionName('');
                     }
-                    okButtonProps={{ disabled: newCollectionName.length < 3 }}
-                >
-                    <p>Имя коллекции</p>
-                    <Input placeholder="Имя" value={newCollectionName} count={{ show: true, max: 63 }} onChange={(e) => setNewCollectionName(e.target.value)} />
-                </Modal>
-                {buckets.length > 0 ?
-                    <FileManager
-                        files={files}
-                        language='ru'
-                        isLoading={isLoading}
-                        layout={'list'}
-                        onRefresh={handleRefresh}
-                        onError={handleError}
-                        onDownload={handleDownload}
-                        onDelete={handleDelete}
-                        onCopy={handleCopy}
-                        onPaste={handlePaste}
-                        onRename={handleRename}
-                        onShowProperties={handleProperties}
-                        onFileUploading={handleFileUploading}
-                        onFileUploaded={handleFileUploaded}
-                        onCreateFolder={handleCreateFolder}
-                        fileUploadConfig={{ url: url, method: 'PUT' }}
-                        defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
-                        collapsibleNav={true}
-                        filePreviewPath={url + `/collections/${currentBucket.id}/file/${tokenAuth}?preview=true`}
-                        primaryColor='#1677ff'
-                        permissions={currentBucket !== '' ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
-                        onFolderChange={handleFolderChange}
-                    /> :
-                    <Flex className='not-collections' style={{ height: 'calc(100vh - 38px - 70px)' }} justify="center" align="center">
-                        <Result
-                            title="У вас нет доступных коллекций, но вы можете их создать!"
-                            extra={
-                                <Button type="primary" onClick={() => setIsModalOpen(true)}>Создать коллекцию</Button>
-                            }
-                        />
-                    </Flex>
                 }
-            </>;
-            break;
+                okButtonProps={{ disabled: newCollectionName.length < 3 }}
+            >
+                <p>Имя коллекции</p>
+                <Input placeholder="Имя" value={newCollectionName} count={{ show: true, max: 63 }} onChange={(e) => setNewCollectionName(e.target.value)} />
+            </Modal>
+            {buckets.length > 0 ?
+                <FileManager
+                    files={files}
+                    language='ru'
+                    isLoading={isLoading}
+                    layout={'list'}
+                    onRefresh={handleRefresh}
+                    onError={handleError}
+                    onDownload={handleDownload}
+                    onDelete={handleDelete}
+                    onCopy={handleCopy}
+                    onPaste={handlePaste}
+                    onRename={handleRename}
+                    onShowProperties={handleProperties}
+                    onFileUploading={handleFileUploading}
+                    onFileUploaded={handleFileUploaded}
+                    onCreateFolder={handleCreateFolder}
+                    fileUploadConfig={{ url: url, method: 'PUT' }}
+                    defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
+                    collapsibleNav={true}
+                    filePreviewPath={url + `/collections/${currentBucket?.id}/file/${tokenAuth}?preview=true`}
+                    primaryColor='#1677ff'
+                    permissions={currentBucket !== null ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
+                    onFolderChange={handleFolderChange}
+                /> :
+                <Flex className='not-collections' style={{ height: 'calc(100vh - 38px - 70px)' }} justify="center" align="center">
+                    <Result
+                        title="У вас нет доступных коллекций, но вы можете их создать!"
+                        extra={
+                            <Button type="primary" onClick={() => setIsModalOpen(true)}>Создать коллекцию</Button>
+                        }
+                    />
+                </Flex>
+            }
+        </>;
     }
 
     return <ConfigProvider locale={ruRU} theme={{

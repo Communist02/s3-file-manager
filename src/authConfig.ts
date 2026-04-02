@@ -1,6 +1,7 @@
 import { User } from "oidc-client-ts"
 import { update_token } from './api/api.ts'
 import { WebStorageStateStore } from "oidc-client-ts";
+import { urlAuth } from "./url.js";
 
 const onSigninCallback = (_user: User | void): void => {
   if (_user) {
@@ -14,8 +15,7 @@ const onSigninCallback = (_user: User | void): void => {
 }
 
 export const oidcConfig = {
-  //authority: "http://minio-s3-1.eco.dvo.ru:8080",
-  authority: "http://localhost:8080",
+  authority: urlAuth,
   client_id: "search",
   redirect_uri: 'http://' + window.location.host,
   "onSigninCallback": onSigninCallback,

@@ -2,13 +2,21 @@ import { useState, useRef } from 'react';
 import { Button, Drawer, Table, Tag, Typography } from 'antd';
 import { getLogs } from '../api/api';
 
-function Logs({ open, setOpen, token }) {
+interface LogsProps {
+    open: boolean;
+    setOpen: (value: boolean) => void;
+}
+
+function Logs({ open, setOpen }: LogsProps) {
     const [logs, setLogs] = useState([]);
+    const [isUpdating, setIsUpdating] = useState(false);
     const updated = useRef(false);
 
     async function updateLogs() {
-        const response = await getLogs(token);
+        setIsUpdating(true);
+        const response = await getLogs();
         setLogs(response.data);
+        setIsUpdating(false);
     }
 
     if (!updated.current && open) {
@@ -24,7 +32,7 @@ function Logs({ open, setOpen, token }) {
         {
             title: 'Время',
             dataIndex: 'date_time',
-            render: (value) => {
+            render: (value: string) => {
                 const formatter = Intl.DateTimeFormat('ru-RU', {
                     day: '2-digit',
                     month: '2-digit',
@@ -42,7 +50,7 @@ function Logs({ open, setOpen, token }) {
         {
             title: 'Результат',
             dataIndex: 'result',
-            render: (value) => {
+            render: (value: number) => {
                 let color;
                 switch (value) {
                     case 200:
@@ -80,7 +88,7 @@ function Logs({ open, setOpen, token }) {
                     padding: 0,
                 }
             }}
-            extra={<Button type='primary' onClick={updateLogs}>Обновить</Button>}
+            extra={<Button loading={isUpdating} type='primary' onClick={updateLogs}>Обновить</Button>}
         >
             {open ? <Table
                 scroll={{ y: 'calc(100vh - 180px)' }}
@@ -88,10 +96,9 @@ function Logs({ open, setOpen, token }) {
                 size="small"
                 dataSource={logs}
                 columns={columns}
-                pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default' }}
+                pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'medium' }}
                 expandable={{
-                    expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>,
-                    // rowExpandable: record => record.message !== null && record.message !== ''
+                    expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>
                 }}
             /> : <></>}
         </Drawer>

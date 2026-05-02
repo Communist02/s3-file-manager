@@ -3,17 +3,17 @@ import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getCollectionsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile, update_token } from './api/api'
-import ControlPanel from './control_panel/ControlPanel';
+import Groups from './groups/Groups';
 import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
 import Uploader from './uploader/Uploader'
-import Logs from './logsView/Logs'
-import History from './historyView/History'
+import Logs from './logs-view/Logs'
+import History from './history/History'
 import CollectionPage from './control_panel/CollectionPage'
 import ProfilePage from './control_panel/ProfilePage'
-import CollectionsSearch from './collectionsSearch/CollectionsSearch'
+import CollectionsSearch from './collections-search/CollectionsSearch'
 import { useAuth } from 'react-oidc-context'
 
 function App() {
@@ -36,6 +36,7 @@ function App() {
     const [newCollectionName, setNewCollectionName] = useState('');
     const [currentCountUploading, setCurrentCountUploading] = useState(0);
     const auth = useAuth();
+    const [isCreatingCollection, setIsCreatingCollection] = useState(false);
 
     useEffect(() => {
         if (auth.user) {
@@ -247,6 +248,7 @@ function App() {
     };
 
     const handleOkCreateCollection = async () => {
+        setIsCreatingCollection(true);
         let response = await createCollection(newCollectionName);
         if (response.status === 200) {
             setIsModalOpen(false);
@@ -261,6 +263,7 @@ function App() {
         } else {
             message.error('Произошла ошибка! ' + response);
         }
+        setIsCreatingCollection(false);
     };
 
     // Функция для форматирования размера файла
@@ -465,7 +468,7 @@ function App() {
                         setNewCollectionName('');
                     }
                 }
-                okButtonProps={{ disabled: newCollectionName.length < 3 }}
+                okButtonProps={{ disabled: newCollectionName.length < 3, loading: isCreatingCollection }}
             >
                 <p>Имя коллекции</p>
                 <Input placeholder="Имя" value={newCollectionName} count={{ show: true, max: 63 }} onChange={(e) => setNewCollectionName(e.target.value)} />
@@ -516,7 +519,7 @@ function App() {
                 {tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '' && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0px 10px 0px 0px' }}>
                     <Button type='text' style={{ height: 60, padding: 10, }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>
                         <img height='40px' width='40px' src={'./favicon.svg'} />
-                        <h1>S3 File Manager</h1>
+                        <h1>Хранилище</h1>
                     </Button>
                     <Space className='header-left'>
                         <Button type="primary" icon={<SearchOutlined />} onClick={() => setOpenSearchCollections(true)}>Поиск</Button>
@@ -535,21 +538,22 @@ function App() {
                             </>
                         }
                         <Dropdown trigger={['click']} menu={{ items, onClick: onClickLogin }}>
-                            <Button type="text" shape="circle">
-                                <Avatar size={34} icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
+                            <Button iconPlacement='end' type="primary" shape="round" icon={<UserOutlined />}>
+                                {auth.user?.profile.sub}
                             </Button>
                         </Dropdown>
                     </Space>
-                    <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
                     {currentBucket !== null && <History collection_id={currentBucket.id} open={openHistory} setOpen={setOpenHistory} />}
+                    <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
+                    <Groups open={showControlPanel} setOpen={setShowControlPanel} getCollections={getBuckets} />
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
                         {openCollection && <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
                     </Drawer>
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
                         {openProfile && <ProfilePage token={tokenAuth} />}
                     </Drawer>
-                    <Drawer title='Группы' styles={{ body: { padding: 0 } }} size={1080} open={showControlPanel} onClose={() => setShowControlPanel(false)}>
-                        {showControlPanel && <ControlPanel getCollections={getBuckets} />}
+                    <Drawer title='Группы' styles={{ body: { padding: 0 } }} size={1080} onClose={() => setShowControlPanel(false)}>
+                        {showControlPanel && <Groups getCollections={getBuckets} />}
                     </Drawer>
                     <Drawer title='Поиск коллекций' size={1080} open={openSearchCollections} onClose={() => setOpenSearchCollections(false)}>
                         {openSearchCollections && <CollectionsSearch getCollections={getBuckets} />}

@@ -18,6 +18,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
     const [groupMode, setGroupMode] = useState(false);
     const lastId = useRef(-1);
     const [form] = Form.useForm();
+    const [isRemovingCollection, setIsRemovingCollection] = useState(false);
 
     const getAccess = async () => {
         const response = await getAccessToCollection(collection.id);
@@ -97,6 +98,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
     }
 
     const handleOkRemove = async () => {
+        setIsRemovingCollection(true);
         const response = await removeCollection(collection.id);
         if (response.status === 200) {
             message.success('Коллекция успешно удалена!');
@@ -108,6 +110,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
         } else {
             message.error('Произошла ошибка! ' + response);
         }
+        setIsRemovingCollection(false);
     };
 
     const handleOkAccess = async () => {
@@ -346,6 +349,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
                     okType='danger'
                     okText='Удалить'
                     onOk={handleOkRemove}
+                    okButtonProps={{ loading: isRemovingCollection }}
                     onCancel={() => setIsModalOpenRemove(false)}
                 >
                     <p>Вы действительно хотите удалить {collection.name} ?</p>

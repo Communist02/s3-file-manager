@@ -22,7 +22,7 @@ function ProfilePage({ token }) {
     const items = [
         {
             key: 'id',
-            label: 'id',
+            label: 'ID',
             children: user.id,
         },
         {

@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
-import { Button, Spin, Card } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import './AuthPage.css';
+import { Button, Spin, Card, Result } from 'antd';
 import { useAuth } from 'react-oidc-context';
+import './AuthPage.css';
 
 function AuthPage() {
     const auth = useAuth();
@@ -15,29 +14,27 @@ function AuthPage() {
 
     let body = <></>;
     if (auth.isLoading) {
-        body = <>
-            <h1>Идет процесс входа</h1>
-        </>
+        body = <Spin description="Идет процесс входа" size='large' />
     } else {
-        body = <>
-            <h1>Требуется войти в систему</h1>
-            <Button style={{ width: '100%' }} type='primary' onClick={() => auth.signinRedirect()}>Войти</Button>
-        </>
+        body = <Result
+            title="Требуется войти в систему"
+            extra={
+                <Button style={{ width: '100%' }} type='primary' onClick={() => auth.signinRedirect()}>Войти</Button>
+            }
+        />
     }
 
     if (auth.error) {
-        body = <>
-            <h1>{auth.error.message}</h1>
-            <div>Попробуйте перезагрузить страницу!</div>
-        </>
+        body = <Result
+            status="warning"
+            title={auth.error.message}
+            subTitle="Попробуйте перезагрузить страницу!"
+        />
     }
 
     return (
         <div className='auth-page'>
-            <Card className="auth-container">
-                {body}
-            </Card>
-            {auth.isLoading && <Spin size="large" fullscreen />}
+            {body}
         </div>
     );
 }

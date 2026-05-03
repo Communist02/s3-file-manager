@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import './Groups.css';
 import GroupPage from './GroupPage';
 import { Layout, Menu, Modal, Input, Button, message, Drawer } from 'antd';
@@ -11,6 +11,7 @@ const Groups = ({ open, setOpen, getCollections }) => {
     const [newGroupTitle, setNewGroupTitle] = useState('');
     const [newGroupDescription, setNewGroupDescription] = useState('');
     const [currentGroup, setCurrentGroup] = useState(-1);
+    const updated = useRef(false);
 
     const updateGroups = async () => {
         const response = await getGroups();
@@ -22,9 +23,10 @@ const Groups = ({ open, setOpen, getCollections }) => {
         }
     }
 
-    useEffect(() => {
+    if (!updated.current && open) {
+        updated.current = true;
         updateGroups();
-    }, []);
+    }
 
     const handleOkCreateGroup = async () => {
         let response = await createGroup(newGroupTitle, newGroupDescription);

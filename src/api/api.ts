@@ -8,13 +8,16 @@ let api = axios.create({
   }
 });
 
-export function update_token(token: string) {
+let token: string = '';
+
+export function update_token(newToken: string) {
   api = axios.create({
     baseURL: url,
     headers: {
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${newToken}`
     }
   });
+  token = newToken;
 }
 
 const apiAuth = axios.create({
@@ -90,10 +93,10 @@ export const downloadFile = async (files: File[], collection_id: number) => {
   try {
     let url;
     if (files.length === 1 && !files[0].isDirectory) {
-      url = `${api.defaults.baseURL}/collections/${collection_id}/file/${encodeURIComponent(files[0].path)}`;
+      url = `${api.defaults.baseURL}/collections/${collection_id}/file/${encodeURIComponent(files[0].path)}?token=${token}`;
     } else {
       const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
-      url = `${api.defaults.baseURL}/collections/${collection_id}/archive?${fileQuery}`;
+      url = `${api.defaults.baseURL}/collections/${collection_id}/archive?${fileQuery}&token=${token}`;
     }
     window.location.href = url;
   } catch (error) {

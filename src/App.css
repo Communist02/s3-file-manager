@@ -21,6 +21,16 @@
   }
 }
 
+@media (max-width: 720px) {
+  .search-button {
+    display: none;
+  }
+
+  .header-right {
+    display: none;
+  }
+}
+
 .file-explorer {
   margin: 0;
   min-height: calc(100vh - 38px - 70px) !important;

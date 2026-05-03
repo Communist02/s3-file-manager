@@ -5,18 +5,18 @@ import { getDataSize } from "../../../utils/getDataSize";
 import { useTranslation } from "../../../contexts/TranslationProvider";
 import "./PreviewFile.action.scss";
 import { validateApiCallback } from "../../../utils/validateApiCallback";
-import { Typography, Image, Card, Modal, Button, Tag, Space } from "antd";
+import { Typography, Image, Card, Modal, Button, Tag, Space, Spin } from "antd";
 import { getIconForFile, } from 'vscode-icons-js';
 
 const imageExtensions = ["jpg", "jpeg", "png", 'gif', 'svg', 'webp', 'avif'];
 const videoExtensions = ["mp4", "mov", "avi", 'webm', 'av1', '3gp'];
-const audioExtensions = ["mp3", "wav", "m4a", 'ogg'];
-const textExtensions = ['txt', 'text', 'asc', 'ascii', 'log', 'logs', 'err', 'error', 'warn', 'warning', 'info', 'debug', 'trace', 'audit', 'history', 'session', 'cache', 'tmp', 'temp', 'swp', 'swo', 'swn', 'pid', 'lock', 'lck', 'state', 'status', 'md', 'markdown', 'rst', 'rest', 'adoc', 'asciidoc', 'tex', 'latex', 'bib', 'wiki', 'creole', 'pod', 'pm', 'textile', 'org', 'fountain', 'rdoc', 'json', 'jsonl', 'ndjson', 'yaml', 'yml', 'toml', 'csv', 'tsv', 'psv', 'dsv', 'ini', 'cfg', 'conf', 'properties', 'env', 'reg', 'inf', 'manifest'];
+const audioExtensions = ["mp3", "wav", "m4a", 'ogg', 'flac'];
+const textExtensions = ['txt', 'text', 'asc', 'ascii', 'log', 'logs', 'err', 'error', 'warn', 'warning', 'info', 'debug', 'trace', 'audit', 'history', 'session', 'cache', 'tmp', 'temp', 'swp', 'swo', 'swn', 'pid', 'lock', 'lck', 'state', 'status', 'md', 'markdown', 'rst', 'rest', 'adoc', 'asciidoc', 'tex', 'latex', 'bib', 'wiki', 'creole', 'pod', 'pm', 'textile', 'org', 'fountain', 'rdoc', 'json', 'jsonl', 'ndjson', 'yaml', 'yml', 'toml', 'csv', 'tsv', 'psv', 'dsv', 'ini', 'cfg', 'conf', 'properties', 'env', 'reg', 'inf', 'manifest', 'key'];
 const codeExtensions = ['js', 'jsx', 'ts', 'tsx', 'py', 'pyw', 'pyi', 'pyc', 'pyd', 'rb', 'rbi', 'php', 'php3', 'php4', 'php5', 'phps', 'phpt', 'phtml', 'java', 'class', 'jar', 'kt', 'kts', 'scala', 'sc', 'groovy', 'gy', 'go', 'rs', 'swift', 'm', 'mm', 'h', 'hh', 'c', 'cc', 'cpp', 'cxx', 'hpp', 'hxx', 'cs', 'vb', 'fs', 'fsx', 'fsi', 'd', 'pas', 'pp', 'lpr', 'lpi', 'pl', 'pm', 't', 'r', 'R', 'Rmd', 'Rnw', 'jl', 'ex', 'exs', 'erl', 'hrl', 'clj', 'cljs', 'cljc', 'edn', 'lua', 'sql', 'ps1', 'psm1', 'psd1', 'sh', 'bash', 'zsh', 'fish', 'csh', 'ksh', 'bat', 'cmd', 'awk', 'sed', 'nim', 'v', 'zig'];
 
-let docExtensions = [];
+const docExtensions = [];
 if (navigator.userAgent.toLowerCase().includes('firefox')) {
-  docExtensions = ['pdf'];
+  docExtensions.push('pdf');
 }
 
 const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, setShow, show }) => {
@@ -137,7 +137,7 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
                       {content}
                     </pre>
                   </Typography.Paragraph>
-                  : <p>{t('loading')}</p>}
+                  : <Spin description="Loading..." size="large" />}
               </Card>
             ),
             toolbarRender: () => null,

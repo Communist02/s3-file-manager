@@ -4,7 +4,7 @@ import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getCollectionsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile, update_token } from './api/api'
 import Groups from './groups/Groups';
-import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip } from 'antd';
+import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip, Spin } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
@@ -37,6 +37,7 @@ function App() {
     const [currentCountUploading, setCurrentCountUploading] = useState(0);
     const auth = useAuth();
     const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+    const [isLoadingCollections, setIsLoadingCollections] = useState(false);
 
     useEffect(() => {
         if (auth.user) {
@@ -94,15 +95,17 @@ function App() {
     };
 
     const getBuckets = async (clear = false) => {
+        // setIsLoading(true);
+        setIsLoadingCollections(true);
         let result = [];
-        setIsLoading(true);
         const response = await getCollectionsAPI();
         let responseFree = null;
         const freeCollectionIds = localStorage.getItem('freeCollectionIds');
         if (freeCollectionIds !== null) {
             responseFree = await getFreeCollections(JSON.parse(freeCollectionIds));
         }
-        setIsLoading(false);
+        // setIsLoading(false);
+        setIsLoadingCollections(false);
         if (response.status === 200) {
             result = response.data;
             if (responseFree !== null && responseFree.status === 200) {
@@ -493,18 +496,18 @@ function App() {
                     fileUploadConfig={{ url: url, method: 'PUT' }}
                     defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
                     collapsibleNav={true}
-                    filePreviewPath={url + `/collections/${currentBucket?.id}/file/${tokenAuth}?preview=true`}
+                    filePreviewPath={url + `/collections/${currentBucket?.id}/file?preview=true&token=${tokenAuth}`}
                     primaryColor='#1677ff'
                     permissions={currentBucket !== null ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
                     onFolderChange={handleFolderChange}
                 /> :
                 <Flex className='not-collections' style={{ height: 'calc(100vh - 38px - 70px)' }} justify="center" align="center">
-                    <Result
+                    {isLoadingCollections ? <Spin size='large' /> : <Result
                         title="У вас нет доступных коллекций, но вы можете их создать!"
                         extra={
                             <Button type="primary" onClick={() => setIsModalOpen(true)}>Создать коллекцию</Button>
                         }
-                    />
+                    />}
                 </Flex>
             }
         </>;
@@ -522,7 +525,7 @@ function App() {
                         <h1>Хранилище</h1>
                     </Button>
                     <Space className='header-left'>
-                        <Button type="primary" icon={<SearchOutlined />} onClick={() => setOpenSearchCollections(true)}>Поиск</Button>
+                        <Button className='search-button' type="primary" icon={<SearchOutlined />} onClick={() => setOpenSearchCollections(true)}>Поиск</Button>
                         {
                             buckets.length > 0 && !showControlPanel && <>
                                 {currentBucket !== null && ['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}

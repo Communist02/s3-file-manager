@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
-import { getAllFilesAPI, downloadFile, deleteAPI, copyItemAPI, renameAPI, createFolderAPI, getCollectionsAPI, createCollection, deleteSession, getFileInfo, getFreeCollections, indexFile, update_token } from './api/api'
 import Groups from './groups/Groups';
-import { Button, Avatar, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip, Spin } from 'antd';
+import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip, Spin } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
@@ -15,10 +14,25 @@ import CollectionPage from './control_panel/CollectionPage'
 import ProfilePage from './control_panel/ProfilePage'
 import CollectionsSearch from './collections-search/CollectionsSearch'
 import { useAuth } from 'react-oidc-context'
+import { apiClient } from './api';
+
+export interface Collection {
+    id: number;
+    name: string;
+    access_type_id: number;
+    type: string;
+    is_access_all: boolean;
+}
+
+export interface File {
+    isDirectory: boolean;
+    path: string;
+    name: string;
+}
 
 function App() {
     const [isLoading, setIsLoading] = useState(false);
-    const [files, setFiles] = useState<Collection[]>([]);
+    const [files, setFiles] = useState<Collection[] | {}[]>([]);
     const [buckets, setBuckets] = useState([]);
     const [currentBucket, setCurrentBucket] = useState<Collection | null>(null);
     const [tokenAuth, setTokenAuth] = useState('');
@@ -46,17 +60,9 @@ function App() {
         }
     }, [auth.isAuthenticated]);
 
-    interface Collection {
-        id: number;
-        name: string;
-        path: string;
-        access_type_id: number;
-        type: string;
-    }
-
     const getFiles = async (collection: Collection) => {
         setIsLoading(true);
-        const response = await getAllFilesAPI(collection.id);
+        const response = await apiClient.getFiles(collection.id);
         setIsLoading(false);
         if (response.status === 200) {
             if (response.data.length > 0) {
@@ -83,7 +89,7 @@ function App() {
 
     async function updateCollection(collection_id: number, path: string = '') {
         if (currentBucket !== null && collection_id === currentBucket.id) {
-            const response = await getAllFilesAPI(currentBucket.id, path);
+            const response = await apiClient.getFiles(currentBucket.id, path);
             if (response.status === 200) {
                 if (response.data.length > 0) {
                     setFiles(response.data);
@@ -94,15 +100,15 @@ function App() {
         }
     };
 
-    const getBuckets = async (clear = false) => {
+    async function getBuckets(clear: boolean = false): Promise<Collection> {
         // setIsLoading(true);
         setIsLoadingCollections(true);
         let result = [];
-        const response = await getCollectionsAPI();
+        const response = await apiClient.getCollections();
         let responseFree = null;
         const freeCollectionIds = localStorage.getItem('freeCollectionIds');
         if (freeCollectionIds !== null) {
-            responseFree = await getFreeCollections(JSON.parse(freeCollectionIds));
+            responseFree = await apiClient.getFreeCollections(JSON.parse(freeCollectionIds));
         }
         // setIsLoading(false);
         setIsLoadingCollections(false);
@@ -135,31 +141,31 @@ function App() {
         currentBucket !== null && getFiles(currentBucket);
     };
 
-    const handleDownload = async (files) => {
-        currentBucket !== null && await downloadFile(files, currentBucket.id);
+    const handleDownload = async (files: File[]) => {
+        currentBucket !== null && await apiClient.downloadFile(files, currentBucket.id);
     };
 
     // File Upload Handlers
-    const handleFileUploading = (file, parentFolder) => {
+    const handleFileUploading = (file: File, parentFolder: File) => {
         console.log(file);
-        return { bucket: currentBucket.name, path: parentFolder !== null ? parentFolder.path : '/' };
+        return { bucket: currentBucket!.name, path: parentFolder !== null ? parentFolder.path : '/' };
     };
 
-    const handleFileUploaded = async (response) => {
+    const handleFileUploaded = async (response: any) => {
         console.log(response);
         // const uploadedFile = JSON.parse(response);
         // setFiles((prev) => [...prev, uploadedFile]);
         currentBucket !== null && await getFiles(currentBucket);
     };
 
-    const handleError = (error, file) => {
+    const handleError = (error: any, file: File) => {
         console.error(error);
     };
 
     // Delete File/Folder
-    const handleDelete = async (files) => {
+    const handleDelete = async (files: File[]) => {
         setIsLoading(true);
-        const response = await deleteAPI(currentBucket.id, files);
+        const response = await apiClient.deleteFiles(currentBucket!.id, files);
         setIsLoading(false);
         if (response.status === 200) {
             currentBucket !== null && await getFiles(currentBucket);
@@ -173,16 +179,16 @@ function App() {
         }
     };
 
-    const handleRename = async (file, newName: string) => {
+    const handleRename = async (file: File, newName: string) => {
         setIsLoading(true);
-        await renameAPI(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket.id);
+        await apiClient.rename(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket!.id);
         currentBucket !== null && await getFiles(currentBucket);
     };
 
     // Create Folder
-    const handleCreateFolder = async (name: string, parentFolder) => {
+    const handleCreateFolder = async (name: string, parentFolder: File) => {
         setIsLoading(true);
-        const response = await createFolderAPI(name, parentFolder !== null ? parentFolder.path : '/', currentBucket.id);
+        const response = await apiClient.createFolder(name, parentFolder !== null ? parentFolder.path : '/', currentBucket!.id);
         if (response.status === 200 || response.status === 201) {
             currentBucket !== null && await getFiles(currentBucket);
             message.success(`Папка "${name}" создана!`);
@@ -192,7 +198,7 @@ function App() {
         setIsLoading(false);
     };
 
-    function handleCopy(files) {
+    function handleCopy(files: File[]) {
         copyCollection.current = currentBucket;
         message.success('Готово к вставке!');
     }
@@ -201,7 +207,7 @@ function App() {
         setCurrentPath(path);
     }
 
-    const handlePaste = async (copiedItems, destinationFolder, operationType) => {
+    const handlePaste = async (copiedItems: File[], destinationFolder: File[], operationType: string) => {
         let copiedFiles = [];
         for (const file of copiedItems) {
             if (file.isDirectory) {
@@ -212,7 +218,7 @@ function App() {
         }
         if (operationType === "copy" && copyCollection.current !== null && currentBucket !== null) {
             setIsLoading(true);
-            const response = await copyItemAPI(copyCollection.current.id, copiedFiles, currentBucket.id, destinationFolder !== null ? destinationFolder.path : '/');
+            const response = await apiClient.copyFiles(copyCollection.current.id, copiedFiles, currentBucket.id, destinationFolder !== null ? destinationFolder.path : '/');
             setIsLoading(false);
             if (response.status === 200) {
                 message.success('Файлы успешно скопированы!');
@@ -252,7 +258,7 @@ function App() {
 
     const handleOkCreateCollection = async () => {
         setIsCreatingCollection(true);
-        let response = await createCollection(newCollectionName);
+        let response = await apiClient.createCollection(newCollectionName);
         if (response.status === 200) {
             setIsModalOpen(false);
             message.success('Коллекция успешно создана!');
@@ -280,8 +286,8 @@ function App() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
-    const handleProperties = async (file) => {
-        let response = await getFileInfo(currentBucket.id, file['path'], file['isDirectory']);
+    const handleProperties = async (file: File) => {
+        let response = await apiClient.getFileInfo(currentBucket!.id, file['path'], file['isDirectory']);
         if (response.status === 200) {
             if (response.data !== null) {
                 const items = [];
@@ -313,7 +319,7 @@ function App() {
                     cancelText: 'Закрыть',
                     okText: 'Индексировать',
                     onOk: async () => {
-                        let response = await indexFile(currentBucket.id, file['path']);
+                        let response = await apiClient.indexFile(currentBucket!.id, file['path']);
                         if (response.status === 200) {
                             handleProperties(file);
                         } else {
@@ -415,7 +421,7 @@ function App() {
         },
     ];
 
-    function onClickLogin(e) {
+    function onClickLogin(e: any) {
         switch (e.key) {
             case 'fileManager':
                 setShowControlPanel(false);
@@ -444,7 +450,7 @@ function App() {
 
     async function login(token: string) {
         setTokenAuth(token);
-        update_token(token);
+        apiClient.updateToken(token);
         const buckets = await getBuckets(true);
         setBuckets(buckets);
     }
@@ -496,7 +502,7 @@ function App() {
                     fileUploadConfig={{ url: url, method: 'PUT' }}
                     defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
                     collapsibleNav={true}
-                    filePreviewPath={url + `/collections/${currentBucket?.id}/file?preview=true&token=${tokenAuth}`}
+                    filePreviewPath={url + `/collection/${currentBucket?.id}/file/?preview=true&token=${tokenAuth}`}
                     primaryColor='#1677ff'
                     permissions={currentBucket !== null ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
                     onFolderChange={handleFolderChange}

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Button, Drawer, Table, Tag, Typography } from 'antd';
-import { getLogs } from '../api/api';
+import { apiClient } from '../api';
 
 interface LogsProps {
     open: boolean;
@@ -14,7 +14,7 @@ function Logs({ open, setOpen }: LogsProps) {
 
     async function updateLogs() {
         setIsUpdating(true);
-        const response = await getLogs();
+        const response = await apiClient.getLogs();
         setLogs(response.data);
         setIsUpdating(false);
     }

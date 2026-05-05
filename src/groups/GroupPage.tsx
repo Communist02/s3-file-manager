@@ -1,13 +1,22 @@
 import { useState, useRef } from 'react';
 import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Space, Collapse, Descriptions, Input, Tooltip } from 'antd';
-import { getOtherUsers, addUserToGroup, getGroupUsers, deleteUserToGroup, transferPowerToGroup, exitGroup, changeRoleInGroup, changeGroupInfo } from '../api/api';
 import { EditOutlined, UserAddOutlined } from '@ant-design/icons';
+import { apiClient } from '../api';
+import { Collection } from '../App';
+import { Group } from './Groups'
 
-function GroupPage({ index, groups, getCollections, updateGroups }) {
+interface GroupsPageProps {
+    index: number;
+    groups: Group[];
+    getCollections: (value?: boolean) => Promise<Collection>;
+    updateGroups: () => void;
+}
+
+function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPageProps) {
     const [users, setUsers] = useState([]);
     const [members, setMembers] = useState([]);
-    const [userId, setUserId] = useState('');
-    const [roleId, setRoleId] = useState('');
+    const [userId, setUserId] = useState<number | null>(null);
+    const [roleId, setRoleId] = useState<number | null>(null);
     const [newOwnerUserId, setNewOwnerUserId] = useState('');
     const [isModalOpenAddUser, setIsModalOpenAddUser] = useState(false);
     const [isModalOpenTransferPower, setIsModalOpenTransferPower] = useState(false);
@@ -17,7 +26,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
     const [description, setDescription] = useState('');
 
     const getMembers = async () => {
-        const response = await getGroupUsers(groups[index].id);
+        const response = await apiClient.getGroupUsers(groups[index].id);
         if (response.status === 200) {
             setMembers(response.data);
         }
@@ -29,7 +38,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
     }
 
     async function showModalAddUser() {
-        let response = await getOtherUsers();
+        let response = await apiClient.getOtherUsers();
         if (response.status === 200) {
             let usersOptions = [];
             const usersList = response.data;
@@ -59,20 +68,22 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
     }
 
     async function handleOkAddUser() {
-        const response = await addUserToGroup(groups[index].id, userId, roleId);
-        if (response.status === 200) {
-            message.success('Пользователь успешно добавлен в группу!');
-            setUserId('');
-            setRoleId('');
-            getMembers();
-            setIsModalOpenAddUser(false);
-        } else {
-            message.error('Произошла ошибка! ' + response);
+        if (userId !== null && roleId !== null) {
+            const response = await apiClient.addUserToGroup(groups[index].id, userId, roleId);
+            if (response.status === 200) {
+                message.success('Пользователь успешно добавлен в группу!');
+                setUserId(null);
+                setRoleId(null);
+                getMembers();
+                setIsModalOpenAddUser(false);
+            } else {
+                message.error('Произошла ошибка! ' + response);
+            }
         }
     }
 
     async function handleOkTransferPower() {
-        const response = await transferPowerToGroup(groups[index].id, newOwnerUserId);
+        const response = await apiClient.transferPowerToGroup(groups[index].id, newOwnerUserId);
         if (response.status === 200) {
             message.success('Власть успешно передана!');
             setNewOwnerUserId('');
@@ -84,8 +95,8 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
         }
     }
 
-    async function handleDeleteUser(userId, name) {
-        const response = await deleteUserToGroup(groups[index].id, userId);
+    async function handleDeleteUser(userId: number, name: string) {
+        const response = await apiClient.deleteUserToGroup(groups[index].id, userId);
         if (response.status === 200) {
             message.success('Пользователь ' + name + ' успешно покинул группу!');
             await getCollections();
@@ -96,7 +107,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
     }
 
     async function handleExitGroup() {
-        const response = await exitGroup(groups[index].id);
+        const response = await apiClient.exitGroup(groups[index].id);
         if (response.status === 200) {
             message.success('Вы успешно покинули группу!');
             await getCollections();
@@ -107,8 +118,8 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
         }
     }
 
-    async function handleChangeRole(userId, roleId) {
-        const response = await changeRoleInGroup(groups[index].id, userId, roleId);
+    async function handleChangeRole(userId: number, roleId: number) {
+        const response = await apiClient.changeRoleInGroup(groups[index].id, userId, roleId);
         if (response.status === 200) {
             if (roleId === 2) {
                 message.success('Участник успешно повышен до админа!');
@@ -122,7 +133,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
     }
 
     async function handleOkEditGroup() {
-        const response = await changeGroupInfo(groups[index].id, title, description);
+        const response = await apiClient.changeGroupInfo(groups[index].id, title, description);
         if (response.status === 200) {
             message.success('Данные успешно изменены!');
             setTitle('');
@@ -152,7 +163,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
         {
             title: 'Роль',
             dataIndex: 'role_id',
-            render: (value) => {
+            render: (value: number) => {
                 let color;
                 let name;
                 switch (value) {
@@ -178,7 +189,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
         },
         {
             title: '',
-            render: (_, record) => (groups[index].role_id < record.role_id) ?
+            render: (_: any, record: any) => (groups[index].role_id < record.role_id) ?
                 <Space size="large">
                     {record.role_id === 2 ?
                         <Popconfirm title="Вы действительно хотите понизить админа до участника?" okText="Понизить" onConfirm={() => handleChangeRole(record.id, 3)}>
@@ -228,12 +239,12 @@ function GroupPage({ index, groups, getCollections, updateGroups }) {
                     onOk={handleOkAddUser}
                     onCancel={
                         () => {
-                            setUserId('');
-                            setRoleId('');
+                            setUserId(null);
+                            setRoleId(null);
                             setIsModalOpenAddUser(false);
                         }
                     }
-                    okButtonProps={{ disabled: userId === '' || roleId === '' }}
+                    okButtonProps={{ disabled: userId === null || roleId === null }}
                 >
                     <p>Пользователь</p>
                     <Select

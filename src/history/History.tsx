@@ -1,13 +1,19 @@
 import { useState, useRef } from 'react';
 import { Button, Drawer, Table } from 'antd';
-import { getHistoryCollection } from '../api/api';
+import { apiClient } from '../api';
 
-function History({ open, setOpen, collection_id }) {
+interface HistoryProps {
+    open: boolean;
+    setOpen: (value: boolean) => void;
+    collection_id: number;
+}
+
+function History({ open, setOpen, collection_id }: HistoryProps) {
     const [logs, setLogs] = useState([]);
-    const last_collection_id = useRef(null);
+    const last_collection_id = useRef<number | null>(null);
 
     async function updateLogs() {
-        const response = await getHistoryCollection(collection_id);
+        const response = await apiClient.getHistoryCollection(collection_id);
         setLogs(response.data);
     }
 
@@ -21,7 +27,7 @@ function History({ open, setOpen, collection_id }) {
             title: 'Время',
             dataIndex: 'date_time',
             width: '20%',
-            render: (value) => {
+            render: (value: any) => {
                 const formatter = Intl.DateTimeFormat('ru-RU', {
                     day: '2-digit',
                     month: '2-digit',
@@ -40,9 +46,9 @@ function History({ open, setOpen, collection_id }) {
         {
             title: 'Действие',
             dataIndex: 'action',
-            render: (value, record) => {
+            render: (value: string, record: any) => {
                 switch (value) {
-                    case 'copy':
+                    case 'copy_files':
                         return `Копирование ${JSON.stringify(record.message.source_paths, null, 1).replace('[', '').replace(']', '')} из коллекции ${record.message.source_collection_id} в «${record.message.destination_path}»`
                     case 'delete_files':
                         return `Удаление ${JSON.stringify(record.message.files, null, 1).replace('[', '').replace(']', '')}`;
@@ -87,7 +93,7 @@ function History({ open, setOpen, collection_id }) {
                 size="small"
                 dataSource={logs}
                 columns={columns}
-                pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default' }}
+                pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'medium' }}
             /> : <></>}
 
         </Drawer>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Button, Spin, Card, Result } from 'antd';
+import { Button, Spin, Result } from 'antd';
 import { useAuth } from 'react-oidc-context';
 import './AuthPage.css';
 

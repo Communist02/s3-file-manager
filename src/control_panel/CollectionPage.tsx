@@ -1,19 +1,40 @@
-import { useState, useRef, useEffect } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Input, Switch, Checkbox } from 'antd';
-import { removeCollection, getGroups, getOtherUsers, giveAccessUserToCollection, giveAccessGroupToCollection, getAccessToCollection, deleteAccessToCollection, getAccessTypes, changeAccessType, changeCollectionInfo, getCollectionInfo, changeAccessToAll } from '../api/api';
+import { useState, useRef } from 'react';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Input, Checkbox } from 'antd';
 import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
+import { Collection } from '../App'
+import { apiClient } from '../api';
 
-function CollectionPage({ collection, getCollections, open, setOpen }) {
+interface CollectionPageProps {
+    open: boolean;
+    setOpen: (value: boolean) => void;
+    collection_id: number;
+    getCollections: (value: boolean) => Collection;
+    collection: Collection;
+}
+
+interface CollectionInfo {
+    title: string;
+    description: string;
+    types: Array<any>;
+    tags: Array<string>;
+}
+
+interface Option {
+    label: string;
+    value: number;
+}
+
+function CollectionPage({ collection, getCollections, open, setOpen }: CollectionPageProps) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
     const [isModalOpenAccess, setIsModalOpenAccess] = useState(false);
     const [isModalOpenEditCollection, setIsModalOpenEditCollection] = useState(false);
-    const [users, setUsers] = useState([]);
+    const [users, setUsers] = useState<Array<Option>>([]);
     const [access, setAccess] = useState([]);
-    const [collectionInfo, setCollectionInfo] = useState(null);
-    const [groups, setGroups] = useState([]);
-    const [accessTypes, setAccessTypes] = useState([]);
-    const [accessTypeId, setAccessTypeId] = useState('');
-    const [accessId, setAccessId] = useState('');
+    const [collectionInfo, setCollectionInfo] = useState<CollectionInfo | null>(null);
+    const [groups, setGroups] = useState<Array<Option>>([]);
+    const [accessTypes, setAccessTypes] = useState<Array<Option>>([]);
+    const [accessTypeId, setAccessTypeId] = useState<number | null>(null);
+    const [accessId, setAccessId] = useState<number | null>(null);
     const [isAccessToAll, setIsAccessAll] = useState(collection.is_access_all);
     const [groupMode, setGroupMode] = useState(false);
     const lastId = useRef(-1);
@@ -21,14 +42,14 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
     const [isRemovingCollection, setIsRemovingCollection] = useState(false);
 
     const getAccess = async () => {
-        const response = await getAccessToCollection(collection.id);
+        const response = await apiClient.getAccessToCollection(collection.id);
         if (response.status === 200) {
             setAccess(response.data);
         }
     }
 
     async function getInfo() {
-        const response = await getCollectionInfo(collection.id);
+        const response = await apiClient.getCollectionInfo(collection.id);
         if (response.status === 200) {
             setCollectionInfo(response.data);
         } else if (response.status === 404) {
@@ -43,7 +64,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
     }
 
     async function showModalAccess() {
-        let response = await getOtherUsers();
+        let response = await apiClient.getOtherUsers();
         if (response.status === 200) {
             let usersOptions = [];
             const usersList = response.data;
@@ -55,7 +76,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
             }
             setUsers(usersOptions);
         }
-        response = await getGroups();
+        response = await apiClient.getGroups();
         if (response.status === 200) {
             let groupsOptions = [];
             const groupsList = response.data;
@@ -67,11 +88,11 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
             }
             setGroups(groupsOptions);
         }
-        response = await getAccessTypes();
+        response = await apiClient.getAccessTypes();
         if (response.status === 200) {
             let accessTypesOptions = [];
             const accessTypesList = response.data;
-            let label;
+            let label = '';
             for (const accessType of accessTypesList) {
                 switch (accessType.id) {
                     case 1:
@@ -99,7 +120,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
 
     const handleOkRemove = async () => {
         setIsRemovingCollection(true);
-        const response = await removeCollection(collection.id);
+        const response = await apiClient.removeCollection(collection.id);
         if (response.status === 200) {
             message.success('Коллекция успешно удалена!');
             await getCollections(true);
@@ -116,15 +137,15 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
     const handleOkAccess = async () => {
         let response;
         if (!groupMode) {
-            response = await giveAccessUserToCollection(collection.id, accessId, accessTypeId);
+            response = await apiClient.giveAccessUserToCollection(collection.id, accessId!, accessTypeId!);
         } else {
-            response = await giveAccessGroupToCollection(collection.id, accessId, accessTypeId);
+            response = await apiClient.giveAccessGroupToCollection(collection.id, accessId!, accessTypeId!);
         }
         if (response.status === 200) {
             message.success('Доступ успешно предоставлен!');
             await getAccess();
-            setAccessId('');
-            setAccessTypeId('');
+            setAccessId(null);
+            setAccessTypeId(null);
             setGroupMode(false);
             setIsModalOpenAccess(false);
         } else {
@@ -132,8 +153,8 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
         }
     };
 
-    async function handleDeleteAccess(access_id) {
-        const response = await deleteAccessToCollection(access_id);
+    async function handleDeleteAccess(access_id: number) {
+        const response = await apiClient.deleteAccessToCollection(access_id);
         if (response.status === 200) {
             message.success('Доступ успешно удален!');
             if (collection.type !== 'owner') {
@@ -145,8 +166,8 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
         }
     };
 
-    async function handleChangeAccess(access_id, accessTypeId) {
-        const response = await changeAccessType(access_id, accessTypeId);
+    async function handleChangeAccess(access_id: number, accessTypeId: number) {
+        const response = await apiClient.changeAccessType(access_id, accessTypeId);
         if (response.status === 200) {
             message.success('Доступ успешно изменен!');
             await getAccess();
@@ -155,8 +176,8 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
         }
     };
 
-    async function handleOkChangeInfo(data) {
-        const response = await changeCollectionInfo(collection.id, data);
+    async function handleOkChangeInfo(data: {}) {
+        const response = await apiClient.changeCollectionInfo(collection.id, data);
         if (response.status === 200) {
             message.success('Описание изменено!');
             setIsModalOpenEditCollection(false);
@@ -166,8 +187,8 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
         }
     };
 
-    async function handleAccessAll(e) {
-        const response = await changeAccessToAll(collection.id, e.target.checked);
+    async function handleAccessAll(e: any) {
+        const response = await apiClient.changeAccessToAll(collection.id, e.target.checked);
         if (response.status === 200) {
             if (e.target.checked) {
                 setIsAccessAll(true);
@@ -187,7 +208,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
         {
             title: 'Тип получателя',
             dataIndex: 'target_type',
-            render: (value) =>
+            render: (value: string) =>
                 <Tag color={value === 'user' ? 'blue' : 'magenta'}>
                     {value === 'user' ? 'Пользователь' : 'Группа'}
                 </Tag>
@@ -199,7 +220,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
         {
             title: 'Тип доступа',
             dataIndex: 'type_id',
-            render: (value, record) => {
+            render: (value: number, record: any) => {
                 let color;
                 let name;
                 switch (value) {
@@ -226,7 +247,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
                     { key: 4, label: 'Только запись' },
                 ]
                 if (collection.access_type_id === 1 && value !== 1) {
-                    return <Dropdown menu={{ items, onClick: (e) => handleChangeAccess(record.id, e.key) }} trigger={['click']}>
+                    return <Dropdown menu={{ items, onClick: (e) => handleChangeAccess(record.id, Number(e.key)) }} trigger={['click']}>
                         <a>
                             <Tag color={color}>{name}</Tag>
                             <DownOutlined />
@@ -239,7 +260,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
         },
         {
             title: '',
-            render: (_, record) => record.type_id !== 1 && (collection.access_type_id === 1 || record.target_type !== 'group') ?
+            render: (_: any, record: any) => record.type_id !== 1 && (collection.access_type_id === 1 || record.target_type !== 'group') ?
                 <Popconfirm title="Вы действительно хотите удалить доступ?" okText="Удалить" onConfirm={() => handleDeleteAccess(record.id)}>
                     <a>Удалить</a>
                 </Popconfirm>
@@ -306,9 +327,9 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
                                 </>}
                                 {collection.type === 'access_to_all' &&
                                     <Popconfirm title="Вы действительно хотите скрыть коллекцию из общего списка?" onConfirm={() => {
-                                        let ids = localStorage.getItem('freeCollectionIds');
-                                        if (ids !== null) {
-                                            ids = JSON.parse(ids);
+                                        const ids_str = localStorage.getItem('freeCollectionIds');
+                                        if (ids_str !== null) {
+                                            let ids: Array<any> = JSON.parse(ids_str);
                                             ids = ids.filter(element => element !== collection.id);
                                             localStorage.setItem('freeCollectionIds', JSON.stringify(ids));
                                         } else {
@@ -361,20 +382,20 @@ function CollectionPage({ collection, getCollections, open, setOpen }) {
                     onOk={handleOkAccess}
                     onCancel={
                         () => {
-                            setAccessId('');
-                            setAccessTypeId('');
+                            setAccessId(null);
+                            setAccessTypeId(null);
                             setGroupMode(false);
                             setIsModalOpenAccess(false);
                         }
                     }
-                    okButtonProps={{ disabled: accessId === '' || accessTypeId === '' }}
+                    okButtonProps={{ disabled: accessId === null || accessTypeId === null }}
                 >
                     <Segmented
                         value={groupMode ? 'Для группы' : 'Для пользователя'}
                         options={['Для пользователя', 'Для группы']}
                         onChange={value => {
-                            setAccessId('');
-                            setAccessTypeId('');
+                            setAccessId(null);
+                            setAccessTypeId(null);
                             setGroupMode(value === 'Для группы');
                         }}
                     />

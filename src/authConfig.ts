@@ -1,11 +1,11 @@
 import { User } from "oidc-client-ts"
-import { update_token } from './api/api.ts'
+import { apiClient } from './api.ts'
 import { WebStorageStateStore } from "oidc-client-ts";
 import { urlAuth } from "./url.js";
 
 const onSigninCallback = (_user: User | void): void => {
   if (_user) {
-    update_token(_user.access_token);
+    apiClient.updateToken(_user.access_token);
   }
   window.history.replaceState(
     {},

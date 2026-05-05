@@ -3,18 +3,33 @@ import './Groups.css';
 import GroupPage from './GroupPage';
 import { Layout, Menu, Modal, Input, Button, message, Drawer } from 'antd';
 import { UsergroupAddOutlined } from '@ant-design/icons';
-import { getGroups, createGroup } from '../api/api';
+import { Collection } from '../App';
+import { apiClient } from '../api';
 
-const Groups = ({ open, setOpen, getCollections }) => {
+interface GroupsProps {
+    open: boolean;
+    setOpen: (value: boolean) => void;
+    collection_id: number;
+    getCollections: (value?: boolean) => Promise<Collection>;
+}
+
+export interface Group {
+    id: number;
+    title: string;
+    description: string;
+    role_id: number;
+}
+
+const Groups = ({ open, setOpen, getCollections }: GroupsProps) => {
     const [isModalOpenCreateGroup, setIsModalOpenCreateGroup] = useState(false);
-    const [groups, setGroups] = useState([]);
+    const [groups, setGroups] = useState<Group[]>([]);
     const [newGroupTitle, setNewGroupTitle] = useState('');
     const [newGroupDescription, setNewGroupDescription] = useState('');
     const [currentGroup, setCurrentGroup] = useState(-1);
     const updated = useRef(false);
 
     const updateGroups = async () => {
-        const response = await getGroups();
+        const response = await apiClient.getGroups();
         if (response.status === 200) {
             setGroups(response.data);
             if (currentGroup === -1 && response.data !== null && response.data.length > 0) {
@@ -29,7 +44,7 @@ const Groups = ({ open, setOpen, getCollections }) => {
     }
 
     const handleOkCreateGroup = async () => {
-        let response = await createGroup(newGroupTitle, newGroupDescription);
+        let response = await apiClient.createGroup(newGroupTitle, newGroupDescription);
         if (response.status === 200) {
             message.success('Группа успешно создана!');
             setNewGroupTitle('');
@@ -39,7 +54,7 @@ const Groups = ({ open, setOpen, getCollections }) => {
             message.error('Произошла ошибка! ' + response);
         }
 
-        response = await getGroups();
+        response = await apiClient.getGroups();
         if (response.status === 200) {
             setGroups(response.data);
         } else {
@@ -87,7 +102,6 @@ const Groups = ({ open, setOpen, getCollections }) => {
             onClose={() => setOpen(false)}
             extra={<Button type="primary" style={{ marginLeft: 5 }} icon={<UsergroupAddOutlined />} onClick={() => setIsModalOpenCreateGroup(true)}>Создать новую группу</Button>}
         >
-            <Groups getCollections={getCollections} />
             <div className="control-panel">
                 <div className="control-panel-main">
                     <Layout>
@@ -97,7 +111,7 @@ const Groups = ({ open, setOpen, getCollections }) => {
                                 defaultOpenKeys={['owner', 'admin', 'member']}
                                 mode="inline"
                                 items={getGroupItems()}
-                                onSelect={(e) => setCurrentGroup(e.key)}
+                                onSelect={(e: any) => setCurrentGroup(e.key)}
                                 selectedKeys={[currentGroup.toString()]}
                             />
                         </Layout.Sider>

@@ -1,12 +1,27 @@
 import { useState } from 'react';
-import { Descriptions, Space, Input, Card, Tag, Popconfirm, message, Table, Typography } from 'antd';
-import { searchCollections } from '../api/api';
+import { Descriptions, Space, Input, Tag, Popconfirm, message, Table, Typography } from 'antd';
+import { apiClient } from '../api';
+import { Collection } from '../App';
 
-function CollectionsSearch({ getCollections }) {
-    const [collections, setCollections] = useState([]);
+interface CollectionsSearchProps {
+    getCollections: (value?: boolean) => Promise<Collection>;
+}
 
-    const onSearch = async (value, _e, info) => {
-        const response = await searchCollections(value);
+interface CollectionSearch {
+    id: number;
+    name: string;
+    access_type_id: number;
+    type: string;
+    is_access_all: boolean;
+    index: Record<string, any>;
+    files: Array<any>;
+}
+
+function CollectionsSearch({ getCollections }: CollectionsSearchProps) {
+    const [collections, setCollections] = useState<CollectionSearch[]>([]);
+
+    const onSearch = async (value: string) => {
+        const response = await apiClient.searchCollections(value);
         if (response.status === 200) {
             if (response.data.length === 0) {
                 message.info('Ничего не найдено!');
@@ -28,7 +43,7 @@ function CollectionsSearch({ getCollections }) {
         {
             title: 'Тема',
             dataIndex: 'index',
-            render: (value) => {
+            render: (value: any) => {
                 if (value !== undefined) return value.title
             }
         },
@@ -36,7 +51,7 @@ function CollectionsSearch({ getCollections }) {
             title: 'Описание',
             dataIndex: 'index',
             width: '50%',
-            render: (value) => {
+            render: (value: any) => {
                 if (value !== undefined) return value.description
             }
         },
@@ -64,7 +79,7 @@ function CollectionsSearch({ getCollections }) {
         {
             title: 'Размер',
             dataIndex: 'size',
-            render: (value) => {
+            render: (value: number) => {
                 const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
                 let index = 0
 
@@ -179,13 +194,14 @@ function CollectionsSearch({ getCollections }) {
     //     return listCards;
     // }
 
-    const getItems = (collection) => {
+    const getItems = (collection: CollectionSearch) => {
         let tags = [];
         let types = [];
 
-        let ids = localStorage.getItem('freeCollectionIds');
-        if (ids !== null) {
-            ids = JSON.parse(ids);
+        let ids_str = localStorage.getItem('freeCollectionIds');
+        let ids: Array<number>;
+        if (ids_str !== null) {
+            ids = JSON.parse(ids_str);
         } else {
             ids = [];
         }
@@ -258,7 +274,7 @@ function CollectionsSearch({ getCollections }) {
                 dataSource={collection.files}
                 columns={columnsFile}
                 bordered
-                pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default' }}
+                pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'medium' }}
                 expandable={{
                     expandedRowRender: record => <Typography><pre>{JSON.stringify(record, null, 4)}</pre></Typography>,
                     // rowExpandable: record => record.message !== null && record.message !== ''
@@ -276,7 +292,7 @@ function CollectionsSearch({ getCollections }) {
             dataSource={collections}
             columns={columns}
             bordered
-            pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'default' }}
+            pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false, size: 'medium' }}
             expandable={{
                 expandedRowRender: record => getItems(record),
                 // rowExpandable: record => record.message !== null && record.message !== ''

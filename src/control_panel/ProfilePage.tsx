@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Descriptions, Avatar, Space, Typography, Divider, Input, message } from 'antd';
-import { getUserInfo } from '../api/api';
+import { apiClient } from '../api';
 import { UserOutlined } from '@ant-design/icons';
 import './ProfilePage.css';
 
-function ProfilePage({ token }) {
-    const [user, setUser] = useState({});
+interface UserProps {
+    id: number;
+    count_collections: number;
+    username: string;
+}
+
+interface ProfilePageProps {
+    token: string;
+}
+
+function ProfilePage({ token }: ProfilePageProps) {
+    const [user, setUser] = useState<UserProps>({id: 0, count_collections: 0, username: ''});
 
     async function getUser() {
-        const response = await getUserInfo(token);
+        const response = await apiClient.getUserInfo();
         if (response.status === 200) {
             setUser(response.data);
         } else {

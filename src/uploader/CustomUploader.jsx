@@ -57,7 +57,7 @@ export default function CustomUploader({
         if (beforeUpload(file) === false) return;
 
         let filePath = path + '/';
-        const action = `${url}/collections/${collection_id}/upload/${filePath}`;
+        const action = `${url}/collection/${collection_id}/upload/${filePath}`;
         const formData = new FormData();
         formData.append('file', file);
 

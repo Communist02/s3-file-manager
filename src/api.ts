@@ -150,7 +150,7 @@ export class ApiClient {
 
     public rename = async (path: string, new_name: string, collection_id: number) => {
         try {
-            const response = await this.api.post('/collections/' + collection_id + '/rename', { path, new_name });
+            const response = await this.api.post('/collection/' + collection_id + '/rename', { path, new_name });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "rename");
@@ -231,7 +231,7 @@ export class ApiClient {
 
     public deleteAccessToCollection = async (access_id: number) => {
         try {
-            const response = await this.api.delete(`/collections/access`, { params: { access_id } });
+            const response = await this.api.delete(`/collection/access`, { params: { access_id } });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -366,7 +366,7 @@ export class ApiClient {
 
     public getFileInfo = async (collection_id: number, path: string, is_dir: boolean) => {
         try {
-            const response = await this.api.get('/collections/' + collection_id + '/file_info/' + encodeURIComponent(path) + '?is_dir=' + is_dir);
+            const response = await this.api.get('/collection/' + collection_id + '/file_info/' + encodeURIComponent(path) + '?is_dir=' + is_dir);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -375,7 +375,7 @@ export class ApiClient {
 
     public indexFile = async (collection_id: number, path: string) => {
         try {
-            const response = await this.api.post('/collections/' + collection_id + '/indexing_file/' + encodeURIComponent(path));
+            const response = await this.api.post('/collection/' + collection_id + '/indexing_file/' + encodeURIComponent(path));
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");

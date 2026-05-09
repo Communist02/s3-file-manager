@@ -33,7 +33,7 @@ export interface File {
 function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [files, setFiles] = useState<Collection[] | {}[]>([]);
-    const [buckets, setBuckets] = useState([]);
+    const [buckets, setBuckets] = useState<Collection[]>([]);
     const [currentBucket, setCurrentBucket] = useState<Collection | null>(null);
     const [tokenAuth, setTokenAuth] = useState('');
     const [showControlPanel, setShowControlPanel] = useState(false);
@@ -100,7 +100,7 @@ function App() {
         }
     };
 
-    async function getBuckets(clear: boolean = false): Promise<Collection> {
+    async function getBuckets(clear: boolean = false): Promise<Collection[]> {
         // setIsLoading(true);
         setIsLoadingCollections(true);
         let result = [];
@@ -131,6 +131,8 @@ function App() {
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
             });
+        } else if (response.status === 401) {
+            outAccount();
         }
         setBuckets(result);
         return result;
@@ -207,7 +209,7 @@ function App() {
         setCurrentPath(path);
     }
 
-    const handlePaste = async (copiedItems: File[], destinationFolder: File[], operationType: string) => {
+    const handlePaste = async (copiedItems: File[], destinationFolder: File, operationType: string) => {
         let copiedFiles = [];
         for (const file of copiedItems) {
             if (file.isDirectory) {
@@ -237,7 +239,10 @@ function App() {
             collection = buckets.find(item => item.id === id);
         }
         try {
-            document.querySelector('.breadcrumb-file-path .ant-breadcrumb-link span').click();
+            const query = document.querySelector('.breadcrumb-file-path .ant-breadcrumb-link span');
+            if (query !== null) {
+                query.click()
+            }
         } catch (error) {
             console.error(error);
         }
@@ -535,7 +540,7 @@ function App() {
                         {
                             buckets.length > 0 && !showControlPanel && <>
                                 {currentBucket !== null && ['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
-                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} />
+                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket?.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} />
                                 <Tooltip title='Создать коллекцию'>
                                     <Button icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} />
                                 </Tooltip>

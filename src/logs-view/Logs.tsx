@@ -31,7 +31,7 @@ function Logs({ open, setOpen }: LogsProps) {
         },
         {
             title: 'Время',
-            dataIndex: 'date_time',
+            dataIndex: 'created_at',
             render: (value: string) => {
                 const formatter = Intl.DateTimeFormat('ru-RU', {
                     day: '2-digit',
@@ -49,7 +49,7 @@ function Logs({ open, setOpen }: LogsProps) {
         },
         {
             title: 'Результат',
-            dataIndex: 'result',
+            dataIndex: 'status',
             render: (value: number) => {
                 let color;
                 switch (value) {

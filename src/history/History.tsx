@@ -25,7 +25,7 @@ function History({ open, setOpen, collection_id }: HistoryProps) {
     const columns = [
         {
             title: 'Время',
-            dataIndex: 'date_time',
+            dataIndex: 'created_at',
             width: '20%',
             render: (value: any) => {
                 const formatter = Intl.DateTimeFormat('ru-RU', {
@@ -49,19 +49,19 @@ function History({ open, setOpen, collection_id }: HistoryProps) {
             render: (value: string, record: any) => {
                 switch (value) {
                     case 'copy_files':
-                        return `Копирование ${JSON.stringify(record.message.source_paths, null, 1).replace('[', '').replace(']', '')} из коллекции ${record.message.source_collection_id} в «${record.message.destination_path}»`
+                        return `Копирование ${JSON.stringify(record.detail.source_paths, null, 1).replace('[', '').replace(']', '')} из коллекции ${record.detail.source_collection_id} в «${record.detail.destination_path}»`
                     case 'delete_files':
-                        return `Удаление ${JSON.stringify(record.message.files, null, 1).replace('[', '').replace(']', '')}`;
+                        return `Удаление ${JSON.stringify(record.detail.files, null, 1).replace('[', '').replace(']', '')}`;
                     case 'upload':
-                        if (record.message.path !== '') {
-                            return `Загрузка в «${record.message.path}» файла «${record.message.file_name}»`;
+                        if (record.detail.path !== '') {
+                            return `Загрузка в «${record.detail.path}» файла «${record.detail.file_name}»`;
                         } else {
-                            return `Загрузка в «/» файла «${record.message.file_name}»`;
+                            return `Загрузка в «/» файла «${record.detail.file_name}»`;
                         }
                     case 'rename':
-                        return `Переименование «${record.message.path}» в «${record.message.new_name}»`;
+                        return `Переименование «${record.detail.path}» в «${record.detail.new_name}»`;
                     case 'create_folder':
-                        return `Создание новой папки «${record.message.name}» в «${record.message.path}»`;
+                        return `Создание новой папки «${record.detail.name}» в «${record.detail.path}»`;
                     case 'change_collection_info':
                         return 'Изменена информация о коллекции';
                     case 'create_collection':

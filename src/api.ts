@@ -186,7 +186,7 @@ export class ApiClient {
 
     public removeCollection = async (collection_id: number) => {
         try {
-            const response = await this.api.delete('/collection', { params: { collection_id } });
+            const response = await this.api.delete(`/collection/${collection_id}`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -222,7 +222,7 @@ export class ApiClient {
 
     public getAccessToCollection = async (collection_id: number) => {
         try {
-            const response = await this.api.get(`/collection/${collection_id}/access`, { params: { collection_id } });
+            const response = await this.api.get(`/collection/${collection_id}/access`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -285,7 +285,7 @@ export class ApiClient {
 
     public exitGroup = async (group_id: number) => {
         try {
-            const response = await this.api.post('/exit_group', { params: { group_id } });
+            const response = await this.api.post(`/exit_group?group_id=${group_id}`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -348,7 +348,7 @@ export class ApiClient {
 
     public changeCollectionInfo = async (collection_id: number, data: {}) => {
         try {
-            const response = await this.api.post('/change_collection_info' + '?collection_id=' + collection_id, data);
+            const response = await this.api.post(`/collection/${collection_id}/change_info`, data);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -384,7 +384,7 @@ export class ApiClient {
 
     public changeAccessToAll = async (collection_id: number, is_access: boolean) => {
         try {
-            const response = await this.api.post('/change_access_to_all' + '?collection_id=' + collection_id + '&is_access=' + is_access);
+            const response = await this.api.post(`/collection/${collection_id}/info` + '?is_access=' + is_access);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");

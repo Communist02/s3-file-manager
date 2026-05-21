@@ -295,7 +295,7 @@ function App() {
         let response = await apiClient.getFileInfo(currentBucket!.id, file['path'], file['isDirectory']);
         if (response.status === 200) {
             if (response.data !== null) {
-                const items = [];
+                const items: Record<string, any>[] = [];
                 for (let [key, value] of Object.entries(response.data)) {
                     switch (key) {
                         case "size":
@@ -558,10 +558,10 @@ function App() {
                         </Dropdown>
                     </Space>
                     {currentBucket !== null && <History collection_id={currentBucket.id} open={openHistory} setOpen={setOpenHistory} />}
-                    <Logs open={openLogs} setOpen={setOpenLogs} token={tokenAuth} />
+                    <Logs open={openLogs} setOpen={setOpenLogs} />
                     <Groups open={showControlPanel} setOpen={setShowControlPanel} getCollections={getBuckets} />
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
-                        {openCollection && <CollectionPage collection={currentBucket} setCurrentCollection={setCurrentBucket} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
+                        {openCollection && <CollectionPage collection={currentBucket!} setCurrentCollection={setCurrentBucket} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
                     </Drawer>
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
                         {openProfile && <ProfilePage token={tokenAuth} />}

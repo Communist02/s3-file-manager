@@ -48,20 +48,18 @@ export class ApiClient {
         this.token = token;
     }
 
-    public async checkToken(token: string): Promise<AxiosResponse> {
+    public async checkToken(): Promise<AxiosResponse> {
         try {
-            const response = await this.api.get('/session', { params: { token } });
+            const response = await this.api.get('/session');
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "get_session");
         }
     }
 
-    public async deleteSession(token: string): Promise<AxiosResponse> {
+    public async deleteSession(): Promise<AxiosResponse> {
         try {
-            const response = await this.api.delete('/session', {
-                params: { token }
-            });
+            const response = await this.api.delete('/session');
             return response.data;
         } catch (error) {
             return this.handleError(error as AxiosError, "delete_session");
@@ -73,10 +71,10 @@ export class ApiClient {
         try {
             let url;
             if (files.length === 1 && !files[0].isDirectory) {
-                url = `${this.api.defaults.baseURL}/collection/${collection_id}/file/${encodeURIComponent(files[0].path)}?token=${this.token}`;
+                url = `${this.api.defaults.baseURL}/collections/${collection_id}/files/${encodeURIComponent(files[0].path)}?token=${this.token}`;
             } else {
                 const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
-                url = `${this.api.defaults.baseURL}/collection/${collection_id}/archive?${fileQuery}&token=${this.token}`;
+                url = `${this.api.defaults.baseURL}/collections/${collection_id}/archive?${fileQuery}&token=${this.token}`;
             }
             window.location.href = url;
         } catch (error) {
@@ -86,17 +84,17 @@ export class ApiClient {
 
     public createFolder = async (name: string, path: string, collection_id: number) => {
         try {
-            const response = await this.api.post(`/collection/${collection_id}/create_folder`, { name, path });
+            const response = await this.api.post(`/collections/${collection_id}/create_directory`, { name, path });
             return response;
         } catch (error) {
-            return this.handleError(error as AxiosError, "create_folder");
+            return this.handleError(error as AxiosError, "create_directory");
         }
     };
 
     public deleteFiles = async (collection_id: number, files: File[]) => {
         const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
         try {
-            const response = await this.api.delete(`/collection/${collection_id}/files?${fileQuery}`);
+            const response = await this.api.delete(`/collections/${collection_id}/files?${fileQuery}`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "delete_files");
@@ -105,7 +103,7 @@ export class ApiClient {
 
     public copyFiles = async (source_collection_id: number, source_paths: string[], destination_collection_id: number, destination_path: string) => {
         try {
-            const response = await this.api.post("/copy", { source_collection_id, source_paths, destination_collection_id, destination_path });
+            const response = await this.api.post("/collections/copy", { source_collection_id, source_paths, destination_collection_id, destination_path });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "copy_files");
@@ -114,7 +112,7 @@ export class ApiClient {
 
     public getFiles = async (collection_id: number, path: string = '', recursive = true) => {
         try {
-            const response = await this.api.get('/collection/' + collection_id + '/files/' + encodeURIComponent(path) + '?recursive=' + recursive);
+            const response = await this.api.get('/collections/' + collection_id + '/list/' + encodeURIComponent(path) + '?recursive=' + recursive);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "get_files");
@@ -150,7 +148,7 @@ export class ApiClient {
 
     public rename = async (path: string, new_name: string, collection_id: number) => {
         try {
-            const response = await this.api.post('/collection/' + collection_id + '/rename', { path, new_name });
+            const response = await this.api.post('/collections/' + collection_id + '/rename', { path, new_name });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "rename");
@@ -159,7 +157,7 @@ export class ApiClient {
 
     public createCollection = async (name: string) => {
         try {
-            const response = await this.api.post('/create_collection', { name });
+            const response = await this.api.post('/collections/create', { name });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -177,7 +175,7 @@ export class ApiClient {
 
     public createGroup = async (title: string, description: string) => {
         try {
-            const response = await this.api.post('/create_group', { title, description });
+            const response = await this.api.post('/groups/create', { title, description });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -186,7 +184,7 @@ export class ApiClient {
 
     public removeCollection = async (collection_id: number) => {
         try {
-            const response = await this.api.delete(`/collection/${collection_id}`);
+            const response = await this.api.delete(`/collections/${collection_id}`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -195,7 +193,7 @@ export class ApiClient {
 
     public getOtherUsers = async () => {
         try {
-            const response = await this.api.get('/other_users');
+            const response = await this.api.get('/users');
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -204,7 +202,7 @@ export class ApiClient {
 
     public giveAccessUserToCollection = async (collection_id: number, user_id: number, access_type_id: number) => {
         try {
-            const response = await this.api.post('/give_access_user_to_collection', { collection_id, user_id, access_type_id });
+            const response = await this.api.post('/collections/give_access_user', { collection_id, user_id, access_type_id });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -213,7 +211,7 @@ export class ApiClient {
 
     public giveAccessGroupToCollection = async (collection_id: number, group_id: number, access_type_id: number) => {
         try {
-            const response = await this.api.post('/give_access_group_to_collection', { collection_id, group_id, access_type_id });
+            const response = await this.api.post('/collections/give_access_group', { collection_id, group_id, access_type_id });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -222,7 +220,7 @@ export class ApiClient {
 
     public getAccessToCollection = async (collection_id: number) => {
         try {
-            const response = await this.api.get(`/collection/${collection_id}/access`);
+            const response = await this.api.get(`/collections/${collection_id}/access`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -231,7 +229,7 @@ export class ApiClient {
 
     public deleteAccessToCollection = async (access_id: number) => {
         try {
-            const response = await this.api.delete(`/collection/access`, { params: { access_id } });
+            const response = await this.api.delete(`/collections/access`, { params: { access_id } });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -240,7 +238,7 @@ export class ApiClient {
 
     public deleteUserToGroup = async (group_id: number, user_id: number) => {
         try {
-            const response = await this.api.delete('/user_to_group', { params: { user_id, group_id } });
+            const response = await this.api.delete(`/groups/${group_id}/user`, { params: { user_id } });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -249,7 +247,7 @@ export class ApiClient {
 
     public addUserToGroup = async (group_id: number, user_id: number, role_id: number) => {
         try {
-            const response = await this.api.post('/add_user_to_group', { group_id, user_id, role_id });
+            const response = await this.api.post(`/groups/${group_id}/add_user`, { user_id, role_id });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -258,7 +256,7 @@ export class ApiClient {
 
     public getGroupUsers = async (group_id: number) => {
         try {
-            const response = await this.api.get('/group_users', { params: { group_id } });
+            const response = await this.api.get(`/groups/${group_id}/users`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -267,7 +265,7 @@ export class ApiClient {
 
     public getAccessTypes = async () => {
         try {
-            const response = await this.api.get('/access_types');
+            const response = await this.api.get('/access/types');
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -276,7 +274,7 @@ export class ApiClient {
 
     public transferPowerToGroup = async (group_id: number, user_id: number) => {
         try {
-            const response = await this.api.post('/transfer_power_to_group', { params: { user_id, group_id } });
+            const response = await this.api.post(`/groups/${group_id}/transfer_power?user_id=${user_id}`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -285,7 +283,7 @@ export class ApiClient {
 
     public exitGroup = async (group_id: number) => {
         try {
-            const response = await this.api.post(`/exit_group?group_id=${group_id}`);
+            const response = await this.api.post(`/groups/${group_id}/exit`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -294,7 +292,7 @@ export class ApiClient {
 
     public changeRoleInGroup = async (group_id: number, user_id: number, role_id: number) => {
         try {
-            const response = await this.api.post('/change_role_in_group' + '?group_id=' + group_id + '&user_id=' + user_id + '&role_id=' + role_id);
+            const response = await this.api.post(`/groups/${group_id}/change_role` + '?user_id=' + user_id + '&role_id=' + role_id);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -312,7 +310,7 @@ export class ApiClient {
 
     public changeAccessType = async (access_id: number, access_type_id: number) => {
         try {
-            const response = await this.api.post('/change_access_type' + '?access_id=' + access_id + '&access_type_id=' + access_type_id);
+            const response = await this.api.post(`/access/${access_id}/change_type` + '?access_type_id=' + access_type_id);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "change_access_type");
@@ -321,7 +319,7 @@ export class ApiClient {
 
     public changeGroupInfo = async (group_id: number, title: string, description: string) => {
         try {
-            const response = await this.api.post('/change_group_info', { group_id, title, description });
+            const response = await this.api.post(`/groups/${group_id}/change_info`, { title, description });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "change_group_info");
@@ -339,7 +337,7 @@ export class ApiClient {
 
     public async getHistoryCollection(collection_id: number): Promise<AxiosResponse> {
         try {
-            const response = await this.api.get(`/collection/${collection_id}/history`);
+            const response = await this.api.get(`/collections/${collection_id}/history`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "get_history_collection");
@@ -348,7 +346,7 @@ export class ApiClient {
 
     public changeCollectionInfo = async (collection_id: number, data: {}) => {
         try {
-            const response = await this.api.post(`/collection/${collection_id}/change_info`, data);
+            const response = await this.api.post(`/collections/${collection_id}/change_info`, data);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -357,7 +355,7 @@ export class ApiClient {
 
     public getCollectionInfo = async (collection_id: number) => {
         try {
-            const response = await this.api.get(`/collection/${collection_id}/info`);
+            const response = await this.api.get(`/collections/${collection_id}/info`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -366,7 +364,7 @@ export class ApiClient {
 
     public getFileInfo = async (collection_id: number, path: string, is_dir: boolean) => {
         try {
-            const response = await this.api.get('/collection/' + collection_id + '/file_info/' + encodeURIComponent(path) + '?is_dir=' + is_dir);
+            const response = await this.api.get('/collections/' + collection_id + '/file_info/' + encodeURIComponent(path) + '?is_dir=' + is_dir);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -375,7 +373,7 @@ export class ApiClient {
 
     public indexFile = async (collection_id: number, path: string) => {
         try {
-            const response = await this.api.post('/collection/' + collection_id + '/indexing_file/' + encodeURIComponent(path));
+            const response = await this.api.post('/collections/' + collection_id + '/indexing_file/' + encodeURIComponent(path));
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -384,7 +382,7 @@ export class ApiClient {
 
     public changeAccessToAll = async (collection_id: number, is_access: boolean) => {
         try {
-            const response = await this.api.post(`/collection/${collection_id}/info` + '?is_access=' + is_access);
+            const response = await this.api.post(`/collections/${collection_id}/change_access_to_all` + '?is_access=' + is_access);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");

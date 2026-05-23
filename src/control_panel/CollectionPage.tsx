@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Input, Checkbox } from 'antd';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Input, Checkbox, Spin } from 'antd';
 import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 import { Collection } from '../App'
 import { apiClient } from '../api';
@@ -40,6 +40,9 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     const lastId = useRef(-1);
     const [form] = Form.useForm();
     const [isRemovingCollection, setIsRemovingCollection] = useState(false);
+    const [isUpdatingOpenAccess, setIsUpdatingOpenAccess] = useState(false);
+    const [isUpdatingGiveAccess, setIsUpdatingGiveAccess] = useState(false);
+    const [isUpdatingAccess, setIsUpdatingAccess] = useState(false);
 
     const getAccess = async () => {
         const response = await apiClient.getAccessToCollection(collection.id);
@@ -64,6 +67,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     }
 
     async function showModalAccess() {
+        setIsUpdatingOpenAccess(true)
         let response = await apiClient.getOtherUsers();
         if (response.status === 200) {
             let usersOptions = [];
@@ -115,6 +119,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
             }
             setAccessTypes(accessTypesOptions);
         }
+        setIsUpdatingOpenAccess(false)
         setIsModalOpenAccess(true);
     }
 
@@ -135,6 +140,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     };
 
     const handleOkAccess = async () => {
+        setIsUpdatingGiveAccess(true);
         let response;
         if (!groupMode) {
             response = await apiClient.giveAccessUserToCollection(collection.id, accessId!, accessTypeId!);
@@ -151,10 +157,12 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
         } else {
             message.error('Произошла ошибка! ' + response);
         }
+        setIsUpdatingGiveAccess(false);
     };
 
     async function handleDeleteAccess(access_id: number) {
-        const response = await apiClient.deleteAccessToCollection(access_id);
+        setIsUpdatingAccess(true);
+        const response = await apiClient.deleteAccess(access_id);
         if (response.status === 200) {
             message.success('Доступ успешно удален!');
             if (collection.type !== 'owner') {
@@ -163,10 +171,13 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
             await getAccess();
         } else {
             message.error('Произошла ошибка! ' + response);
+            console.log(response.toString())
         }
+        setIsUpdatingAccess(false);
     };
 
     async function handleChangeAccess(access_id: number, accessTypeId: number) {
+        setIsUpdatingAccess(true);
         const response = await apiClient.changeAccessType(access_id, accessTypeId);
         if (response.status === 200) {
             message.success('Доступ успешно изменен!');
@@ -174,6 +185,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
         } else {
             message.error('Произошла ошибка! ' + response);
         }
+        setIsUpdatingAccess(false);
     };
 
     async function handleOkChangeInfo(data: {}) {
@@ -188,7 +200,9 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     };
 
     async function handleAccessAll(e: any) {
+        setIsUpdatingAccess(true);
         const response = await apiClient.changeAccessToAll(collection.id, e.target.checked);
+        setIsUpdatingAccess(false);
         if (response.status === 200) {
             if (e.target.checked) {
                 setIsAccessAll(true);
@@ -313,6 +327,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
         // }
         return (
             <>
+                {isUpdatingAccess && <Spin size='large' fullscreen/>}
                 <Flex vertical gap="small" style={{ width: '100%' }}>
                     <Descriptions
                         bordered
@@ -357,7 +372,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                     <Space>
                         {
                             collection.access_type_id === 1 && <>
-                                <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>
+                                <Button loading={isUpdatingOpenAccess} type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>
                                 <Checkbox checked={isAccessToAll} onChange={handleAccessAll}>Сделать коллекцию доступной для чтения для всех</Checkbox>
                             </>
                         }
@@ -377,6 +392,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                     <p>Для удаления требуется, чтобы коллекция была пустой!</p>
                 </Modal>
                 <Modal
+                    confirmLoading={isUpdatingGiveAccess}
                     title={"Предоставление доступа для коллекции " + collection.name}
                     open={isModalOpenAccess}
                     onOk={handleOkAccess}

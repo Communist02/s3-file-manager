@@ -64,16 +64,11 @@ const CreateFolderAction = ({ filesViewRef, file, onCreateFolder, triggerAction 
 
   return (
     <>
-      {folderName}
       <Modal
         centered
         title={t('newFolder')}
         open={true}
-        onOk={
-          () => {
-            handleFolderCreating();
-          }
-        }
+        onOk={handleFolderCreating}
         onCancel={
           () => {
             setCurrentPathFiles((prev) => prev.filter((f) => f.key !== file.key));
@@ -88,6 +83,8 @@ const CreateFolderAction = ({ filesViewRef, file, onCreateFolder, triggerAction 
         >
           <Input
             value={folderName}
+            autoFocus
+            onPressEnter={handleFolderCreating}
             onChange={
               (e) => {
                 handleFolderNameChange(e);

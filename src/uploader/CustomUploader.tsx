@@ -1,33 +1,48 @@
 import { useRef, useState } from "react";
 import "./CustomUploader.css";
 
+interface CustomUploaderProps {
+    url: string;
+    token: string;
+    collection_id: number;
+    path: string;
+    dirMode: boolean;
+    beforeUpload: (file: any) => boolean;
+    onChange: (file: any, collection_id: number) => void;
+    onCreateXhr: (uid: any, xhr: any) => void;
+    onError: (file: any) => void;
+    onProgress: () => void;
+    onSuccess: () => void;
+    children: any[],
+}
+
 export default function CustomUploader({
     url,
     path,
     token,
     collection_id,
     dirMode,
-    beforeUpload = () => true,
-    onChange = () => { },
-    onCreateXhr = () => { },
-    onProgress = () => { },
-    onSuccess = () => { },
-    onError = () => { },
+    beforeUpload,
+    onChange,
+    onCreateXhr,
+    onProgress,
+    onSuccess,
+    onError,
     children
-}) {
+}: CustomUploaderProps) {
     const [dragActive, setDragActive] = useState(false);
     const currentUid = useRef(0);
 
-    const handleFiles = (files) => {
+    const handleFiles = (files: any[]) => {
         [...files].forEach((file) => {
             file.uid = currentUid.current++;
             uploadFile(file);
         });
     };
 
-    const traverseDirectory = (entry, path = "") =>
+    const traverseDirectory = (entry: any, path = "") =>
         new Promise((resolve) => {
-            const files = [];
+            const files: any[] = [];
 
             if (entry.isFile) {
                 entry.file(file => {
@@ -53,7 +68,7 @@ export default function CustomUploader({
         });
 
 
-    const uploadFile = (file) => {
+    const uploadFile = (file: any) => {
         if (beforeUpload(file) === false) return;
 
         let filePath = path + '/';
@@ -70,42 +85,40 @@ export default function CustomUploader({
                 onProgress({ percent }, file);
                 onChange(
                     {
-                        file: {
-                            uid: file.uid,
-                            name: file.name,
-                            size: file.size,
-                            status: 'uploading',
-                            percent: percent ?? 0,
-                            // response: xhr.response
-                        },
-                        collection_id: collection_id
-                    }
+                        uid: file.uid,
+                        name: file.name,
+                        size: file.size,
+                        status: 'uploading',
+                        percent: percent ?? 0,
+                        // response: xhr.response
+                    },
+
+                    collection_id
                 );
             }
         };
 
         xhr.onload = () => {
             if (xhr.status < 200 || xhr.status >= 300) {
-                onError(new Error('Upload failed'), file);
+                onError(file);
             } else {
                 onSuccess(xhr.response, file);
                 onChange(
                     {
-                        file: {
-                            uid: file.uid,
-                            name: file.name,
-                            size: file.size,
-                            status: 'done',
-                            percent: 100,
-                            // response: xhr.response
-                        }
-                    }
+                        uid: file.uid,
+                        name: file.name,
+                        size: file.size,
+                        status: 'done',
+                        percent: 100,
+                        // response: xhr.response
+                    },
+                    collection_id
                 );
             }
         };
 
         xhr.onerror = () => {
-            onError(new Error('Upload failed'), file);
+            onError(file);
         };
 
         xhr.open('POST', action, true);
@@ -119,7 +132,7 @@ export default function CustomUploader({
         };
     };
 
-    const handleDrop = async (e) => {
+    const handleDrop = async (e: any) => {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);

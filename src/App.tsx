@@ -80,7 +80,7 @@ function App() {
         } else {
             setFiles([{}]);
             Modal.error({
-                title: "Ошибка сервера!",
+                title: "Ошибка сервера",
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
             });
@@ -127,12 +127,19 @@ function App() {
             }
         } else if (response.status === 500) {
             Modal.error({
-                title: "Ошибка сервера!",
+                title: "Ошибка сервера",
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
             });
         } else if (response.status === 401) {
             outAccount();
+        } else if (response.status === 0) {
+            console.log(response)
+            Modal.error({
+                title: "Нет ответа от сервера",
+                centered: true,
+                content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
+            });
         }
         setBuckets(result);
         return result;
@@ -149,7 +156,6 @@ function App() {
 
     // File Upload Handlers
     const handleFileUploading = (file: File, parentFolder: File) => {
-        console.log(file);
         return { bucket: currentBucket!.name, path: parentFolder !== null ? parentFolder.path : '/' };
     };
 
@@ -171,19 +177,34 @@ function App() {
         setIsLoading(false);
         if (response.status === 200) {
             currentBucket !== null && await getFiles(currentBucket);
-            message.success(`Успешно удалено!`);
+            message.success(`Успешно удалено`);
         } else if (response.status === 500) {
             Modal.error({
-                title: "Ошибка сервера!",
+                title: "Ошибка сервера",
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
             });
+        } else {
+            message.error('Произошла ошибка! ' + response);
         }
     };
 
     const handleRename = async (file: File, newName: string) => {
         setIsLoading(true);
-        await apiClient.rename(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket!.id);
+        const response = await apiClient.rename(file.isDirectory ? file.path + '/' : file.path, newName, currentBucket!.id);
+        setIsLoading(false);
+        if (response.status === 200) {
+            currentBucket !== null && await getFiles(currentBucket);
+            message.success(`Успешно переименовано`);
+        } else if (response.status === 500) {
+            Modal.error({
+                title: "Ошибка сервера",
+                centered: true,
+                content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
+            });
+        } else {
+            message.error('Произошла ошибка! ' + response);
+        }
         currentBucket !== null && await getFiles(currentBucket);
     };
 
@@ -193,16 +214,16 @@ function App() {
         const response = await apiClient.createFolder(name, parentFolder !== null ? parentFolder.path : '/', currentBucket!.id);
         if (response.status === 200 || response.status === 201) {
             currentBucket !== null && await getFiles(currentBucket);
-            message.success(`Папка "${name}" создана!`);
+            message.success(`Папка "${name}" создана`);
         } else {
-            console.error(response.data);
+            message.error('Произошла ошибка! ' + response);
         }
         setIsLoading(false);
     };
 
     function handleCopy(files: File[]) {
         copyCollection.current = currentBucket;
-        message.success('Готово к вставке!');
+        message.success('Готово к вставке');
     }
 
     function handleFolderChange(path: string) {
@@ -223,10 +244,12 @@ function App() {
             const response = await apiClient.copyFiles(copyCollection.current.id, copiedFiles, currentBucket.id, destinationFolder !== null ? destinationFolder.path : '/');
             setIsLoading(false);
             if (response.status === 200) {
-                message.success('Файлы успешно скопированы!');
+                message.success('Файлы успешно скопированы');
                 await getFiles(currentBucket);
             } else if (response.status === 403) {
-                message.error('Нет прав на копирование!');
+                message.error('Нет прав на копирование');
+            } else {
+                message.error('Произошла ошибка! ' + response);
             }
         }
     };
@@ -266,14 +289,14 @@ function App() {
         let response = await apiClient.createCollection(newCollectionName);
         if (response.status === 200) {
             setIsModalOpen(false);
-            message.success('Коллекция успешно создана!');
+            message.success('Коллекция успешно создана');
             const collections = await getBuckets();
             setNewCollectionName('');
             await handleBucket(response.data, collections);
         } else if (response.status === 406) {
-            message.error('Имя может содержать только латинские буквы и цифры!');
+            message.error('Имя может содержать только латинские буквы и цифры');
         } else if (response.status === 409) {
-            message.error('Коллекция с таким именем уже существует в системе!');
+            message.error('Коллекция с таким именем уже существует в системе');
         } else {
             message.error('Произошла ошибка! ' + response);
         }
@@ -328,7 +351,7 @@ function App() {
                         if (response.status === 200) {
                             handleProperties(file);
                         } else {
-                            message.error('Не удалость индексировать файл!')
+                            message.error('Не удалость индексировать файл')
                         }
                     }
                 });

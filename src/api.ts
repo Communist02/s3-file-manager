@@ -2,6 +2,39 @@ import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig 
 import { url } from "./url";
 import { File } from "./App"
 
+class ErrorResponse implements AxiosResponse {
+    data: any;
+    status: number;
+    statusText: string;
+    headers: any;
+    config: InternalAxiosRequestConfig;
+    request?: any;
+
+    constructor(error: AxiosError) {
+        if (error.response) {
+            this.data = error.response.data;
+            this.status = error.response.status;
+            this.statusText = error.response.statusText;
+            this.headers = error.response.headers;
+            this.config = error.response.config;
+            this.request = error.response.request;
+        } else {
+            this.data = null;
+            this.status = error.status ?? 0;
+            this.statusText = error.code ?? "NETWORK_ERROR";
+            this.headers = {};
+            this.config = (error.config ?? {}) as InternalAxiosRequestConfig;
+            this.request = error.request;
+        }
+    }
+
+    toString() {
+        if (this.data?.detail) return `${this.status}: ${this.data.detail}`;
+        if (this.statusText) return `${this.status}: ${this.statusText}`;
+        return "Unknown error";
+    }
+}
+
 export class ApiClient {
     private api;
     private token: string = '';
@@ -18,19 +51,7 @@ export class ApiClient {
     }
 
     private normalizeErrorResponse(error: AxiosError): AxiosResponse {
-        if (error.response) {
-            // Сервер дал ответ (даже 500) — возвращаем как есть
-            return error.response;
-        }
-
-        // Если ответа нет — создаём фейковый AxiosResponse
-        return {
-            data: null,
-            status: 0,
-            statusText: error.code ?? "NETWORK_ERROR",
-            headers: {},
-            config: (error.config ?? {}) as InternalAxiosRequestConfig,
-        };
+        return new ErrorResponse(error);
     }
 
     private handleError(error: AxiosError, context?: string): AxiosResponse {
@@ -202,7 +223,7 @@ export class ApiClient {
 
     public giveAccessUserToCollection = async (collection_id: number, user_id: number, access_type_id: number) => {
         try {
-            const response = await this.api.post('/collections/give_access_user', { collection_id, user_id, access_type_id });
+            const response = await this.api.post(`/collections/${collection_id}/give_access_user`, { user_id, access_type_id });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -211,7 +232,7 @@ export class ApiClient {
 
     public giveAccessGroupToCollection = async (collection_id: number, group_id: number, access_type_id: number) => {
         try {
-            const response = await this.api.post('/collections/give_access_group', { collection_id, group_id, access_type_id });
+            const response = await this.api.post(`/collections/${collection_id}/give_access_group`, { group_id, access_type_id });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -227,9 +248,9 @@ export class ApiClient {
         }
     };
 
-    public deleteAccessToCollection = async (access_id: number) => {
+    public deleteAccess = async (access_id: number) => {
         try {
-            const response = await this.api.delete(`/collections/access`, { params: { access_id } });
+            const response = await this.api.delete(`/access/${access_id}`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");

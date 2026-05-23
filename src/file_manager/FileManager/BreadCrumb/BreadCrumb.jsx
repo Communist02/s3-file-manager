@@ -98,25 +98,20 @@ const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpe
       {/* --- Кнопка сворачивания навигации --- */}
       {collapsibleNav && (
         <>
-          <Tooltip
-            title={
-              isNavigationPaneOpen
-                ? t("collapseNavigationPane")
-                : t("expandNavigationPane")
+          <Button
+            title={isNavigationPaneOpen
+              ? t("collapseNavigationPane")
+              : t("expandNavigationPane")}
+            type="text"
+            icon={
+              isNavigationPaneOpen ? (
+                <MenuFoldOutlined />
+              ) : (
+                <MenuUnfoldOutlined />
+              )
             }
-          >
-            <Button
-              type="text"
-              icon={
-                isNavigationPaneOpen ? (
-                  <MenuFoldOutlined />
-                ) : (
-                  <MenuUnfoldOutlined />
-                )
-              }
-              onClick={() => setNavigationPaneOpen((prev) => !prev)}
-            />
-          </Tooltip>
+            onClick={() => setNavigationPaneOpen((prev) => !prev)}
+          />
         </>
       )}
 

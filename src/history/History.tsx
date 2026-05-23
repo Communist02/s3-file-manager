@@ -11,10 +11,13 @@ interface HistoryProps {
 function History({ open, setOpen, collection_id }: HistoryProps) {
     const [logs, setLogs] = useState([]);
     const last_collection_id = useRef<number | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     async function updateLogs() {
+        setIsUpdating(true);
         const response = await apiClient.getHistoryCollection(collection_id);
         setLogs(response.data);
+        setIsUpdating(false);
     }
 
     if (open && last_collection_id.current !== collection_id) {
@@ -85,7 +88,7 @@ function History({ open, setOpen, collection_id }: HistoryProps) {
                 }
             }}
             // placement='top'
-            extra={<Button type='primary' onClick={updateLogs}>Обновить</Button>}
+            extra={<Button loading={isUpdating} type='primary' onClick={updateLogs}>Обновить</Button>}
         >
             {open ? <Table
                 scroll={{ y: 'calc(100vh - 180px)' }}

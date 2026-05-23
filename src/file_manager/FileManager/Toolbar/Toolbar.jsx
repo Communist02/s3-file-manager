@@ -9,7 +9,7 @@ import { useLayout } from "../../contexts/LayoutContext";
 import { validateApiCallback } from "../../utils/validateApiCallback";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./Toolbar.scss";
-import { Button } from "antd";
+import { Button, Dropdown } from "antd";
 import { AppstoreOutlined, BarsOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FolderAddOutlined, ImportOutlined, SyncOutlined } from '@ant-design/icons'
 
 const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
@@ -17,7 +17,7 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
   const { currentFolder } = useFileNavigation();
   const { selectedFiles, setSelectedFiles, handleDownload } = useSelection();
   const { clipBoard, setClipBoard, handleCutCopy, handlePasting } = useClipBoard();
-  const { activeLayout } = useLayout();
+  const { activeLayout, setActiveLayout } = useLayout();
   const t = useTranslation();
 
   // Toolbar Items
@@ -47,17 +47,16 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
   ];
 
   const toolbarRightItems = [
-    {
-      icon: activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />,
-      title: t("changeView"),
-      onClick: () => setShowToggleViewMenu((prev) => !prev),
-    },
+    // {
+    //   icon: activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />,
+    //   title: t("changeView"),
+    //   onClick: () => setShowToggleViewMenu((prev) => !prev),
+    // },
     {
       icon: <SyncOutlined />,
       title: t("refresh"),
       onClick: () => {
         validateApiCallback(onRefresh, "onRefresh");
-        setClipBoard(null);
       },
     },
   ];
@@ -139,7 +138,27 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
       </div>
     );
   }
-  //
+
+  const items = [
+    {
+      key: 'grid',
+      label: t("grid"),
+      icon: <AppstoreOutlined />,
+      onClick: () => {
+        onLayoutChange('grid');
+        setActiveLayout('grid');
+      }
+    },
+    {
+      key: 'list',
+      label: t("list"),
+      icon: <BarsOutlined />,
+      onClick: () => {
+        setActiveLayout('list');
+        onLayoutChange('list')
+      },
+    }
+  ];
 
   return (
     <div className="toolbar">
@@ -154,19 +173,15 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
             ))}
         </div>
         <div>
+          <Dropdown trigger={['click']} menu={{ items }}>
+            <Button title={t("changeView")} icon={activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />} />
+          </Dropdown>
           {toolbarRightItems.map((item, index) => (
             <div key={index} className="toolbar-left-items">
               <Button icon={item.icon} className="item-action icon-only" title={item.title} onClick={item.onClick} />
               {index !== toolbarRightItems.length - 1 && <div className="item-separator"></div>}
             </div>
           ))}
-
-          {showToggleViewMenu && (
-            <LayoutToggler
-              setShowToggleViewMenu={setShowToggleViewMenu}
-              onLayoutChange={onLayoutChange}
-            />
-          )}
         </div>
       </div>
     </div>

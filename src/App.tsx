@@ -507,7 +507,7 @@ function App() {
                     fileUploadConfig={{ url: url, method: 'PUT' }}
                     defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
                     collapsibleNav={true}
-                    filePreviewPath={url + `/collection/${currentBucket?.id}/file/?preview=true&token=${tokenAuth}`}
+                    filePreviewPath={url + `/collections/${currentBucket?.id}/files/?preview=true&token=${tokenAuth}`}
                     primaryColor='#1677ff'
                     permissions={currentBucket !== null ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
                     onFolderChange={handleFolderChange}

@@ -7,8 +7,7 @@ import { apiClient } from '../api';
 interface CollectionPageProps {
     open: boolean;
     setOpen: (value: boolean) => void;
-    collection_id: number;
-    getCollections: (value: boolean) => Collection;
+    getCollections: (value?: boolean) => Promise<Collection[]>;
     collection: Collection;
 }
 
@@ -127,7 +126,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
         setIsRemovingCollection(true);
         const response = await apiClient.removeCollection(collection.id);
         if (response.status === 200) {
-            message.success('Коллекция успешно удалена!');
+            message.success('Коллекция успешно удалена');
             await getCollections(true);
             setIsModalOpenRemove(false);
             setOpen(false);
@@ -148,7 +147,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
             response = await apiClient.giveAccessGroupToCollection(collection.id, accessId!, accessTypeId!);
         }
         if (response.status === 200) {
-            message.success('Доступ успешно предоставлен!');
+            message.success('Доступ успешно предоставлен');
             await getAccess();
             setAccessId(null);
             setAccessTypeId(null);
@@ -161,10 +160,9 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     };
 
     async function handleDeleteAccess(access_id: number) {
-        setIsUpdatingAccess(true);
         const response = await apiClient.deleteAccess(access_id);
         if (response.status === 200) {
-            message.success('Доступ успешно удален!');
+            message.success('Доступ успешно удален');
             if (collection.type !== 'owner') {
                 await getCollections(true);
             }
@@ -173,14 +171,13 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
             message.error('Произошла ошибка! ' + response);
             console.log(response.toString())
         }
-        setIsUpdatingAccess(false);
     };
 
     async function handleChangeAccess(access_id: number, accessTypeId: number) {
         setIsUpdatingAccess(true);
         const response = await apiClient.changeAccessType(access_id, accessTypeId);
         if (response.status === 200) {
-            message.success('Доступ успешно изменен!');
+            message.success('Доступ успешно изменен');
             await getAccess();
         } else {
             message.error('Произошла ошибка! ' + response);
@@ -191,7 +188,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     async function handleOkChangeInfo(data: {}) {
         const response = await apiClient.changeCollectionInfo(collection.id, data);
         if (response.status === 200) {
-            message.success('Описание изменено!');
+            message.success('Описание изменено');
             setIsModalOpenEditCollection(false);
             await getInfo();
         } else {
@@ -207,11 +204,11 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
             if (e.target.checked) {
                 setIsAccessAll(true);
                 collection.is_access_all = true;
-                message.success('Доступ дан!');
+                message.success('Доступ дан всем');
             } else {
                 setIsAccessAll(false);
                 collection.is_access_all = false;
-                message.success('Доступ отозван!');
+                message.success('Доступ отозван у всех');
             }
         } else {
             message.error('Произошла ошибка! ' + response);
@@ -282,7 +279,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
         },
     ];
 
-    let itemsInfo;
+    let itemsInfo: Record<string, any>[] = [];
     if (collectionInfo !== null) {
         const tags = [];
         if (collectionInfo.tags) {
@@ -308,17 +305,21 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                 label: 'Описание',
                 children: collectionInfo.description,
             },
-            {
+        ];
+        if (tags.length !== 0) {
+            itemsInfo.push({
                 key: 'collection-tags',
                 label: 'Ключевые слова',
-                children: <Space size={0}>{tags}</Space>,
-            },
-            {
+                children: <Space  size={5}>{tags}</Space>,
+            });
+        }
+        if (types.length !== 0) {
+            itemsInfo.push({
                 key: 'collection-types',
                 label: 'Описание файлов',
-                children: <Space size={0}>{types}</Space>,
-            },
-        ];
+                children: <Space size={5}>{types}</Space>,
+            });
+        }
     }
 
     if (open) {
@@ -350,7 +351,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                                         } else {
                                             localStorage.setItem('freeCollectionIds', '[]');
                                         }
-                                        message.success('Коллекция успешно скрыта!');
+                                        message.success('Коллекция скрыта');
                                         getCollections(true);
                                         setOpen(false);
                                     }}>
@@ -367,7 +368,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                     />
                     {
                         collectionInfo !== null &&
-                        <Descriptions title='Информация' layout='vertical' items={itemsInfo} />
+                        <Descriptions size='small' style={{marginBottom: 10}} title='Информация' layout='vertical' items={itemsInfo} />
                     }
                     <Space>
                         {
@@ -417,11 +418,10 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                     />
                     {groupMode ? <p>Группа</p> : <p>Пользователь</p>}
                     <Select
-                        showSearch
+                        showSearch={{ optionFilterProp: 'label' }}
                         value={accessId}
                         style={{ width: '100%' }}
                         placeholder="Выберите кому предоставить доступ"
-                        optionFilterProp="label"
                         onChange={(value) => setAccessId(value)}
                         // onSearch={onSearch}
                         options={groupMode ? groups : users}
@@ -437,6 +437,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                     />
                 </Modal>
                 <Modal
+                    centered
                     title="Редактирование описания"
                     open={isModalOpenEditCollection}
                     okText='Сохранить'
@@ -535,13 +536,13 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                             </Form.List>
                         </Form.Item>
 
-                        <Form.Item noStyle shouldUpdate>
+                        {/* <Form.Item noStyle shouldUpdate>
                             {() => (
                                 <Typography>
                                     <pre>{JSON.stringify(form.getFieldsValue(), null, 4)}</pre>
                                 </Typography>
                             )}
-                        </Form.Item>
+                        </Form.Item> */}
                     </Form>
                 </Modal>
             </>

@@ -8,7 +8,7 @@ import { Group } from './Groups'
 interface GroupsPageProps {
     index: number;
     groups: Group[];
-    getCollections: (value?: boolean) => Promise<Collection>;
+    getCollections: (value?: boolean) => Promise<Collection[]>;
     updateGroups: () => void;
 }
 
@@ -305,7 +305,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
             </>
         );
     } else {
-        return <Empty description='Выберите группу' />;
+        return <Flex style={{ height: 'calc(100vh)' }} justify="center" align="center"><Empty description='Создайте группу или попросите добавить вас' /></Flex>;
     }
 }
 

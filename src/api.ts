@@ -71,7 +71,7 @@ export class ApiClient {
 
     public async checkToken(): Promise<AxiosResponse> {
         try {
-            const response = await this.api.get('/session');
+            const response = await this.api.get('/user/session');
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "get_session");
@@ -80,7 +80,7 @@ export class ApiClient {
 
     public async deleteSession(): Promise<AxiosResponse> {
         try {
-            const response = await this.api.delete('/session');
+            const response = await this.api.delete('/user/session');
             return response.data;
         } catch (error) {
             return this.handleError(error as AxiosError, "delete_session");
@@ -150,8 +150,9 @@ export class ApiClient {
     };
 
     public getFreeCollections = async (collection_ids: number[]) => {
+        const ids = collection_ids.join(',');
         try {
-            const response = await this.api.post('/collections/specific', { collection_ids });
+            const response = await this.api.get('/collections', { params: { ids } });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "get_specific_collection");
@@ -178,7 +179,7 @@ export class ApiClient {
 
     public createCollection = async (name: string) => {
         try {
-            const response = await this.api.post('/collections/create', { name });
+            const response = await this.api.post('/collections/create?name=' + name);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -223,7 +224,7 @@ export class ApiClient {
 
     public giveAccessUserToCollection = async (collection_id: number, user_id: number, access_type_id: number) => {
         try {
-            const response = await this.api.post(`/collections/${collection_id}/give_access_user`, { user_id, access_type_id });
+            const response = await this.api.post(`/collections/${collection_id}/access/user`, { user_id, access_type_id });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -232,7 +233,7 @@ export class ApiClient {
 
     public giveAccessGroupToCollection = async (collection_id: number, group_id: number, access_type_id: number) => {
         try {
-            const response = await this.api.post(`/collections/${collection_id}/give_access_group`, { group_id, access_type_id });
+            const response = await this.api.post(`/collections/${collection_id}/access/group`, { group_id, access_type_id });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -259,7 +260,7 @@ export class ApiClient {
 
     public deleteUserToGroup = async (group_id: number, user_id: number) => {
         try {
-            const response = await this.api.delete(`/groups/${group_id}/user`, { params: { user_id } });
+            const response = await this.api.delete(`/groups/${group_id}/users/${user_id}`);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -268,7 +269,7 @@ export class ApiClient {
 
     public addUserToGroup = async (group_id: number, user_id: number, role_id: number) => {
         try {
-            const response = await this.api.post(`/groups/${group_id}/add_user`, { user_id, role_id });
+            const response = await this.api.post(`/groups/${group_id}/users`, { user_id, role_id });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -313,7 +314,7 @@ export class ApiClient {
 
     public changeRoleInGroup = async (group_id: number, user_id: number, role_id: number) => {
         try {
-            const response = await this.api.post(`/groups/${group_id}/change_role` + '?user_id=' + user_id + '&role_id=' + role_id);
+            const response = await this.api.patch(`/groups/${group_id}/users/${user_id}/role` + '?role_id=' + role_id);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -322,7 +323,7 @@ export class ApiClient {
 
     public async getUserInfo(): Promise<AxiosResponse> {
         try {
-            const response = await this.api.get('/user_info');
+            const response = await this.api.get('/user/info');
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "get_user_info");
@@ -331,7 +332,7 @@ export class ApiClient {
 
     public changeAccessType = async (access_id: number, access_type_id: number) => {
         try {
-            const response = await this.api.post(`/access/${access_id}/change_type` + '?access_type_id=' + access_type_id);
+            const response = await this.api.patch(`/access/${access_id}/type` + '?access_type_id=' + access_type_id);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "change_access_type");
@@ -340,7 +341,7 @@ export class ApiClient {
 
     public changeGroupInfo = async (group_id: number, title: string, description: string) => {
         try {
-            const response = await this.api.post(`/groups/${group_id}/change_info`, { title, description });
+            const response = await this.api.patch(`/groups/${group_id}/info`, { title, description });
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "change_group_info");
@@ -367,7 +368,7 @@ export class ApiClient {
 
     public changeCollectionInfo = async (collection_id: number, data: {}) => {
         try {
-            const response = await this.api.post(`/collections/${collection_id}/change_info`, data);
+            const response = await this.api.patch(`/collections/${collection_id}/info`, data);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");
@@ -403,7 +404,7 @@ export class ApiClient {
 
     public changeAccessToAll = async (collection_id: number, is_access: boolean) => {
         try {
-            const response = await this.api.post(`/collections/${collection_id}/change_access_to_all` + '?is_access=' + is_access);
+            const response = await this.api.patch(`/collections/${collection_id}/access_to_all` + '?is_access=' + is_access);
             return response;
         } catch (error) {
             return this.handleError(error as AxiosError, "");

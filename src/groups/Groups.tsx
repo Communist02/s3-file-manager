@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import './Groups.css';
-import GroupPage from './GroupPage';
+import GroupPage from './Group';
 import { Layout, Menu, Modal, Input, Button, message, Drawer } from 'antd';
 import { UsergroupAddOutlined } from '@ant-design/icons';
 import { Collection } from '../App';
@@ -9,8 +9,7 @@ import { apiClient } from '../api';
 interface GroupsProps {
     open: boolean;
     setOpen: (value: boolean) => void;
-    collection_id: number;
-    getCollections: (value?: boolean) => Promise<Collection>;
+    getCollections: (clear?: boolean) => Promise<Collection[]>;
 }
 
 export interface Group {
@@ -57,6 +56,10 @@ const Groups = ({ open, setOpen, getCollections }: GroupsProps) => {
         response = await apiClient.getGroups();
         if (response.status === 200) {
             setGroups(response.data);
+            console.log(groups)
+            if (groups.length === 0 && response.data) {
+                setCurrentGroup(0);
+            }
         } else {
             message.error('Произошла ошибка! ' + response);
         }
@@ -107,7 +110,7 @@ const Groups = ({ open, setOpen, getCollections }: GroupsProps) => {
                     <Layout>
                         <Layout.Sider>
                             <Menu
-                                style={{ overflow: 'auto', height: 'calc(100vh - 170px)' }}
+                                style={{ overflow: 'auto', height: 'calc(100vh - 65px)' }}
                                 defaultOpenKeys={['owner', 'admin', 'member']}
                                 mode="inline"
                                 items={getGroupItems()}

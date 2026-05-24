@@ -304,7 +304,7 @@ function App() {
     };
 
     // Функция для форматирования размера файла
-    const formatFileSize = (bytes: number) => {
+    const formatFileSize = (bytes: number |any) => {
         if (bytes === 0) return '0 B';
 
         const k = 1024;
@@ -584,25 +584,22 @@ function App() {
                     <Logs open={openLogs} setOpen={setOpenLogs} />
                     <Groups open={showControlPanel} setOpen={setShowControlPanel} getCollections={getBuckets} />
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
-                        {openCollection && <CollectionPage collection={currentBucket!} setCurrentCollection={setCurrentBucket} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
+                        {openCollection && <CollectionPage collection={currentBucket!} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
                     </Drawer>
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
                         {openProfile && <ProfilePage token={tokenAuth} />}
-                    </Drawer>
-                    <Drawer title='Группы' styles={{ body: { padding: 0 } }} size={1080} onClose={() => setShowControlPanel(false)}>
-                        {showControlPanel && <Groups getCollections={getBuckets} />}
                     </Drawer>
                     <Drawer title='Поиск коллекций' size={1080} open={openSearchCollections} onClose={() => setOpenSearchCollections(false)}>
                         {openSearchCollections && <CollectionsSearch getCollections={getBuckets} />}
                     </Drawer>
                 </Layout.Header>}
                 <Layout.Content>
-                    <Card className='main-card' style={{ margin: '0 10px', body: { padding: 0 } }}>
+                    <Card className='main-card' style={{ margin: '0 10px' }} styles={{ body: { padding: 0 } }}>
                         {page}
                     </Card>
                     <Uploader open={openUploader} setOpen={setOpenUploader} url={url} collection_id={currentBucket !== null ? currentBucket.id : null} path={currentPath} token={tokenAuth} updateCollection={updateCollection} setCurrentCountUploading={setCurrentCountUploading} />
                 </Layout.Content>
-                <Layout.Footer style={{ padding: '10px 50px', textAlign: 'center', color: 'grey' }}>S3 File Manager © 2025 Created by Denis Mazur</Layout.Footer>
+                <Layout.Footer style={{ padding: '10px 50px', textAlign: 'center', color: 'grey' }}>storage-web © 2026 Created by Denis Mazur</Layout.Footer>
             </Layout>
         </AntApp>
     </ConfigProvider>

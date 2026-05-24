@@ -72,7 +72,7 @@ export default function CustomUploader({
         if (beforeUpload(file) === false) return;
 
         let filePath = path + '/';
-        const action = `${url}/collections/${collection_id}/upload/${filePath}`;
+        const action = `${url}/collections/${collection_id}/upload?path=${filePath}`;
         const formData = new FormData();
         formData.append('file', file);
 
@@ -82,7 +82,7 @@ export default function CustomUploader({
         xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
                 const percent = (event.loaded / event.total) * 100;
-                onProgress({ percent }, file);
+                // onProgress({ percent }, file);
                 onChange(
                     {
                         uid: file.uid,
@@ -102,7 +102,7 @@ export default function CustomUploader({
             if (xhr.status < 200 || xhr.status >= 300) {
                 onError(file);
             } else {
-                onSuccess(xhr.response, file);
+                // onSuccess(xhr.response, file);
                 onChange(
                     {
                         uid: file.uid,

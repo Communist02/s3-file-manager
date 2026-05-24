@@ -10,15 +10,15 @@
     padding: 0 0 0 0;
   }
 
-  .files.grid {
+  /* .files.grid {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     display: grid;
     justify-items: stretch;
-  }
+  } */
 
-  .files.grid .file-item {
+  /* .files.grid .file-item {
     width: auto;
-  }
+  } */
 }
 
 @media (max-width: 720px) {
@@ -44,10 +44,6 @@
   height: 200px !important;
   box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
   border-radius: 8px;
-}
-
-.main-card>.ant-card-body {
-  padding: 0;
 }
 
 .main-card:has(.auth-page) {

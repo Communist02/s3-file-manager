@@ -4,7 +4,7 @@ import { apiClient } from '../api';
 import { Collection } from '../App';
 
 interface CollectionsSearchProps {
-    getCollections: (value?: boolean) => Promise<Collection>;
+    getCollections: (value?: boolean) => Promise<Collection[]>;
 }
 
 interface CollectionSearch {

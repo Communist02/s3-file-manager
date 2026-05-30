@@ -1,4 +1,3 @@
-import { ImSpinner2 } from "react-icons/im";
 import "./Loader.scss";
 import { Spin } from 'antd';
 

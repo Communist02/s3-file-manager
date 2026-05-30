@@ -3,7 +3,7 @@ import './Groups.css';
 import GroupPage from './Group';
 import { Layout, Menu, Modal, Input, Button, message, Drawer } from 'antd';
 import { UsergroupAddOutlined } from '@ant-design/icons';
-import { Collection } from '../App';
+import type { Collection } from '../App';
 import { apiClient } from '../api';
 
 interface GroupsProps {

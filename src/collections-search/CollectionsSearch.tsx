@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Descriptions, Space, Input, Tag, Popconfirm, message, Table, Typography } from 'antd';
 import { apiClient } from '../api';
-import { Collection } from '../App';
+import type { Collection } from '../App';
 
 interface CollectionsSearchProps {
     getCollections: (value?: boolean) => Promise<Collection[]>;

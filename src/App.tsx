@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import './App.css'
+// @ts-ignore
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import Groups from './groups/Groups';
@@ -28,6 +29,7 @@ export interface File {
     isDirectory: boolean;
     path: string;
     name: string;
+    size: number;
 }
 
 function App() {
@@ -155,7 +157,7 @@ function App() {
     };
 
     // File Upload Handlers
-    const handleFileUploading = (file: File, parentFolder: File) => {
+    const handleFileUploading = (_: File, parentFolder: File) => {
         return { bucket: currentBucket!.name, path: parentFolder !== null ? parentFolder.path : '/' };
     };
 
@@ -166,7 +168,7 @@ function App() {
         currentBucket !== null && await getFiles(currentBucket);
     };
 
-    const handleError = (error: any, file: File) => {
+    const handleError = (error: any, _: File) => {
         console.error(error);
     };
 
@@ -221,7 +223,7 @@ function App() {
         setIsLoading(false);
     };
 
-    function handleCopy(files: File[]) {
+    function handleCopy(_: File[]) {
         copyCollection.current = currentBucket;
         message.success('Готово к вставке');
     }
@@ -264,7 +266,7 @@ function App() {
         try {
             const query = document.querySelector('.breadcrumb-file-path .ant-breadcrumb-link span');
             if (query !== null) {
-                query.click()
+                (query as HTMLSpanElement).click();
             }
         } catch (error) {
             console.error(error);
@@ -304,7 +306,7 @@ function App() {
     };
 
     // Функция для форматирования размера файла
-    const formatFileSize = (bytes: number |any) => {
+    const formatFileSize = (bytes: number | any) => {
         if (bytes === 0) return '0 B';
 
         const k = 1024;
@@ -399,7 +401,7 @@ function App() {
         return result;
     }
 
-    const items = [
+    const items: any[] = [
         {
             key: 'fileManager',
             label: 'Файловый менеджер',
@@ -571,7 +573,7 @@ function App() {
                                 <Tooltip title='Управление коллекцией'>
                                     <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)} />
                                 </Tooltip>
-                                <FloatButton id='upload-button' type='primary' badge={{ count: currentCountUploading, overflowCount: 9999 }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
+                                <FloatButton {...{ id: 'upload-button' }} type='primary' badge={{ count: currentCountUploading, overflowCount: 9999 }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
                             </>
                         }
                         <Dropdown trigger={['click']} menu={{ items, onClick: onClickLogin }}>

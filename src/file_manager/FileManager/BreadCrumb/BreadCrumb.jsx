@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import PropTypes from "prop-types";
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./BreadCrumb.scss";
@@ -122,10 +121,5 @@ const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpe
 };
 
 BreadCrumb.displayName = "BreadCrumb";
-
-BreadCrumb.propTypes = {
-  isNavigationPaneOpen: PropTypes.bool.isRequired,
-  setNavigationPaneOpen: PropTypes.func.isRequired,
-};
 
 export default BreadCrumb;

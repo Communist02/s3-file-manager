@@ -1,6 +1,6 @@
 import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import { url } from "./url";
-import { File } from "./App"
+import type { File } from "./App"
 
 class ErrorResponse implements AxiosResponse {
     data: any;

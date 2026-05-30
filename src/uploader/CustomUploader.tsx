@@ -7,6 +7,7 @@ interface CustomUploaderProps {
     collection_id: number;
     path: string;
     dirMode: boolean;
+    archiveMode: boolean;
     beforeUpload: (file: any) => boolean;
     onChange: (file: any, collection_id: number) => void;
     onCreateXhr: (uid: any, xhr: any) => void;
@@ -22,6 +23,7 @@ export default function CustomUploader({
     token,
     collection_id,
     dirMode,
+    archiveMode,
     beforeUpload,
     onChange,
     onCreateXhr,
@@ -72,7 +74,7 @@ export default function CustomUploader({
         if (beforeUpload(file) === false) return;
 
         let filePath = path + '/';
-        const action = `${url}/collections/${collection_id}/upload?path=${filePath}`;
+        const action = `${url}/collections/${collection_id}/upload?archive=${archiveMode}&path=${filePath}`;
         const formData = new FormData();
         formData.append('file', file);
 
@@ -184,8 +186,7 @@ export default function CustomUploader({
                     id="file-input"
                     type="file"
                     style={{ display: "none" }}
-                    webkitdirectory="true"
-                    directory="true"
+                    {...{ webkitdirectory: "true", directory: "true"}}
                     multiple
                     onChange={(e) => handleFiles(e.target.files)}
                 />

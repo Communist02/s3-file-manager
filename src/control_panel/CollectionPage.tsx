@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Typography, Input, Checkbox, Spin } from 'antd';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Input, Checkbox, Spin } from 'antd';
 import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
-import { Collection } from '../App'
+import type { Collection } from '../App'
 import { apiClient } from '../api';
 
 interface CollectionPageProps {
@@ -453,9 +453,6 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                         name="dynamic_form_complex"
                         autoComplete="off"
                         initialValues={collectionInfo === null ? { collection_id: collection.id, collection_name: collection.name } : collectionInfo}
-                        onFieldsChange={(_, allFields) => {
-                            // setFields(allFields);
-                        }}
                     >
                         <Form.Item
                             name="collection_id"

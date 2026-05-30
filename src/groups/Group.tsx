@@ -2,8 +2,8 @@ import { useState, useRef } from 'react';
 import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Space, Collapse, Descriptions, Input, Tooltip } from 'antd';
 import { EditOutlined, UserAddOutlined } from '@ant-design/icons';
 import { apiClient } from '../api';
-import { Collection } from '../App';
-import { Group } from './Groups'
+import type { Collection } from '../App';
+import type { Group } from './Groups';
 
 interface GroupsPageProps {
     index: number;
@@ -13,11 +13,11 @@ interface GroupsPageProps {
 }
 
 function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPageProps) {
-    const [users, setUsers] = useState([]);
-    const [members, setMembers] = useState([]);
+    const [users, setUsers] = useState<{ label: string; value: number }[]>([]);
+    const [members, setMembers] = useState<{ id: number; username: string; role_id: number }[]>([]);
     const [userId, setUserId] = useState<number | null>(null);
     const [roleId, setRoleId] = useState<number | null>(null);
-    const [newOwnerUserId, setNewOwnerUserId] = useState('');
+    const [newOwnerUserId, setNewOwnerUserId] = useState(-1);
     const [isModalOpenAddUser, setIsModalOpenAddUser] = useState(false);
     const [isModalOpenTransferPower, setIsModalOpenTransferPower] = useState(false);
     const lastGroupId = useRef(-1);
@@ -86,7 +86,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
         const response = await apiClient.transferPowerToGroup(groups[index].id, newOwnerUserId);
         if (response.status === 200) {
             message.success('Власть успешно передана!');
-            setNewOwnerUserId('');
+            setNewOwnerUserId(-1);
             updateGroups();
             getMembers();
             setIsModalOpenTransferPower(false);
@@ -273,11 +273,11 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
                     onOk={handleOkTransferPower}
                     onCancel={
                         () => {
-                            setNewOwnerUserId('');
+                            setNewOwnerUserId(-1);
                             setIsModalOpenTransferPower(false);
                         }
                     }
-                    okButtonProps={{ disabled: newOwnerUserId === '' }}
+                    okButtonProps={{ disabled: newOwnerUserId === -1 }}
                 >
                     <p>Кому</p>
                     <Select

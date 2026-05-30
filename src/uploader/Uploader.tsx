@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { InboxOutlined } from '@ant-design/icons'
-import { Drawer, message, Checkbox, notification, Progress, Button, Table } from 'antd';
+import { Drawer, message, notification, Progress, Button, Table, Segmented } from 'antd';
 import CustomUploader from './CustomUploader';
 
 // Функция для форматирования размера файла
@@ -36,7 +36,8 @@ interface UploaderProps {
 }
 
 function Uploader({ open, setOpen, url, token, collection_id, path, updateCollection, setCurrentCountUploading }: UploaderProps) {
-    const [dirMode, setDirMode] = useState(false);
+    const [isDirMode, setIsDirMode] = useState(false);
+    const [isArchiveMode, setIsArchiveMode] = useState(false);
     const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
     const uploadRequestsRef = useRef(new Map()); // Храним XMLHttpRequest для отмены
 
@@ -238,7 +239,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             title: 'Действие',
             dataIndex: 'status',
             width: 100,
-            render: (value: string, record: UploadingFile) => {
+            render: (_: string, record: UploadingFile) => {
                 if (record.status === 'done' || record.status === 'error') {
                     return <Button style={{ height: 22, padding: 4 }} onClick={() => removeUploadingFile(record.uid)}>Скрыть</Button>
                 } else if (record.percent === 100) {
@@ -264,9 +265,26 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             open={open}
             extra={
                 <div>
-                    <Checkbox checked={dirMode} onChange={(e) => setDirMode(e.target.checked)}>
-                        Режим директории
-                    </Checkbox>
+                    <Segmented<string>
+                        title='Режим'
+                        options={['Файлы', 'Директория', 'Архив']}
+                        onChange={(value: string) => {
+                            switch (value) {
+                                case 'Файлы':
+                                    setIsDirMode(false);
+                                    setIsArchiveMode(false);
+                                    break;
+                                case 'Директория':
+                                    setIsDirMode(true);
+                                    setIsArchiveMode(false);
+                                    break;
+                                case 'Архив':
+                                    setIsDirMode(false);
+                                    setIsArchiveMode(true);
+                                    break;
+                            }
+                        }}
+                    />
                     {uploadingFiles.filter((file) => file.status === 'done').length > 0 && <Button style={{ height: 24, padding: 4 }} onClick={removeDoneFiles}>Очистить завершенные</Button>}
                     <div style={{ marginTop: 4, fontSize: '12px', color: '#666', textAlign: 'right', marginRight: 8 }}>
                         Количество загрузок: {uploadRequestsRef.current.size}
@@ -279,7 +297,8 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 path={path}
                 token={token}
                 collection_id={collection_id}
-                dirMode={dirMode}
+                dirMode={isDirMode}
+                archiveMode={isArchiveMode}
                 beforeUpload={beforeUpload}
                 onChange={(info) => onChange(info, collection_id)}
                 onCreateXhr={(uid, xhr) => { uploadRequestsRef.current.set(uid, xhr) }}
@@ -296,6 +315,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 <p className="ant-upload-hint">
                     Поддерживается один или несколько файлов.
                     Включите режим директории, чтобы загрузить папку.
+                    Включите режим архива, если хотите чтобы архив распаковался после загрузки.
                     Файлы будут загружены в текущую директорию
                     {path !== '' ? ` ${path}` : ''}.
                 </p>

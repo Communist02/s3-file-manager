@@ -66,7 +66,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     }
 
     async function showModalAccess() {
-        setIsUpdatingOpenAccess(true)
+        setIsUpdatingAccess(true)
         let response = await apiClient.getOtherUsers();
         if (response.status === 200) {
             let usersOptions = [];
@@ -118,7 +118,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
             }
             setAccessTypes(accessTypesOptions);
         }
-        setIsUpdatingOpenAccess(false)
+        setIsUpdatingAccess(false);
         setIsModalOpenAccess(true);
     }
 

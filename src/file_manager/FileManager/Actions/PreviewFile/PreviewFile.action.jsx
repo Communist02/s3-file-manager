@@ -8,7 +8,7 @@ import { validateApiCallback } from "../../../utils/validateApiCallback";
 import { Typography, Image, Card, Modal, Button, Tag, Space, Spin } from "antd";
 import { getIconForFile, } from 'vscode-icons-js';
 
-const imageExtensions = ["jpg", "jpeg", "png", 'gif', 'svg', 'webp', 'avif'];
+const imageExtensions = ["jpg", "jpeg", "png", 'gif', 'webp', 'avif'];
 const videoExtensions = ["mp4", "mov", "avi", 'webm', 'av1', '3gp'];
 const audioExtensions = ["mp3", "wav", "m4a", 'ogg', 'flac'];
 const textExtensions = ['txt', 'text', 'asc', 'ascii', 'log', 'logs', 'err', 'error', 'warn', 'warning', 'info', 'debug', 'trace', 'audit', 'history', 'session', 'cache', 'tmp', 'temp', 'swp', 'swo', 'swn', 'pid', 'lock', 'lck', 'state', 'status', 'md', 'markdown', 'rst', 'rest', 'adoc', 'asciidoc', 'tex', 'latex', 'bib', 'wiki', 'creole', 'pod', 'pm', 'textile', 'org', 'fountain', 'rdoc', 'json', 'jsonl', 'ndjson', 'yaml', 'yml', 'toml', 'csv', 'tsv', 'psv', 'dsv', 'ini', 'cfg', 'conf', 'properties', 'env', 'reg', 'inf', 'manifest', 'key'];
@@ -81,7 +81,7 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
       {imageExtensions.includes(extension) && (
         <>
           <div className="image-preview"></div>
-          <Image style={{ display: 'none' }} preview={{ visible: show, onVisibleChange: setShow }} src={filePath} alt={"Preview Unavailable"} />
+          <Image style={{ display: 'none' }} preview={{ visible: show, onOpenChange: setShow }} src={filePath} alt={"Preview Unavailable"} />
         </>
       )}
       {videoExtensions.includes(extension) && (
@@ -92,7 +92,6 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
             ),
             toolbarRender: () => null,
           }}
-          src={filePath}
           alt={"Preview Unavailable"}
         />
       )}
@@ -104,7 +103,6 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
             ),
             toolbarRender: () => null,
           }}
-          src={filePath}
           alt={"Preview Unavailable"}
         />
       )}
@@ -122,29 +120,31 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
             ),
             toolbarRender: () => null,
           }}
-          src={filePath}
           alt={"Preview Unavailable"}
         />
       )}
       {(textExtensions.includes(extension) || codeExtensions.includes(extension)) && (
-        <Image style={{ display: 'none' }}
-          preview={{
-            visible: show, onVisibleChange: setShow, imageRender: () => (
-              <Card style={{ width: "80%", height: '80%', maxWidth: 1080 }}>
-                {content !== '' ?
-                  <Typography.Paragraph>
-                    <pre style={{ whiteSpace: 'pre-wrap', overflow: 'auto', height: 'calc(80vh - 70px)', margin: 5, textAlign: 'left' }}>
-                      {content}
-                    </pre>
-                  </Typography.Paragraph>
-                  : <Spin description="Loading..." size="large" />}
-              </Card>
-            ),
-            toolbarRender: () => null,
-          }}
-          src={filePath}
-          alt={"Preview Unavailable"}
-        />
+        <Modal
+          width="60%"
+          centered
+          open={true}
+          onCancel={setShow}
+          footer={[
+            content !== '' ?
+              <Typography.Paragraph>
+                <pre style={{ whiteSpace: 'pre-wrap', overflow: 'auto', height: 'calc(80vh - 70px)', margin: 5, textAlign: 'left' }}>
+                  {content}
+                </pre>
+              </Typography.Paragraph>
+              : <Spin description="Loading..." size="large" />
+          ]}
+        >
+          <Space align="start">
+            <img src={'/icons/' + getIconForFile(selectedFiles[0].name)} height={64} width={64} />
+            {selectedFiles[0].name}
+            {selectedFiles[0].size && <Tag>{getDataSize(selectedFiles[0].size)}</Tag>}
+          </Space>
+        </Modal>
       )}
     </>
   );

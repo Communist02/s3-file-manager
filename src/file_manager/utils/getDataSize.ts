@@ -1,4 +1,4 @@
-export const getDataSize = (size, decimalPlaces = 2) => {
+export function getDataSize(size: number, decimalPlaces: number = 2): string {
   if (isNaN(size)) return "";
 
   const KiloBytes = size / 1024;
@@ -12,4 +12,5 @@ export const getDataSize = (size, decimalPlaces = 2) => {
   } else if (MegaBytes >= 1024) {
     return `${GigaBytes.toFixed(decimalPlaces)} GB`;
   }
+  return '';
 };

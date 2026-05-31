@@ -248,11 +248,10 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
                 >
                     <p>Пользователь</p>
                     <Select
-                        showSearch
+                        showSearch={{ optionFilterProp: 'label' }}
                         value={userId}
                         style={{ width: '100%' }}
                         placeholder="Выберите кого добавить"
-                        optionFilterProp="label"
                         onChange={(value) => setUserId(value)}
                         // onSearch={onSearch}
                         options={users}
@@ -281,11 +280,10 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
                 >
                     <p>Кому</p>
                     <Select
-                        showSearch
+                        showSearch={{ optionFilterProp: 'label' }}
                         value={newOwnerUserId}
                         style={{ width: '100%' }}
                         placeholder="Выберите кому передать"
-                        optionFilterProp="label"
                         onChange={(value) => setNewOwnerUserId(value)}
                         // onSearch={onSearch}
                         options={users}
@@ -305,7 +303,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
             </>
         );
     } else {
-        return <Flex style={{ height: 'calc(100vh)' }} justify="center" align="center"><Empty description='Создайте группу или попросите добавить вас' /></Flex>;
+        return <Flex style={{ height: 'calc(100vh - 180px)' }} justify="center" align="center"><Empty description='Создайте группу или попросите добавить вас' /></Flex>;
     }
 }
 

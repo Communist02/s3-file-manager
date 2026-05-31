@@ -31,7 +31,7 @@ const Groups = ({ open, setOpen, getCollections }: GroupsProps) => {
         const response = await apiClient.getGroups();
         if (response.status === 200) {
             setGroups(response.data);
-            if (currentGroup === -1 && response.data !== null && response.data.length > 0) {
+            if ((currentGroup === -1 || currentGroup > response.data.length - 1) && response.data !== null && response.data.length > 0) {
                 setCurrentGroup(0);
             }
         }
@@ -118,7 +118,7 @@ const Groups = ({ open, setOpen, getCollections }: GroupsProps) => {
                                 selectedKeys={[currentGroup.toString()]}
                             />
                         </Layout.Sider>
-                        <Layout.Content style={{ padding: '10px 10px 0', overflow: 'auto', height: 'calc(100vh - 180px)' }}>
+                        <Layout.Content style={{ padding: '10px 10px 0', overflow: 'auto', height: 'calc(100vh - 65px)' }}>
                             <GroupPage index={currentGroup} groups={groups} getCollections={getCollections} updateGroups={updateGroups} />
                         </Layout.Content>
                     </Layout>

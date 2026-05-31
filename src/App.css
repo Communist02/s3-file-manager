@@ -55,7 +55,7 @@
   padding: 0;
 }
 
-.files.list .files-header .file-select-all {
+/* .files.list .files-header .file-select-all {
   width: 23px !important;
 }
 
@@ -64,7 +64,6 @@
 }
 
 .files.list>.files-header>.file-name {
-  /* width: calc(65%) !important; */
   text-align: left !important;
   padding-left: 0 !important;
 }
@@ -84,7 +83,7 @@
 
 .files.list .size {
   justify-content: start !important;
-}
+} */
 
 .text-truncate.file-size {
   font-size: x-small !important;

@@ -1,24 +1,39 @@
 import { BsScissors } from "react-icons/bs";
+// @ts-ignore
 import { useClipBoard } from "../../contexts/ClipboardContext";
 import { useEffect, useState } from "react";
+// @ts-ignore
 import { useSelection } from "../../contexts/SelectionContext";
+// @ts-ignore
 import { useLayout } from "../../contexts/LayoutContext";
+// @ts-ignore
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
-import { duplicateNameHandler } from "../../utils/duplicateNameHandler";
+// @ts-ignore
+// import { duplicateNameHandler } from "../../utils/duplicateNameHandler";
+// @ts-ignore
 import { validateApiCallback } from "../../utils/validateApiCallback";
+// @ts-ignore
 import { useTranslation } from "../../contexts/TranslationProvider";
 import { AppstoreOutlined, BarsOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FileOutlined, FolderAddOutlined, FolderOpenOutlined, ImportOutlined, InfoCircleOutlined, SelectOutlined, SyncOutlined, UploadOutlined } from '@ant-design/icons'
 
-const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, onFileOpen, onShowProperties) => {
-  const [selectedFileIndexes, setSelectedFileIndexes] = useState([]);
+interface File {
+  name: string;
+  path: string;
+  updatedAt: string;
+  size: number;
+  isDirectory: boolean;
+}
+
+const useFileList = (onRefresh: () => void, enableFilePreview: boolean, triggerAction: any, permissions: any, onFileOpen: (file: File | null) => void, onShowProperties: (file: File | null) => void) => {
+  const [selectedFilePaths, setSelectedFilePaths] = useState<string[]>([]);
   const [visible, setVisible] = useState(false);
   const [isSelectionCtx, setIsSelectionCtx] = useState(false);
   const [clickPosition, setClickPosition] = useState({ clickX: 0, clickY: 0 });
-  const [lastSelectedFile, setLastSelectedFile] = useState(null);
+  const [lastSelectedFile, setLastSelectedFile] = useState<File | null>(null);
 
   const { clipBoard, setClipBoard, handleCutCopy, handlePasting } = useClipBoard();
   const { selectedFiles, setSelectedFiles, handleDownload } = useSelection();
-  const { currentPath, setCurrentPath, currentPathFiles, setCurrentPathFiles, onFolderChange } =
+  const { currentPath, setCurrentPath, currentPathFiles, onFolderChange } =
     useFileNavigation();
   const { activeLayout, setActiveLayout } = useLayout();
   const t = useTranslation();
@@ -27,10 +42,10 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
   // Context Menu
   const handleFileOpen = () => {
     onFileOpen(lastSelectedFile);
-    if (lastSelectedFile.isDirectory) {
+    if (lastSelectedFile && lastSelectedFile.isDirectory) {
       setCurrentPath(lastSelectedFile.path);
       onFolderChange?.(lastSelectedFile.path);
-      setSelectedFileIndexes([]);
+      setSelectedFilePaths([]);
       setSelectedFiles([]);
     } else {
       enableFilePreview && triggerAction.show("previewFile");
@@ -38,7 +53,7 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
     setVisible(false);
   };
 
-  const handleMoveOrCopyItems = (isMoving) => {
+  const handleMoveOrCopyItems = (isMoving: boolean) => {
     handleCutCopy(isMoving);
     setVisible(false);
   };
@@ -75,7 +90,7 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
   };
 
   const handleProperties = () => {
-    onShowProperties(lastSelectedFile);
+    onShowProperties(selectedFiles[0]);
     setVisible(false);
     // validateApiCallback(onRefresh, "onRefresh");
     // setClipBoard(null);
@@ -88,7 +103,10 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
 
   const handleUpload = () => {
     setVisible(false);
-    document.getElementById('upload-button').click();
+    const query = document.getElementById('upload-button');
+    if (query !== null) {
+      (query as HTMLSpanElement).click();
+    }
     // triggerAction.show("uploadFile");
   };
 
@@ -229,28 +247,28 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
   //   });
   // };
 
-  const handleItemRenaming = () => {
-    setCurrentPathFiles((prev) => {
-      if (prev[selectedFileIndexes.at(-1)]) {
-        prev[selectedFileIndexes.at(-1)].isEditing = true;
-      } else {
-        triggerAction.close();
-      }
-      return prev;
-    });
+  // const handleItemRenaming = () => {
+  //   setCurrentPathFiles((prev) => {
+  //     if (prev[selectedFilePaths.at(-1)]) {
+  //       prev[selectedFilePaths.at(-1)].isEditing = true;
+  //     } else {
+  //       triggerAction.close();
+  //     }
+  //     return prev;
+  //   });
 
-    setSelectedFileIndexes([]);
-    setSelectedFiles([]);
-  };
+  //   setSelectedFilePaths([]);
+  //   setSelectedFiles([]);
+  // };
 
   const unselectFiles = () => {
-    if (selectedFileIndexes.length > 0) {
-      setSelectedFileIndexes([]);
-      setSelectedFiles((prev) => (prev.length > 0 ? [] : prev));
+    if (selectedFilePaths.length > 0) {
+      setSelectedFilePaths([]);
+      // setSelectedFiles((prev) => (prev.length > 0 ? [] : prev));
     }
   };
 
-  const handleContextMenu = (e, isSelection = false) => {
+  const handleContextMenu = (e: any, isSelection = false) => {
     e.preventDefault();
     if (e.which = 3) {
       setClickPosition({ clickX: e.clientX, clickY: e.clientY });
@@ -274,19 +292,19 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
   // }, [triggerAction.isActive]);
 
   useEffect(() => {
-    setSelectedFileIndexes([]);
+    setSelectedFilePaths([]);
     setSelectedFiles([]);
   }, [currentPath]);
 
   useEffect(() => {
     if (selectedFiles.length > 0) {
-      setSelectedFileIndexes(() => {
-        return selectedFiles.map((selectedFile) => {
-          return currentPathFiles.findIndex((f) => f.path === selectedFile.path);
+      setSelectedFilePaths(() => {
+        return selectedFiles.map((selectedFile: File) => {
+          return currentPathFiles.findIndex((f: File) => f.path === selectedFile.path);
         });
       });
     } else {
-      setSelectedFileIndexes([]);
+      setSelectedFilePaths([]);
     }
   }, [selectedFiles, currentPathFiles]);
 
@@ -298,7 +316,7 @@ const useFileList = (onRefresh, enableFilePreview, triggerAction, permissions, o
     visible,
     setVisible,
     setLastSelectedFile,
-    selectedFileIndexes,
+    selectedFileIndexes: selectedFilePaths,
     clickPosition,
     isSelectionCtx,
   };

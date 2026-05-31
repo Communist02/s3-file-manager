@@ -1,27 +1,44 @@
-import { useState } from "react";
-import { BsGridFill } from "react-icons/bs";
-import { FaListUl, FaRegPaste } from "react-icons/fa6";
-import LayoutToggler from "./LayoutToggler";
+// @ts-ignore
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
+// @ts-ignore
 import { useSelection } from "../../contexts/SelectionContext";
+// @ts-ignore
 import { useClipBoard } from "../../contexts/ClipboardContext";
+// @ts-ignore
 import { useLayout } from "../../contexts/LayoutContext";
+// @ts-ignore
 import { validateApiCallback } from "../../utils/validateApiCallback";
+// @ts-ignore
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./Toolbar.scss";
-import { Button, Dropdown } from "antd";
-import { AppstoreOutlined, BarsOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FolderAddOutlined, ImportOutlined, SyncOutlined } from '@ant-design/icons'
+import { Button } from "antd";
+import { CloseOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FolderAddOutlined, ImportOutlined, SyncOutlined } from '@ant-design/icons'
+import type { ButtonType } from "antd/es/button";
 
-const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
-  const [showToggleViewMenu, setShowToggleViewMenu] = useState(false);
+interface ToolbarProps {
+  onLayoutChange: (value: string) => void;
+  onRefresh: () => void;
+  triggerAction: any;
+  permissions: any;
+}
+
+interface toolbarLeftItemsProps {
+  icon: any;
+  text: string;
+  type: ButtonType;
+  permission: boolean | undefined;
+  onClick: () => void;
+}
+
+const Toolbar = ({ onRefresh, triggerAction, permissions }: ToolbarProps) => {
   const { currentFolder } = useFileNavigation();
   const { selectedFiles, setSelectedFiles, handleDownload } = useSelection();
-  const { clipBoard, setClipBoard, handleCutCopy, handlePasting } = useClipBoard();
-  const { activeLayout, setActiveLayout } = useLayout();
+  const { clipBoard, handleCutCopy, handlePasting } = useClipBoard();
+  // const { activeLayout, setActiveLayout } = useLayout();
   const t = useTranslation();
 
   // Toolbar Items
-  const toolbarLeftItems = [
+  const toolbarLeftItems: toolbarLeftItemsProps[] = [
     {
       icon: <ImportOutlined />,
       text: t("paste"),
@@ -32,28 +49,16 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
     {
       icon: <FolderAddOutlined />,
       text: t("newFolder"),
-      type: '',
+      type: 'default',
       permission: permissions.create,
       onClick: () => triggerAction.show("createFolder"),
     },
-    // {
-    //   icon: <MdOutlineFileUpload size={18} />,
-    //   text: t("upload"),
-    //   type: '',
-    //   permission: permissions.upload,
-    //   // onClick: () => triggerAction.show("uploadFile"),
-    //   onClick: () => document.getElementById('upload-button').click(),
-    // },
   ];
 
   const toolbarRightItems = [
-    // {
-    //   icon: activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />,
-    //   title: t("changeView"),
-    //   onClick: () => setShowToggleViewMenu((prev) => !prev),
-    // },
     {
       icon: <SyncOutlined />,
+      type: 'default',
       title: t("refresh"),
       onClick: () => {
         validateApiCallback(onRefresh, "onRefresh");
@@ -124,7 +129,7 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
           <Button
             type="text"
             icon={<CloseOutlined />}
-            iconPosition="end"
+            iconPlacement="end"
             className="item-action file-action"
             title={t("clearSelection")}
             onClick={() => setSelectedFiles([])}
@@ -139,27 +144,6 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
     );
   }
 
-  const items = [
-    {
-      key: 'grid',
-      label: t("grid"),
-      icon: <AppstoreOutlined />,
-      onClick: () => {
-        onLayoutChange('grid');
-        setActiveLayout('grid');
-      }
-    },
-    {
-      key: 'list',
-      label: t("list"),
-      icon: <BarsOutlined />,
-      onClick: () => {
-        setActiveLayout('list');
-        onLayoutChange('list')
-      },
-    }
-  ];
-
   return (
     <div className="toolbar">
       <div className="fm-toolbar">
@@ -173,9 +157,17 @@ const Toolbar = ({ onLayoutChange, onRefresh, triggerAction, permissions }) => {
             ))}
         </div>
         <div>
-          <Dropdown trigger={['click']} menu={{ items }}>
-            <Button title={t("changeView")} icon={activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />} />
-          </Dropdown>
+          {/* <Segmented
+            value={activeLayout}
+            options={[
+              { value: 'list', icon: <BarsOutlined /> },
+              { value: 'grid', icon: <AppstoreOutlined /> },
+            ]}
+            onChange={(value) => {
+              setActiveLayout(value);
+              onLayoutChange(value)
+            }}
+          /> */}
           {toolbarRightItems.map((item, index) => (
             <div key={index} className="toolbar-left-items">
               <Button icon={item.icon} className="item-action icon-only" title={item.title} onClick={item.onClick} />

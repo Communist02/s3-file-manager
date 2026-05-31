@@ -265,6 +265,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             open={open}
             extra={
                 <div>
+                    {uploadingFiles.filter((file) => file.status === 'done').length > 0 && <Button style={{ marginRight: 4 }} onClick={removeDoneFiles}>Очистить завершенные</Button>}
                     <Segmented<string>
                         title='Режим'
                         options={['Файлы', 'Директория', 'Архив']}
@@ -285,7 +286,6 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                             }
                         }}
                     />
-                    {uploadingFiles.filter((file) => file.status === 'done').length > 0 && <Button style={{ height: 24, padding: 4 }} onClick={removeDoneFiles}>Очистить завершенные</Button>}
                     <div style={{ marginTop: 4, fontSize: '12px', color: '#666', textAlign: 'right', marginRight: 8 }}>
                         Количество загрузок: {uploadRequestsRef.current.size}
                     </div>

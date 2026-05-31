@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
+// @ts-ignore
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
+// @ts-ignore
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./BreadCrumb.scss";
 import {
   HomeOutlined,
-  EllipsisOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
-import { Breadcrumb, Dropdown, Menu, Button, Tooltip } from "antd";
+import { Breadcrumb, Button } from "antd";
 
-const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpen }) => {
+interface BreadCrumbProps {
+  collapsibleNav: boolean;
+  isNavigationPaneOpen: boolean;
+  setNavigationPaneOpen: (value: any) => void;
+}
+
+const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpen }: BreadCrumbProps) => {
   const [folders, setFolders] = useState([]);
-  const [hiddenFolders, setHiddenFolders] = useState([]);
-  const [hiddenFoldersWidth, setHiddenFoldersWidth] = useState([]);
 
   const { currentPath, setCurrentPath, onFolderChange } = useFileNavigation();
   const t = useTranslation();
@@ -21,42 +26,23 @@ const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpe
   useEffect(() => {
     setFolders(() => {
       let path = "";
-      return currentPath?.split("/").map((item) => {
+      return currentPath?.split("/").map((item: string) => {
         return {
           name: item || t("home"),
           path: item === "" ? item : (path += `/${item}`),
         };
       });
     });
-    setHiddenFolders([]);
-    setHiddenFoldersWidth([]);
   }, [currentPath, t]);
 
-  const switchPath = (path) => {
+  const switchPath = (path: string) => {
     setCurrentPath(path);
     onFolderChange?.(path);
   };
 
-  const hiddenMenu = (
-    <Menu
-      items={hiddenFolders.map((folder, index) => ({
-        key: index,
-        label: (
-          <span
-            onClick={() => switchPath(folder.path)}
-            style={{ cursor: "pointer" }}
-          >
-            {folder.name}
-          </span>
-        ),
-      }))}
-    />
-  );
-
-  const breadcrumb_items = [];
-  folders.map((folder, index) => {
+  const breadcrumb_items: {}[] = [];
+  folders.map((folder: { path: string, name: string }, index) => {
     const isRoot = index === 0;
-    const showMore = hiddenFolders?.length > 0 && isRoot;
     breadcrumb_items.push({
       key: index,
       onClick: () => switchPath(folder.path),
@@ -69,27 +55,6 @@ const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpe
       </>
       )
     });
-    // < Breadcrumb.Item key = { index } >
-    //   <span
-    //     style={{ cursor: "pointer" }}
-    //     onClick={() => switchPath(folder.path)}
-    //   >
-    //     {isRoot ? <HomeOutlined /> : null} {folder.name}
-    //   </span>
-
-    {/* --- Кнопка "ещё" для скрытых папок --- */ }
-    // {
-    //   showMore && (
-    //     <Dropdown overlay={hiddenMenu} placement="bottomLeft">
-    //       <Button
-    //         type="text"
-    //         icon={<EllipsisOutlined />}
-    //         title={t("showMoreFolder")}
-    //       />
-    //     </Dropdown>
-    //   )
-    // }
-    //   </Breadcrumb.Item >
   });
 
   return (
@@ -109,7 +74,7 @@ const BreadCrumb = ({ collapsibleNav, isNavigationPaneOpen, setNavigationPaneOpe
                 <MenuUnfoldOutlined />
               )
             }
-            onClick={() => setNavigationPaneOpen((prev) => !prev)}
+            onClick={() => setNavigationPaneOpen((prev: boolean) => !prev)}
           />
         </>
       )}

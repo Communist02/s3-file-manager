@@ -40,7 +40,7 @@ const FileManager = ({
   onFolderChange = () => { },
   onSelect,
   onError = () => { },
-  layout = "grid",
+  layout = "list",
   enableFilePreview = true,
   maxFileSize,
   filePreviewPath,

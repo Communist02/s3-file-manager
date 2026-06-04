@@ -45,7 +45,7 @@ type DataIndex = keyof File;
 interface FileListProps {
   onCreateFolder: () => void;
   onRename: () => void;
-  onFileOpen: (file: File) => void;
+  onFileOpen: (file: File | null) => void;
   onRefresh: () => void;
   enableFilePreview: boolean;
   triggerAction: any;
@@ -219,7 +219,7 @@ const FileList = ({
     {
       title: 'Изменено',
       dataIndex: 'updatedAt',
-      width: 120,
+      width: 135,
       sorter: (a, b) => Date.parse(a.updatedAt) - Date.parse(b.updatedAt),
       render: (value: number | string | Date) => {
         return formatDate(value);

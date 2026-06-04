@@ -39,7 +39,6 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     const lastId = useRef(-1);
     const [form] = Form.useForm();
     const [isRemovingCollection, setIsRemovingCollection] = useState(false);
-    const [isUpdatingOpenAccess, setIsUpdatingOpenAccess] = useState(false);
     const [isUpdatingGiveAccess, setIsUpdatingGiveAccess] = useState(false);
     const [isUpdatingAccess, setIsUpdatingAccess] = useState(false);
 
@@ -373,7 +372,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                     <Space>
                         {
                             collection.access_type_id === 1 && <>
-                                <Button loading={isUpdatingOpenAccess} type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>
+                                <Button type='primary' onClick={showModalAccess}>Предоставить доступ к коллекции</Button>
                                 <Checkbox checked={isAccessToAll} onChange={handleAccessAll}>Сделать коллекцию доступной для чтения для всех</Checkbox>
                             </>
                         }

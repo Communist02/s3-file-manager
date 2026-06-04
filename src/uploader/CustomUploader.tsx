@@ -12,8 +12,8 @@ interface CustomUploaderProps {
     onChange: (file: any, collection_id: number) => void;
     onCreateXhr: (uid: any, xhr: any) => void;
     onError: (file: any) => void;
-    onProgress: () => void;
-    onSuccess: () => void;
+    // onProgress: () => void;
+    // onSuccess: () => void;
     children: any[],
 }
 
@@ -27,12 +27,12 @@ export default function CustomUploader({
     beforeUpload,
     onChange,
     onCreateXhr,
-    onProgress,
-    onSuccess,
+    // onProgress,
+    // onSuccess,
     onError,
     children
 }: CustomUploaderProps) {
-    const [dragActive, setDragActive] = useState(false);
+    const [_, setDragActive] = useState(false);
     const currentUid = useRef(0);
 
     const handleFiles = (files: any[]) => {
@@ -43,18 +43,18 @@ export default function CustomUploader({
     };
 
     const traverseDirectory = (entry: any, path = "") =>
-        new Promise((resolve) => {
+        new Promise<any[]>((resolve) => {
             const files: any[] = [];
 
             if (entry.isFile) {
-                entry.file(file => {
+                entry.file((file: any) => {
                     // СОХРАНЯЕМ путь самостоятельно
                     file.fullPath = path + file.name;
                     resolve([file]);
                 });
             } else if (entry.isDirectory) {
                 const dirReader = entry.createReader();
-                dirReader.readEntries(async (entries) => {
+                dirReader.readEntries(async (entries: any[]) => {
 
                     for (const ent of entries) {
                         const res = await traverseDirectory(
@@ -164,7 +164,7 @@ export default function CustomUploader({
                 multiple
                 style={{ display: "none" }}
                 {...(dirMode ? { webkitdirectory: 'true', directory: 'true' } : {})}
-                onChange={(e) => handleFiles(e.target.files)}
+                onChange={(e: any) => handleFiles(e.target.files)}
             />
             <div
                 className="drag-and-drop-uploader"
@@ -180,7 +180,10 @@ export default function CustomUploader({
                     // // background: dragActive ? "#white" : "white",
                     cursor: "pointer"
                 }}
-                onClick={() => document.getElementById("custom-file-input").click()}
+                onClick={() => {
+                    const query = document.getElementById("custom-file-input")
+                    query?.click();
+                }}
             >
                 <input
                     id="file-input"
@@ -188,7 +191,7 @@ export default function CustomUploader({
                     style={{ display: "none" }}
                     {...{ webkitdirectory: "true", directory: "true"}}
                     multiple
-                    onChange={(e) => handleFiles(e.target.files)}
+                    onChange={(e: any) => handleFiles(e.target.files)}
                 />
                 {children}
             </div>

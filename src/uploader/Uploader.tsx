@@ -303,8 +303,8 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 onChange={(info) => onChange(info, collection_id)}
                 onCreateXhr={(uid, xhr) => { uploadRequestsRef.current.set(uid, xhr) }}
                 onError={onError}
-                onProgress={() => { }}
-                onSuccess={() => { }}
+                // onProgress={() => { }}
+                // onSuccess={() => { }}
             >
                 <p style={{ fontSize: 80, margin: 0 }} className="ant-upload-drag-icon">
                     <InboxOutlined />

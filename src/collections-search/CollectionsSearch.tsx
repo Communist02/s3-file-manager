@@ -74,11 +74,11 @@ function CollectionsSearch({ getCollections }: CollectionsSearchProps) {
         {
             title: 'Путь',
             dataIndex: 'path',
-            width: '50%',
         },
         {
             title: 'Размер',
             dataIndex: 'size',
+            width: '100px',
             render: (value: number) => {
                 const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
                 let index = 0
@@ -92,27 +92,14 @@ function CollectionsSearch({ getCollections }: CollectionsSearchProps) {
                 return `${Math.round(value)} ${sizes[index]}`
             }
         },
-        // {
-        //     title: 'Описание',
-        //     dataIndex: 'index',
-        //     width: '50%',
-        //     render: (value) => {
-        //         if (value !== undefined) return value.description
-        //     }
-        // },
-        // {
-        //     title: 'Ключевые слова',
-        //     dataIndex: 'index',
-        //     render: (value, record) => {
-        //         const tags = [];
-        //         if (value.tags) {
-        //             for (const item of value.tags) {
-        //                 tags.push(<Tag>{item}</Tag>);
-        //             }
-        //         }
-        //         return <Space size={0}>{tags}</Space>;
-        //     }
-        // },
+        {
+            title: 'Ссылка',
+            width: '100px',
+            render: (_: any, record: any) => {
+                const link = `/${record.collection_id}${record.path}`
+                return <a href={link}>Открыть</a>;
+            }
+        },
     ];
 
 
@@ -267,7 +254,7 @@ function CollectionsSearch({ getCollections }: CollectionsSearchProps) {
         }
 
         return <>
-            <Descriptions layout='vertical' items={itemsInfo} />
+            <Descriptions layout='vertical' size='small' items={itemsInfo} />
             <Table
                 rowKey="path"
                 size="small"

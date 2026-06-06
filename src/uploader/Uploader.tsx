@@ -28,9 +28,9 @@ interface UploaderProps {
     open: boolean;
     setOpen: (value: boolean) => void;
     url: string;
-    token: string;
+    token: string | null;
     collection_id: number | null;
-    path: string;
+    path: string | null;
     updateCollection: (collection_id: number) => void;
     setCurrentCountUploading: (count: number) => void;
 }
@@ -292,7 +292,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 </div>
             }
         >
-            {collection_id !== null && <CustomUploader
+            {collection_id !== null && token && path !== null && <CustomUploader
                 url={url}
                 path={path}
                 token={token}

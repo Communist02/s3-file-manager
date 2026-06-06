@@ -89,10 +89,16 @@ export class ApiClient {
 
     public downloadFile = async (files: File[], collection_id: number) => {
         if (files.length === 0) return;
+
+        function strip(str: string) {
+            if (str.startsWith('/')) str = str.slice(1);
+            return str;
+        }
+
         try {
             let url;
             if (files.length === 1 && !files[0].isDirectory) {
-                url = `${this.api.defaults.baseURL}/collections/${collection_id}/files/${encodeURIComponent(files[0].path)}?token=${this.token}`;
+                url = `${this.api.defaults.baseURL}/collections/${collection_id}/files/${strip(files[0].path)}?token=${this.token}`;
             } else {
                 const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
                 url = `${this.api.defaults.baseURL}/collections/${collection_id}/archive?${fileQuery}&token=${this.token}`;

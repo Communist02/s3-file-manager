@@ -27,7 +27,14 @@ export const FileNavigationProvider = ({ children, initialPath, onFolderChange }
 
   useEffect(() => {
     if (!isMountRef.current && Array.isArray(files) && files.length > 0) {
-      const activePath = files.some((file) => file.path === initialPath) ? initialPath : "";
+      let activePath = files.some((file) => file.path === initialPath && file.isDirectory) ? initialPath : "";
+      if (activePath !== initialPath) {
+        let path = files.some((file) => file.path === initialPath && !file.isDirectory) ? initialPath : "";
+        if (path) {
+          activePath = path.substring(0, path.lastIndexOf('/'));
+        }
+      }
+      
       setCurrentPath(activePath);
       onFolderChange?.(activePath);
       isMountRef.current = true;

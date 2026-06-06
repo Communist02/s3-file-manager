@@ -4,11 +4,14 @@ import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from "react-oidc-context"
 import { oidcConfig } from './authConfig.ts'
+import { BrowserRouter } from 'react-router-dom'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider {...oidcConfig}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </AuthProvider>
   </StrictMode>,
 )

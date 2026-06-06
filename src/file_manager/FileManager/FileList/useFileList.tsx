@@ -14,7 +14,7 @@ import { useFileNavigation } from "../../contexts/FileNavigationContext";
 import { validateApiCallback } from "../../utils/validateApiCallback";
 // @ts-ignore
 import { useTranslation } from "../../contexts/TranslationProvider";
-import { AppstoreOutlined, BarsOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FileOutlined, FolderAddOutlined, FolderOpenOutlined, ImportOutlined, InfoCircleOutlined, SelectOutlined, SyncOutlined, UploadOutlined } from '@ant-design/icons'
+import { CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FileOutlined, FolderAddOutlined, FolderOpenOutlined, ImportOutlined, InfoCircleOutlined, SelectOutlined, SyncOutlined, UploadOutlined } from '@ant-design/icons'
 
 interface File {
   name: string;
@@ -35,7 +35,7 @@ const useFileList = (onRefresh: () => void, enableFilePreview: boolean, triggerA
   const { selectedFiles, setSelectedFiles, handleDownload } = useSelection();
   const { currentPath, setCurrentPath, currentPathFiles, onFolderChange } =
     useFileNavigation();
-  const { activeLayout, setActiveLayout } = useLayout();
+  // const { activeLayout, setActiveLayout } = useLayout();
   const t = useTranslation();
   const { currentFolder } = useFileNavigation();
 
@@ -116,31 +116,31 @@ const useFileList = (onRefresh: () => void, enableFilePreview: boolean, triggerA
   };
 
   const emptySelecCtxItems = [
-    {
-      title: t("view"),
-      icon: activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />,
-      onClick: () => { },
-      children: [
-        {
-          title: t("grid"),
-          icon: <AppstoreOutlined />,
-          selected: activeLayout === "grid",
-          onClick: () => {
-            setActiveLayout("grid");
-            setVisible(false);
-          },
-        },
-        {
-          title: t("list"),
-          icon: <BarsOutlined />,
-          selected: activeLayout === "list",
-          onClick: () => {
-            setActiveLayout("list");
-            setVisible(false);
-          },
-        },
-      ],
-    },
+    // {
+    //   title: t("view"),
+    //   icon: activeLayout === "grid" ? <AppstoreOutlined /> : <BarsOutlined />,
+    //   onClick: () => { },
+    //   children: [
+    //     {
+    //       title: t("grid"),
+    //       icon: <AppstoreOutlined />,
+    //       selected: activeLayout === "grid",
+    //       onClick: () => {
+    //         setActiveLayout("grid");
+    //         setVisible(false);
+    //       },
+    //     },
+    //     {
+    //       title: t("list"),
+    //       icon: <BarsOutlined />,
+    //       selected: activeLayout === "list",
+    //       onClick: () => {
+    //         setActiveLayout("list");
+    //         setVisible(false);
+    //       },
+    //     },
+    //   ],
+    // },
     {
       title: t("paste"),
       icon: <ImportOutlined />,

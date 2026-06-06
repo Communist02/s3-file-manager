@@ -16,6 +16,7 @@ import ProfilePage from './control_panel/ProfilePage'
 import CollectionsSearch from './collections-search/CollectionsSearch'
 import { useAuth } from 'react-oidc-context'
 import { apiClient } from './api';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export interface Collection {
     id: number;
@@ -37,7 +38,7 @@ function App() {
     const [files, setFiles] = useState<Collection[] | {}[]>([]);
     const [buckets, setBuckets] = useState<Collection[]>([]);
     const [currentBucket, setCurrentBucket] = useState<Collection | null>(null);
-    const [tokenAuth, setTokenAuth] = useState('');
+    const [tokenAuth, setTokenAuth] = useState<string | null>(null);
     const [showControlPanel, setShowControlPanel] = useState(false);
     const copyCollection = useRef<Collection | null>(null);
     const [openUploader, setOpenUploader] = useState(false);
@@ -46,7 +47,7 @@ function App() {
     const [openCollection, setOpenCollection] = useState(false);
     const [openSearchCollections, setOpenSearchCollections] = useState(false);
     const [openHistory, setOpenHistory] = useState(false);
-    const [currentPath, setCurrentPath] = useState('');
+    const [currentPath, setCurrentPath] = useState<string | null>(null);
     const [darkTheme, setDarkTheme] = useState(localStorage.getItem('darkTheme') === 'true');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCollectionName, setNewCollectionName] = useState('');
@@ -54,6 +55,8 @@ function App() {
     const auth = useAuth();
     const [isCreatingCollection, setIsCreatingCollection] = useState(false);
     const [isLoadingCollections, setIsLoadingCollections] = useState(false);
+    const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (auth.user) {
@@ -102,14 +105,14 @@ function App() {
         }
     };
 
-    async function getBuckets(clear: boolean = false): Promise<Collection[]> {
+    async function getCollections(isResetCurrentCollection: boolean = false): Promise<Collection[]> {
         // setIsLoading(true);
         setIsLoadingCollections(true);
         let result = [];
         const response = await apiClient.getCollections();
         let responseFree = null;
         const freeCollectionIds = localStorage.getItem('freeCollectionIds');
-        if (freeCollectionIds !== null) {
+        if (freeCollectionIds !== null && freeCollectionIds.length > 2) {
             responseFree = await apiClient.getFreeCollections(JSON.parse(freeCollectionIds));
         }
         // setIsLoading(false);
@@ -120,10 +123,14 @@ function App() {
                 result = result.concat(responseFree.data);
             }
             if (result.length > 0) {
-                if (currentBucket === null || clear) {
+                if (currentBucket === null || isResetCurrentCollection) {
                     setCurrentBucket(result[0]);
+
+                    if (currentPath !== null) {
+                        navigate(result.id + '/');
+                    }
                 }
-                if (clear) {
+                if (isResetCurrentCollection) {
                     getFiles(result[0]);
                 }
             }
@@ -230,6 +237,7 @@ function App() {
 
     function handleFolderChange(path: string) {
         setCurrentPath(path);
+        navigate(currentBucket?.id + '/' + path + '/');
     }
 
     const handlePaste = async (copiedItems: File[], destinationFolder: File, operationType: string) => {
@@ -256,7 +264,7 @@ function App() {
         }
     };
 
-    const handleBucket = async (id: number, collections: Collection[] | null = null) => {
+    const changeCollection = async (id: number, collections: Collection[] | null = null) => {
         let collection;
         if (collections !== null) {
             collection = collections.find(item => item.id === id);
@@ -271,8 +279,27 @@ function App() {
         } catch (error) {
             console.error(error);
         }
+
+        if (!collection) {
+            const response = await apiClient.getFreeCollections([id]);
+            if (response.status === 200) {
+                const collectionsFree: Collection[] = response.data;
+                if (collectionsFree.length > 0) {
+                    collection = collectionsFree[0];
+                    if (collections !== null) {
+                        setBuckets(collectionsFree.concat(collections));
+                    } else {
+                        setBuckets(collectionsFree.concat(buckets));
+                    }
+                }
+            }
+        }
+
         if (collection) {
             setCurrentBucket(collection);
+            if (currentPath !== null) {
+                navigate(collection.id + '/');
+            }
             await getFiles(collection);
         }
     }
@@ -280,7 +307,8 @@ function App() {
     const outAccount = () => {
         auth.removeUser();
         setShowControlPanel(false);
-        setTokenAuth('');
+        navigate('');
+        setTokenAuth(null);
         setBuckets([]);
         setCurrentBucket(null);
         setFiles([{}]);
@@ -292,9 +320,9 @@ function App() {
         if (response.status === 200) {
             setIsModalOpen(false);
             message.success('Коллекция успешно создана');
-            const collections = await getBuckets();
+            const collections = await getCollections();
             setNewCollectionName('');
-            await handleBucket(response.data, collections);
+            await changeCollection(response.data, collections);
         } else if (response.status === 406) {
             message.error('Имя может содержать только латинские буквы и цифры');
         } else if (response.status === 409) {
@@ -405,7 +433,7 @@ function App() {
         {
             key: 'fileManager',
             label: 'Файловый менеджер',
-            icon: <img height='40px' width='40px' src={'./favicon.svg'} />,
+            icon: <img height='40px' width='40px' src={'/favicon.svg'} />,
         },
         {
             type: 'divider',
@@ -480,9 +508,15 @@ function App() {
 
     async function login(token: string) {
         setTokenAuth(token);
+        const segments = decodeURIComponent(location.pathname).split('/').filter(Boolean);
         apiClient.updateToken(token);
-        const buckets = await getBuckets(true);
-        setBuckets(buckets);
+        const collections = await getCollections(true);
+        setIsLoadingCollections(true);
+        await changeCollection(Number(segments[0]), collections);
+
+        const folder = segments.slice(1).join('/');
+        await setCurrentPath('/' + folder);
+        setIsLoadingCollections(false);
     }
 
     const permissions = [
@@ -512,7 +546,7 @@ function App() {
                 <p>Имя коллекции</p>
                 <Input placeholder="Имя" value={newCollectionName} count={{ show: true, max: 63 }} onChange={(e) => setNewCollectionName(e.target.value)} />
             </Modal>
-            {buckets.length > 0 ?
+            {buckets.length > 0 && currentPath !== null ?
                 <FileManager
                     files={files}
                     language='ru'
@@ -536,6 +570,7 @@ function App() {
                     primaryColor='#1677ff'
                     permissions={currentBucket !== null ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
                     onFolderChange={handleFolderChange}
+                    initialPath={currentPath}
                 /> :
                 <Flex className='not-collections' style={{ height: 'calc(100vh - 38px - 70px)' }} justify="center" align="center">
                     {isLoadingCollections ? <Spin size='large' /> : <Result
@@ -549,23 +584,24 @@ function App() {
         </>;
     }
 
+    const searchButton = <Tooltip title='Поиск коллекций'><Button className='search-button' icon={<SearchOutlined />} onClick={() => setOpenSearchCollections(true)} /></Tooltip>;
+
     return <ConfigProvider locale={ruRU} theme={{
         components: { Layout: { headerBg: '#00000000' } },
         algorithm: darkTheme ? theme.darkAlgorithm : undefined,
     }}>
         <AntApp>
             <Layout>
-                {tokenAuth !== null && tokenAuth !== undefined && tokenAuth !== '' && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0px 10px 0px 0px' }}>
+                {tokenAuth && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0px 10px 0px 0px' }}>
                     <Button type='text' style={{ height: 60, padding: 10, }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>
-                        <img height='40px' width='40px' src={'./favicon.svg'} />
+                        <img height='40px' width='40px' src={'/favicon.svg'} />
                         <h1>Хранилище</h1>
                     </Button>
                     <Space className='header-left'>
-                        <Button className='search-button' type="primary" icon={<SearchOutlined />} onClick={() => setOpenSearchCollections(true)}>Поиск</Button>
                         {
-                            buckets.length > 0 && !showControlPanel && <>
+                            buckets.length > 0 ? <>
                                 {currentBucket !== null && ['', <Tag color='purple'>Чтение и запись</Tag>, <Tag color='orange'>Только чтение</Tag>, <Tag color='magenta'>Только запись</Tag>][currentBucket.access_type_id - 1]}
-                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket?.id} onChange={(id) => handleBucket(id)} options={getCollectionItems()} />
+                                <Select prefix="Коллекция" style={{ width: '200px' }} value={currentBucket?.id} onChange={(id) => changeCollection(id)} options={getCollectionItems()} />
                                 <Tooltip title='Создать коллекцию'>
                                     <Button icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} />
                                 </Tooltip>
@@ -573,8 +609,9 @@ function App() {
                                 <Tooltip title='Управление коллекцией'>
                                     <Button icon={<SettingOutlined />} onClick={() => setOpenCollection(true)} />
                                 </Tooltip>
+                                {searchButton}
                                 <FloatButton {...{ id: 'upload-button' }} type='primary' badge={{ count: currentCountUploading, overflowCount: 9999 }} icon={<UploadOutlined />} onClick={() => setOpenUploader(true)} tooltip='Загрузки' />
-                            </>
+                            </> : searchButton
                         }
                         <Dropdown trigger={['click']} menu={{ items, onClick: onClickLogin }}>
                             <Button iconPlacement='end' type="primary" shape="round" icon={<UserOutlined />}>
@@ -584,15 +621,15 @@ function App() {
                     </Space>
                     {currentBucket !== null && <History collection_id={currentBucket.id} open={openHistory} setOpen={setOpenHistory} />}
                     <Logs open={openLogs} setOpen={setOpenLogs} />
-                    <Groups open={showControlPanel} setOpen={setShowControlPanel} getCollections={getBuckets} />
+                    <Groups open={showControlPanel} setOpen={setShowControlPanel} getCollections={getCollections} />
                     <Drawer size='large' open={openCollection} onClose={() => setOpenCollection(false)}>
-                        {openCollection && <CollectionPage collection={currentBucket!} getCollections={getBuckets} open={openCollection} setOpen={setOpenCollection} />}
+                        {openCollection && <CollectionPage collection={currentBucket!} getCollections={getCollections} open={openCollection} setOpen={setOpenCollection} />}
                     </Drawer>
                     <Drawer title='Профиль' size='large' open={openProfile} onClose={() => setOpenProfile(false)}>
                         {openProfile && <ProfilePage token={tokenAuth} />}
                     </Drawer>
                     <Drawer title='Поиск коллекций' size={1080} open={openSearchCollections} onClose={() => setOpenSearchCollections(false)}>
-                        {openSearchCollections && <CollectionsSearch getCollections={getBuckets} />}
+                        {openSearchCollections && <CollectionsSearch getCollections={getCollections} />}
                     </Drawer>
                 </Layout.Header>}
                 <Layout.Content>

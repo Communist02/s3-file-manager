@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, message, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Input, Checkbox, Spin } from 'antd';
+import { Button, Flex, Modal, Select, Segmented, Table, Popconfirm, Empty, Tag, Descriptions, Dropdown, Space, Tooltip, Form, Input, Checkbox, Spin, App } from 'antd';
 import { DeleteOutlined, DownOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 import type { Collection } from '../App'
 import { apiClient } from '../api';
@@ -41,6 +41,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
     const [isRemovingCollection, setIsRemovingCollection] = useState(false);
     const [isUpdatingGiveAccess, setIsUpdatingGiveAccess] = useState(false);
     const [isUpdatingAccess, setIsUpdatingAccess] = useState(false);
+    const { message } = App.useApp();
 
     const getAccess = async () => {
         const response = await apiClient.getAccessToCollection(collection.id);

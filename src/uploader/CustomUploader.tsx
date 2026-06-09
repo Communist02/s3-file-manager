@@ -11,7 +11,7 @@ interface CustomUploaderProps {
     beforeUpload: (file: any) => boolean;
     onChange: (file: any, collection_id: number) => void;
     onCreateXhr: (uid: any, xhr: any) => void;
-    onError: (file: any) => void;
+    onError: (file: any, message: string) => void;
     // onProgress: () => void;
     // onSuccess: () => void;
     children: any[],
@@ -102,7 +102,8 @@ export default function CustomUploader({
 
         xhr.onload = () => {
             if (xhr.status < 200 || xhr.status >= 300) {
-                onError(file);
+                let errorMessage = `Ошибка ${xhr.status}: ${xhr.statusText} - ${xhr.responseText}`;
+                onError(file, errorMessage);
             } else {
                 // onSuccess(xhr.response, file);
                 onChange(
@@ -120,7 +121,7 @@ export default function CustomUploader({
         };
 
         xhr.onerror = () => {
-            onError(file);
+            onError(file, 'Произошла сетевая ошибка. Пожалуйста, проверьте ваше соединение.');
         };
 
         xhr.open('POST', action, true);
@@ -189,7 +190,7 @@ export default function CustomUploader({
                     id="file-input"
                     type="file"
                     style={{ display: "none" }}
-                    {...{ webkitdirectory: "true", directory: "true"}}
+                    {...{ webkitdirectory: "true", directory: "true" }}
                     multiple
                     onChange={(e: any) => handleFiles(e.target.files)}
                 />

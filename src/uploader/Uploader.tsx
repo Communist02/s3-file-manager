@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { InboxOutlined } from '@ant-design/icons'
-import { Drawer, message, notification, Progress, Button, Table, Segmented } from 'antd';
+import { Drawer, Progress, Button, Table, Segmented, App } from 'antd';
 import CustomUploader from './CustomUploader';
 
 // Функция для форматирования размера файла
@@ -40,6 +40,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
     const [isArchiveMode, setIsArchiveMode] = useState(false);
     const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
     const uploadRequestsRef = useRef(new Map()); // Храним XMLHttpRequest для отмены
+    const { message, notification } = App.useApp();
 
     const cancelUpload = (uid: any) => {
         const request = uploadRequestsRef.current.get(uid);
@@ -103,7 +104,8 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
         });
     };
 
-    function onError(file: UploadingFile) {
+    function onError(file: UploadingFile, errorMessage: string) {
+        message.error(errorMessage);
         updateUploadingFile(file.uid, {
             status: 'error',
             uid: file.uid,
@@ -315,7 +317,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 <p className="ant-upload-hint">
                     Поддерживается один или несколько файлов.
                     Включите режим директории, чтобы загрузить папку.
-                    Включите режим архива, если хотите чтобы архив распаковался после загрузки.
+                    Включите режим архива, если хотите чтобы архив (.tar, .tar.gz, .tar.zst, .tar.lz4, .tar.bz2) распаковался после загрузки.
                     Файлы будут загружены в текущую директорию
                     {path !== '' ? ` ${path}` : ''}.
                 </p>

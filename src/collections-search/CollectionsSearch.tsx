@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Descriptions, Space, Input, Tag, Popconfirm, message, Table, Typography } from 'antd';
+import { Descriptions, Space, Input, Tag, Popconfirm, Table, Typography, App } from 'antd';
 import { apiClient } from '../api';
 import type { Collection } from '../App';
 
@@ -19,6 +19,7 @@ interface CollectionSearch {
 
 function CollectionsSearch({ getCollections }: CollectionsSearchProps) {
     const [collections, setCollections] = useState<CollectionSearch[]>([]);
+    const { message } = App.useApp();
 
     const onSearch = async (value: string) => {
         const response = await apiClient.searchCollections(value);

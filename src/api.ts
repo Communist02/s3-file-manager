@@ -1,6 +1,6 @@
 import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import { url } from "./url";
-import type { File } from "./App"
+import type { File } from "./App";
 
 class ErrorResponse implements AxiosResponse {
     data: any;
@@ -95,15 +95,26 @@ export class ApiClient {
             return str;
         }
 
+        document.cookie = `token=${this.token}; path=/; max-age=15; SameSite=Lax`;
+
         try {
-            let url;
+            let new_url;
             if (files.length === 1 && !files[0].isDirectory) {
-                url = `${this.api.defaults.baseURL}/collections/${collection_id}/files/${strip(files[0].path)}?token=${this.token}`;
+                new_url = `${this.api.defaults.baseURL}/collections/${collection_id}/files/${strip(files[0].path)}`;
             } else {
                 const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
-                url = `${this.api.defaults.baseURL}/collections/${collection_id}/archive?${fileQuery}&token=${this.token}`;
+                new_url = `${this.api.defaults.baseURL}/collections/${collection_id}/archive?${fileQuery}`;
             }
-            window.location.href = url;
+            console.log(window.location.hostname);
+            console.log(new URL(url).hostname)
+            if (window.location.hostname != new URL(url).hostname) {
+                if (files.length === 1 && !files[0].isDirectory) {
+                    new_url += `?token=${this.token}`
+                } else {
+                    new_url += `&token=${this.token}`
+                }
+            }
+            window.location.href = new_url;
         } catch (error) {
             return this.handleError(error as AxiosError, "download");
         }

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Button, Flex, Modal, Select, Table, message, Empty, Tag, Popconfirm, Space, Collapse, Descriptions, Input, Tooltip } from 'antd';
+import { Button, Flex, Modal, Select, Table, Empty, Tag, Popconfirm, Space, Collapse, Descriptions, Input, Tooltip, App } from 'antd';
 import { EditOutlined, UserAddOutlined } from '@ant-design/icons';
 import { apiClient } from '../api';
 import type { Collection } from '../App';
@@ -24,6 +24,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
     const [isModalOpenEditGroup, setIsModalOpenEditGroup] = useState(false);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const { message } = App.useApp();
 
     const getMembers = async () => {
         const response = await apiClient.getGroupUsers(groups[index].id);

@@ -4,7 +4,7 @@ import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import Groups from './groups/Groups';
-import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, message, Modal, Input, FloatButton, Typography, Descriptions, Tooltip, Spin } from 'antd';
+import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Modal, Input, FloatButton, Typography, Descriptions, Tooltip, Spin } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
@@ -57,6 +57,8 @@ function App() {
     const [isLoadingCollections, setIsLoadingCollections] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
+    const { message } = AntApp.useApp();
+    
 
     useEffect(() => {
         if (auth.user) {

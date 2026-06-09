@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import './Groups.css';
 import GroupPage from './Group';
-import { Layout, Menu, Modal, Input, Button, message, Drawer } from 'antd';
+import { Layout, Menu, Modal, Input, Button, Drawer, App } from 'antd';
 import { UsergroupAddOutlined } from '@ant-design/icons';
 import type { Collection } from '../App';
 import { apiClient } from '../api';
@@ -26,6 +26,7 @@ const Groups = ({ open, setOpen, getCollections }: GroupsProps) => {
     const [newGroupDescription, setNewGroupDescription] = useState('');
     const [currentGroup, setCurrentGroup] = useState(-1);
     const updated = useRef(false);
+    const { message } = App.useApp();
 
     const updateGroups = async () => {
         const response = await apiClient.getGroups();

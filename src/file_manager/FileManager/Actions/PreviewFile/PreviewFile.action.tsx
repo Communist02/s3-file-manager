@@ -1,11 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useRef, useState } from "react";
+// @ts-ignore
 import { getFileExtension } from "../../../utils/getFileExtension";
+// @ts-ignore
 import { useSelection } from "../../../contexts/SelectionContext";
 import { getDataSize } from "../../../utils/getDataSize";
+// @ts-ignore
 import { useTranslation } from "../../../contexts/TranslationProvider";
-import "./PreviewFile.action.scss";
+// @ts-ignore
 import { validateApiCallback } from "../../../utils/validateApiCallback";
-import { Typography, Image, Card, Modal, Button, Tag, Space, Spin } from "antd";
+import { Typography, Image, Modal, Button, Tag, Space, Spin } from "antd";
 import { getIconForFile, } from 'vscode-icons-js';
 
 const imageExtensions = ["jpg", "jpeg", "png", 'gif', 'webp', 'avif'];
@@ -14,41 +17,50 @@ const audioExtensions = ["mp3", "wav", "m4a", 'ogg', 'flac'];
 const textExtensions = ['txt', 'text', 'asc', 'ascii', 'log', 'logs', 'err', 'error', 'warn', 'warning', 'info', 'debug', 'trace', 'audit', 'history', 'session', 'cache', 'tmp', 'temp', 'swp', 'swo', 'swn', 'pid', 'lock', 'lck', 'state', 'status', 'md', 'markdown', 'rst', 'rest', 'adoc', 'asciidoc', 'tex', 'latex', 'bib', 'wiki', 'creole', 'pod', 'pm', 'textile', 'org', 'fountain', 'rdoc', 'json', 'jsonl', 'ndjson', 'yaml', 'yml', 'toml', 'csv', 'tsv', 'psv', 'dsv', 'ini', 'cfg', 'conf', 'properties', 'env', 'reg', 'inf', 'manifest', 'key'];
 const codeExtensions = ['js', 'jsx', 'ts', 'tsx', 'py', 'pyw', 'pyi', 'pyc', 'pyd', 'rb', 'rbi', 'php', 'php3', 'php4', 'php5', 'phps', 'phpt', 'phtml', 'java', 'class', 'jar', 'kt', 'kts', 'scala', 'sc', 'groovy', 'gy', 'go', 'rs', 'swift', 'm', 'mm', 'h', 'hh', 'c', 'cc', 'cpp', 'cxx', 'hpp', 'hxx', 'cs', 'vb', 'fs', 'fsx', 'fsi', 'd', 'pas', 'pp', 'lpr', 'lpi', 'pl', 'pm', 't', 'r', 'R', 'Rmd', 'Rnw', 'jl', 'ex', 'exs', 'erl', 'hrl', 'clj', 'cljs', 'cljc', 'edn', 'lua', 'sql', 'ps1', 'psm1', 'psd1', 'sh', 'bash', 'zsh', 'fish', 'csh', 'ksh', 'bat', 'cmd', 'awk', 'sed', 'nim', 'v', 'zig'];
 
-const docExtensions = [];
+const docExtensions: string[] = [];
 if (navigator.userAgent.toLowerCase().includes('firefox')) {
   docExtensions.push('pdf');
 }
 
-const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, setShow, show }) => {
-  const { selectedFiles } = useSelection();
-  const extension = getFileExtension(selectedFiles[0].name)?.toLowerCase();
-  const filePath = [filePreviewPath.slice(0, filePreviewPath.indexOf('?')), encodeURIComponent(selectedFiles[0].path), filePreviewPath.slice(filePreviewPath.indexOf('?'))].join('');
+interface PreviewFileActionProps {
+  filePreviewPath: string;
+  filePreviewComponent: any;
+  onDownload: () => void;
+  open: boolean;
+  show: boolean;
+  setShow: () => void;
+}
+
+const PreviewFileAction = ({ filePreviewPath, onDownload, setShow, show, open }: PreviewFileActionProps) => {
+  const { selectedFiles }: { selectedFiles: any[] } = useSelection();
+  const [extension, setExtension] = useState('');
+  const [filePath, setFilePath] = useState('');
   const [content, setContent] = useState('');
   const t = useTranslation();
+  const prevOpenRef = useRef(open);
+  const [file, setFile] = useState<any>(null)
 
-  // Custom file preview component
-  const customPreview = useMemo(
-    () => filePreviewComponent?.(selectedFiles[0]),
-    [filePreviewComponent]
-  );
+  if (open && !prevOpenRef.current) {
+    if (selectedFiles.length > 0) {
+      setFile(selectedFiles[0]);
+      const ext = getFileExtension(selectedFiles[0].name)?.toLowerCase()
+      setExtension(ext);
+      const filePth = [filePreviewPath.slice(0, filePreviewPath.indexOf('?')), encodeURIComponent(selectedFiles[0].path), filePreviewPath.slice(filePreviewPath.indexOf('?'))].join('');
+      setFilePath(filePth);
+
+      if (textExtensions.includes(ext) || codeExtensions.includes(ext)) {
+        fetch(filePth)
+          .then((res) => res.text())
+          .then((data) => setContent(data))
+          .catch((err) => console.error('Ошибка загрузки:', err));
+      }
+    }
+  }
+  prevOpenRef.current = open;
 
   const handleDownload = () => {
     validateApiCallback(onDownload, "onDownload", selectedFiles);
-    // window.location.href = filePath;
   };
-
-  if (React.isValidElement(customPreview)) {
-    return customPreview;
-  }
-
-  useEffect(() => {
-    if (textExtensions.includes(extension) || codeExtensions.includes(extension)) {
-      fetch(filePath)
-        .then((res) => res.text())
-        .then((data) => setContent(data))
-        .catch((err) => console.error('Ошибка загрузки:', err));
-    }
-  }, [filePath]);
 
   return (
     <>
@@ -63,32 +75,29 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
           <Modal
             title={t("previewUnavailable")}
             centered
-            open={true}
+            open={open}
             onCancel={setShow}
             footer={[
-              <Button key={'preview-download'} onClick={handleDownload} type="primary">
+              open && <Button key={'preview-download'} onClick={handleDownload} type="primary">
                 {t("download")}
               </Button>
             ]}
           >
-            <Space align="start">
-              <img src={'/icons/' + getIconForFile(selectedFiles[0].name)} height={64} width={64} />
-              {selectedFiles[0].name}
-              {selectedFiles[0].size && <Tag>{getDataSize(selectedFiles[0].size)}</Tag>}
-            </Space>
+            {open && file && <Space align="start">
+              <img src={'/icons/' + getIconForFile(file.name)} height={64} width={64} />
+              {file.name}
+              {file.size && <Tag>{getDataSize(file.size)}</Tag>}
+            </Space>}
           </Modal>
         ))}
       {imageExtensions.includes(extension) && (
-        <>
-          <div className="image-preview"></div>
-          <Image style={{ display: 'none' }} preview={{ visible: show, onOpenChange: setShow }} src={filePath} alt={"Preview Unavailable"} />
-        </>
+        <Image style={{ display: 'none' }} preview={{ open: show, onOpenChange: setShow }} src={filePath} alt={"Preview Unavailable"} />
       )}
       {videoExtensions.includes(extension) && (
         <Image style={{ display: 'none' }}
           preview={{
-            visible: show, onVisibleChange: setShow, imageRender: () => (
-              <video style={{ height: '80%', maxWidth: '90%' }} src={filePath} controls autoPlay />
+            open: open, onOpenChange: setShow, imageRender: () => (
+              open && <video style={{ maxHeight: '90%', maxWidth: '90%' }} src={filePath} controls autoPlay />
             ),
             toolbarRender: () => null,
           }}
@@ -98,8 +107,8 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
       {audioExtensions.includes(extension) && (
         <Image style={{ display: 'none' }}
           preview={{
-            visible: show, onVisibleChange: setShow, imageRender: () => (
-              <audio style={{ width: "90%", maxWidth: 768 }} src={filePath} controls autoPlay />
+            visible: open, onOpenChange: setShow, imageRender: () => (
+              open && <audio style={{ width: "90%", maxWidth: 768 }} src={filePath} controls autoPlay />
             ),
             toolbarRender: () => null,
           }}
@@ -109,8 +118,10 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
       {docExtensions.includes(extension) && (
         <Image style={{ display: 'none' }}
           preview={{
-            visible: show, onVisibleChange: setShow, imageRender: () => (
-              <embed
+            open: open,
+            onOpenChange: setShow,
+            imageRender: () => (
+              open && <embed
                 src={filePath}
                 width={'90%'}
                 height={'90%'}
@@ -118,7 +129,7 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
                 title="PDF document"
               />
             ),
-            toolbarRender: () => null,
+            actionsRender: () => null,
           }}
           alt={"Preview Unavailable"}
         />
@@ -127,9 +138,9 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
         <Modal
           width="60%"
           centered
-          open={true}
+          open={open}
           onCancel={setShow}
-          footer={[
+          footer={open && [
             content !== '' ?
               <Typography.Paragraph>
                 <pre style={{ whiteSpace: 'pre-wrap', overflow: 'auto', height: 'calc(80vh - 70px)', margin: 5, textAlign: 'left' }}>
@@ -139,11 +150,11 @@ const PreviewFileAction = ({ filePreviewPath, filePreviewComponent, onDownload, 
               : <Spin description="Loading..." size="large" />
           ]}
         >
-          <Space align="start">
-            <img src={'/icons/' + getIconForFile(selectedFiles[0].name)} height={64} width={64} />
-            {selectedFiles[0].name}
-            {selectedFiles[0].size && <Tag>{getDataSize(selectedFiles[0].size)}</Tag>}
-          </Space>
+          {open && file && <Space align="start">
+            <img src={'/icons/' + getIconForFile(file.name)} height={64} width={64} />
+            {file.name}
+            {file.size && <Tag>{getDataSize(file.size)}</Tag>}
+          </Space>}
         </Modal>
       )}
     </>

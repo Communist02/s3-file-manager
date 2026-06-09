@@ -9,15 +9,24 @@ import { useSelection } from "../../../contexts/SelectionContext";
 
 const maxNameLength = 220;
 
-const RenameAction = ({ onRename, triggerAction }) => {
+const RenameAction = ({ onRename, triggerAction, open }) => {
   const [renameFileWarning, setRenameFileWarning] = useState(false);
   const [fileRenameError, setFileRenameError] = useState(false);
   const { selectedFiles, setSelectedFiles } = useSelection();
   const { currentPathFiles, setCurrentPathFiles, selectedFileIndexes } = useFileNavigation();
   const t = useTranslation();
-  const file = selectedFiles.at(-1);
+  const [file, setFile] = useState(selectedFiles.at(-1));
   const [renameFile, setRenameFile] = useState(file?.name);
   const warningModalRef = useRef(null);
+  const prevOpenRef = useRef(open);
+
+  if (open && !prevOpenRef.current) {
+    setRenameFileWarning(false);
+    setFileRenameError(false);
+    setFile(selectedFiles.at(-1));
+    setRenameFile(selectedFiles.at(-1)?.name);
+  }
+  prevOpenRef.current = open;
 
   // Auto hide error message after 5 seconds
   useEffect(() => {
@@ -80,7 +89,7 @@ const RenameAction = ({ onRename, triggerAction }) => {
       <Modal
         centered
         title={t('rename')}
-        open={true}
+        open={open}
         onOk={
           () => {
             handleFileRenaming(true);
@@ -92,7 +101,7 @@ const RenameAction = ({ onRename, triggerAction }) => {
           }
         }
       >
-        <Tooltip
+        {open && <Tooltip
           open={fileRenameError}
           title={t('invalidFileName')}
           placement="bottomLeft"
@@ -104,7 +113,7 @@ const RenameAction = ({ onRename, triggerAction }) => {
                 handleChange(e);
               }
             } />
-        </Tooltip>
+        </Tooltip>}
       </Modal>
 
       {/* {fileRenameError && (
@@ -140,14 +149,14 @@ const RenameAction = ({ onRename, triggerAction }) => {
           }
         }
       >
-        <div className="fm-rename-folder-container" ref={warningModalRef}>
+        {open && <div className="fm-rename-folder-container" ref={warningModalRef}>
           <div className="fm-rename-folder-input">
             <div className="fm-rename-warning">
               <IoWarningOutline size={70} color="orange" />
               <div>{t("fileNameChangeWarning")}</div>
             </div>
           </div>
-        </div>
+        </div>}
       </Modal>
     </>
   );

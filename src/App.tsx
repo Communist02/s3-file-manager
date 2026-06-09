@@ -4,7 +4,7 @@ import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import Groups from './groups/Groups';
-import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Modal, Input, FloatButton, Typography, Descriptions, Tooltip, Spin } from 'antd';
+import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Modal, Input, FloatButton, Tooltip, Spin } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
@@ -17,6 +17,7 @@ import CollectionsSearch from './collections-search/CollectionsSearch'
 import { useAuth } from 'react-oidc-context'
 import { apiClient } from './api';
 import { useLocation, useNavigate } from 'react-router-dom';
+import FileProperties from './file-properties/FileProperties';
 
 export interface Collection {
     id: number;
@@ -58,7 +59,7 @@ function App() {
     const location = useLocation();
     const navigate = useNavigate();
     const { message } = AntApp.useApp();
-    
+    const [modal, contextHolder] = Modal.useModal();
 
     useEffect(() => {
         if (auth.user) {
@@ -79,14 +80,14 @@ function App() {
             };
         } else if (response.status === 410) {
             setFiles([{}]);
-            Modal.error({
+            modal.error({
                 title: "Фатальная ошибка!",
                 centered: true,
                 content: 'Коллекция не существует, данные утеряны!\nПожалуйста удалите коллекцию через меню "Управление" или обратитесь в службу поддержки!'
             });
         } else {
             setFiles([{}]);
-            Modal.error({
+            modal.error({
                 title: "Ошибка сервера",
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
@@ -108,16 +109,14 @@ function App() {
     };
 
     async function getCollections(isResetCurrentCollection: boolean = false): Promise<Collection[]> {
-        // setIsLoading(true);
         setIsLoadingCollections(true);
         let result = [];
         const response = await apiClient.getCollections();
         let responseFree = null;
         const freeCollectionIds = localStorage.getItem('freeCollectionIds');
-        if (freeCollectionIds !== null && freeCollectionIds.length > 2) {
+        if (freeCollectionIds && freeCollectionIds.length > 2) {
             responseFree = await apiClient.getFreeCollections(JSON.parse(freeCollectionIds));
         }
-        // setIsLoading(false);
         setIsLoadingCollections(false);
         if (response.status === 200) {
             result = response.data;
@@ -137,7 +136,7 @@ function App() {
                 }
             }
         } else if (response.status === 500) {
-            Modal.error({
+            modal.error({
                 title: "Ошибка сервера",
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
@@ -146,7 +145,7 @@ function App() {
             outAccount();
         } else if (response.status === 0) {
             console.log(response)
-            Modal.error({
+            modal.error({
                 title: "Нет ответа от сервера",
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
@@ -190,7 +189,7 @@ function App() {
             currentBucket !== null && await getFiles(currentBucket);
             message.success(`Успешно удалено`);
         } else if (response.status === 500) {
-            Modal.error({
+            modal.error({
                 title: "Ошибка сервера",
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
@@ -208,7 +207,7 @@ function App() {
             currentBucket !== null && await getFiles(currentBucket);
             message.success(`Успешно переименовано`);
         } else if (response.status === 500) {
-            Modal.error({
+            modal.error({
                 title: "Ошибка сервера",
                 centered: true,
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
@@ -282,7 +281,7 @@ function App() {
             console.error(error);
         }
 
-        if (!collection) {
+        if (!collection && id) {
             const response = await apiClient.getFreeCollections([id]);
             if (response.status === 200) {
                 const collectionsFree: Collection[] = response.data;
@@ -335,44 +334,20 @@ function App() {
         setIsCreatingCollection(false);
     };
 
-    // Функция для форматирования размера файла
-    const formatFileSize = (bytes: number | any) => {
-        if (bytes === 0) return '0 B';
-
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
     const handleProperties = async (file: File) => {
         let response = await apiClient.getFileInfo(currentBucket!.id, file['path'], file['isDirectory']);
         if (response.status === 200) {
             if (response.data !== null) {
-                const items: Record<string, any>[] = [];
-                for (let [key, value] of Object.entries(response.data)) {
-                    switch (key) {
-                        case "size":
-                        case "sum_size": {
-                            value = formatFileSize(value);
-                        }
-                    }
-                    items.push({
-                        key: key,
-                        label: key,
-                        children: typeof value === 'object' ? <Typography><pre style={{ margin: 0 }}>{JSON.stringify(value, null, 4)}</pre></Typography> : value,
-                    })
-                }
-                Modal.info({
-                    title: "Свойства " + file['name'],
+
+                modal.info({
+                    title: "Свойства" + (file['isDirectory'] ? ' папки ' : ' файла ') + file['name'],
                     icon: null,
                     centered: true,
-                    content: <Descriptions size={'small'} column={1} items={items} />,
-                    width: 720
+                    content: <FileProperties properties={response.data} />,
+                    okText: 'Закрыть'
                 });
             } else {
-                Modal.confirm({
+                modal.confirm({
                     title: "Свойства " + file['name'],
                     centered: true,
                     content: "Файл не индексирован",
@@ -593,6 +568,7 @@ function App() {
         algorithm: darkTheme ? theme.darkAlgorithm : undefined,
     }}>
         <AntApp>
+            {contextHolder}
             <Layout>
                 {tokenAuth && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0px 10px 0px 0px' }}>
                     <Button type='text' style={{ height: 60, padding: 10, }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>

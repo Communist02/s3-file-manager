@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Descriptions, Avatar, Space, Typography, Divider, Input, App } from 'antd';
 import { apiClient } from '../api';
 import { UserOutlined } from '@ant-design/icons';
-import './ProfilePage.css';
 
 interface UserProps {
     id: number;
@@ -15,7 +14,7 @@ interface ProfilePageProps {
 }
 
 function ProfilePage({ token }: ProfilePageProps) {
-    const [user, setUser] = useState<UserProps>({id: 0, count_collections: 0, username: ''});
+    const [user, setUser] = useState<UserProps>({ id: 0, count_collections: 0, username: '' });
     const { message } = App.useApp();
 
     async function getUser() {
@@ -51,12 +50,16 @@ function ProfilePage({ token }: ProfilePageProps) {
     return <>
         <Space size='large' align='start'>
             <Avatar size={160} icon={<UserOutlined />}>{user.username}</Avatar>
-            <Typography.Title className='profile-username'>
+            <Typography.Title style={{ marginTop: 0, marginLeft: 10 }}>
                 {user.username}
             </Typography.Title>
         </Space>
         <Divider />
-        <Descriptions bordered title='Информация' layout='vertical' items={items} />
+        <Descriptions bordered title='Информация' column={1} styles={{
+    label: {
+      width: 200
+    }
+  }} items={items} />
     </>;
 }
 

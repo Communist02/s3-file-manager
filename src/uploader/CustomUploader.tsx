@@ -102,7 +102,7 @@ export default function CustomUploader({
 
         xhr.onload = () => {
             if (xhr.status < 200 || xhr.status >= 300) {
-                let errorMessage = `Ошибка ${xhr.status}: ${xhr.statusText} - ${xhr.responseText}`;
+                const errorMessage = `Ошибка ${xhr.status}: ${xhr.statusText} - ${xhr.responseText}`;
                 onError(file, errorMessage);
             } else {
                 // onSuccess(xhr.response, file);
@@ -121,7 +121,7 @@ export default function CustomUploader({
         };
 
         xhr.onerror = () => {
-            onError(file, 'Произошла сетевая ошибка. Пожалуйста, проверьте ваше соединение.');
+            onError(file, 'Произошла сетевая ошибка. Пожалуйста, проверьте ваше соединение!');
         };
 
         xhr.open('POST', action, true);

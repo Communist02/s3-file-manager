@@ -1,7 +1,5 @@
 import { useRef, useState, useEffect } from "react";
 // @ts-ignore
-import FileItem from "./FileItem";
-// @ts-ignore
 import { useFileNavigation } from "../../contexts/FileNavigationContext";
 // @ts-ignore
 import { useLayout } from "../../contexts/LayoutContext";
@@ -307,41 +305,37 @@ const FileList = ({
       onContextMenu={handleContextMenu}
       onClick={unselectFiles}
     >
-      <div className={`rename-file-container ${activeLayout}`}>
-        {triggerAction.actionType === "createFolder" && (
-          <CreateFolderAction
-            filesViewRef={filesViewRef}
-            file={{
-              name: duplicateNameHandler("New Folder", true, currentPathFiles),
-              isDirectory: true,
-              path: currentPath,
-              isEditing: true,
-              key: new Date().valueOf(),
-            }}
-            onCreateFolder={onCreateFolder}
-            triggerAction={triggerAction}
-          />
-        )}
-      </div>
-
+      <CreateFolderAction
+        open={triggerAction.actionType === "createFolder"}
+        filesViewRef={filesViewRef}
+        file={{
+          name: duplicateNameHandler("New Folder", true, currentPathFiles),
+          isDirectory: true,
+          path: currentPath,
+          isEditing: true,
+          key: new Date().valueOf(),
+        }}
+        onCreateFolder={onCreateFolder}
+        triggerAction={triggerAction}
+      />
       <Table
-          rowSelection={rowSelection}
-          rowKey={'path'}
-          pagination={false}
-          virtual
-          size="small"
-          columns={columns}
-          dataSource={currentPathFiles}
-          scroll={{ y: size.y - 40 }}
-          onRow={(record) => ({
-            onClick: (e) => handleRowClick(record, e),
-            onDoubleClick: () => handleFile(record),
-            onContextMenu: () => handleLeftClick(record),
-          })}
-        // rowClassName={(record) =>
-        //   selectedRowKeys.includes(record.path) ? 'ant-table-row-selected' : ''
-        // }
-        />
+        rowSelection={rowSelection}
+        rowKey={'path'}
+        pagination={false}
+        virtual
+        size="small"
+        columns={columns}
+        dataSource={currentPathFiles}
+        scroll={{ y: size.y - 40 }}
+        onRow={(record) => ({
+          onClick: (e) => handleRowClick(record, e),
+          onDoubleClick: () => handleFile(record),
+          onContextMenu: () => handleLeftClick(record),
+        })}
+      // rowClassName={(record) =>
+      //   selectedRowKeys.includes(record.path) ? 'ant-table-row-selected' : ''
+      // }
+      />
 
       <ContextMenu
         filesViewRef={filesViewRef}

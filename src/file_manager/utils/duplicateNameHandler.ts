@@ -1,5 +1,5 @@
-export const duplicateNameHandler = (originalFileName, isDirectory, files) => {
-  if (files.find((f) => f.name === originalFileName)) {
+export const duplicateNameHandler = (originalFileName: string, isDirectory: boolean, files: any) => {
+  if (files.find((f: any) => f.name === originalFileName)) {
     const fileExtension = isDirectory ? "" : "." + originalFileName.split(".").pop();
     const fileName = isDirectory
       ? originalFileName
@@ -10,7 +10,7 @@ export const duplicateNameHandler = (originalFileName, isDirectory, files) => {
     // If there exists a file with name fileName (1), fileName (2), etc.
     // Check if the number is greater than the maxFileNum, then set it to that greater number
     const fileNameRegex = new RegExp(`${fileName} \\(\\d+\\)`);
-    files.forEach((f) => {
+    files.forEach((f: any) => {
       const fName = f.isDirectory ? f.name : f.name.split(".").slice(0, -1).join(".");
       if (fileNameRegex.test(fName)) {
         const fileNumStr = fName.split(`${fileName} (`).pop().slice(0, -1);

@@ -307,7 +307,6 @@ const FileList = ({
     >
       <CreateFolderAction
         open={triggerAction.actionType === "createFolder"}
-        filesViewRef={filesViewRef}
         file={{
           name: duplicateNameHandler("New Folder", true, currentPathFiles),
           isDirectory: true,

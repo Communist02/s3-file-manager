@@ -1,7 +1,7 @@
-import { User } from "oidc-client-ts"
+import { User, WebStorageStateStore } from "oidc-client-ts"
 import { apiClient } from './api.ts'
-import { WebStorageStateStore } from "oidc-client-ts";
-import { urlAuth } from "./url.js";
+import { urlAuth } from "./url.js"
+import { type AuthProviderProps } from "react-oidc-context"
 
 const onSigninCallback = (_user: User | void): void => {
   if (_user) {
@@ -14,11 +14,11 @@ const onSigninCallback = (_user: User | void): void => {
   )
 }
 
-export const oidcConfig = {
+export const oidcConfig: AuthProviderProps = {
   authority: urlAuth,
   client_id: "storage-web",
-  redirect_uri: window.location.protocol + '//' + window.location.host,
-  "onSigninCallback": onSigninCallback,
+  redirect_uri: window.location.href,
+  onSigninCallback: onSigninCallback,
   stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
   userStore: new WebStorageStateStore({ store: window.localStorage })
 };

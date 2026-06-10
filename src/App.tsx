@@ -62,11 +62,20 @@ function App() {
     const [modal, contextHolder] = Modal.useModal();
 
     useEffect(() => {
-        if (auth.user) {
-            //update_token(auth.user?.access_token)
-            login(auth.user?.access_token);
-        }
-    }, [auth.isAuthenticated]);
+        const authUser = async () => {
+            if (auth.user) {
+                if (auth.user.expired) {
+                    const renewedUser = await auth.signinSilent();
+                    if (renewedUser) {
+                        login(renewedUser.access_token);
+                    }
+                } else {
+                    login(auth.user.access_token);
+                }
+            }
+        };
+        authUser();
+    }, [auth.isAuthenticated, auth.user]);
 
     const getFiles = async (collection: Collection) => {
         setIsLoading(true);
@@ -484,16 +493,21 @@ function App() {
     }
 
     async function login(token: string) {
-        setTokenAuth(token);
-        const segments = decodeURIComponent(location.pathname).split('/').filter(Boolean);
-        apiClient.updateToken(token);
-        const collections = await getCollections(true);
-        setIsLoadingCollections(true);
-        await changeCollection(Number(segments[0]), collections);
+        if (tokenAuth === null) {
+            setTokenAuth(token);
+            apiClient.updateToken(token);
+            const segments = decodeURIComponent(location.pathname).split('/').filter(Boolean);
+            const collections = await getCollections(true);
+            setIsLoadingCollections(true);
+            await changeCollection(Number(segments[0]), collections);
 
-        const folder = segments.slice(1).join('/');
-        await setCurrentPath('/' + folder);
-        setIsLoadingCollections(false);
+            const folder = segments.slice(1).join('/');
+            await setCurrentPath('/' + folder);
+            setIsLoadingCollections(false);
+        } else {
+            setTokenAuth(token);
+            apiClient.updateToken(token);
+        }
     }
 
     const permissions = [

@@ -17,7 +17,7 @@ const onSigninCallback = (_user: User | void): void => {
 export const oidcConfig: AuthProviderProps = {
   authority: urlAuth,
   client_id: "storage-web",
-  redirect_uri: window.location.href,
+  redirect_uri: window.location.origin + window.location.pathname,
   onSigninCallback: onSigninCallback,
   stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
   userStore: new WebStorageStateStore({ store: window.localStorage })

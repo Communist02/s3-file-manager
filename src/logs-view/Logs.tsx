@@ -1,10 +1,16 @@
 import { useState, useRef } from 'react';
-import { Button, Drawer, Table, Tag, Typography } from 'antd';
+import { Button, Drawer, Table, Tag, Typography, type TableProps } from 'antd';
 import { apiClient } from '../api';
 
 interface LogsProps {
     open: boolean;
     setOpen: (value: boolean) => void;
+}
+
+interface LogsType {
+    id: number;
+    created_at: string;
+    status: number;
 }
 
 function Logs({ open, setOpen }: LogsProps) {
@@ -24,32 +30,16 @@ function Logs({ open, setOpen }: LogsProps) {
         updateLogs();
     }
 
-    const columns = [
+    const columns: TableProps<LogsType>['columns'] = [
         {
             title: 'ID',
             dataIndex: 'id',
-        },
-        {
-            title: 'Время',
-            dataIndex: 'created_at',
-            render: (value: string) => {
-                const formatter = Intl.DateTimeFormat('ru-RU', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                return formatter.format(Date.parse(value));
-            }
-        },
-        {
-            title: 'Действие',
-            dataIndex: 'action',
+            width: 100,
         },
         {
             title: 'Результат',
             dataIndex: 'status',
+            width: 90,
             render: (value: number) => {
                 let color;
                 switch (value) {
@@ -74,6 +64,25 @@ function Logs({ open, setOpen }: LogsProps) {
                 }
                 return <Tag color={color}>{value}</Tag>;
             }
+        },
+        {
+            title: 'Время',
+            dataIndex: 'created_at',
+            width: 140,
+            render: (value: string) => {
+                const formatter = Intl.DateTimeFormat('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                return formatter.format(Date.parse(value));
+            }
+        },
+        {
+            title: 'Действие',
+            dataIndex: 'action',
         },
     ];
 

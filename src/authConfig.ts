@@ -3,9 +3,9 @@ import { apiClient } from './api.ts'
 import { urlAuth } from "./url.js"
 import { type AuthProviderProps } from "react-oidc-context"
 
-const onSigninCallback = (_user: User | void): void => {
-  if (_user) {
-    apiClient.updateToken(_user.access_token);
+const onSigninCallback = (user: User | void): void => {
+  if (user) {
+    apiClient.updateToken(user.access_token);
   }
   window.history.replaceState(
     {},
@@ -18,6 +18,7 @@ export const oidcConfig: AuthProviderProps = {
   authority: urlAuth,
   client_id: "storage-web",
   redirect_uri: window.location.origin + window.location.pathname,
+  automaticSilentRenew: false,
   onSigninCallback: onSigninCallback,
   stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
   userStore: new WebStorageStateStore({ store: window.localStorage })

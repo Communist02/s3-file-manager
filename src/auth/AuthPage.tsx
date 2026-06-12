@@ -12,12 +12,12 @@ function AuthPage() {
         }
     }, [auth.error?.message, auth.signinRedirect]);
 
-    let body = <></>;
-    if (auth.isLoading) {
+    let body: React.JSX.Element;
+    if (auth.isLoading || auth.user && auth.user.expired) {
         body = <Spin description="Идет процесс входа" size='large' />
     } else {
         body = <Result
-            title="Требуется войти в систему"
+            title="Требуется вход в учетную запись"
             extra={
                 <Button style={{ width: '100%' }} type='primary' onClick={() => auth.signinRedirect()}>Войти</Button>
             }
@@ -26,8 +26,8 @@ function AuthPage() {
 
     if (auth.error) {
         body = <Result
-            status="warning"
-            title={auth.error.message}
+            status="error"
+            title={`${auth.error.name}: ${auth.error.message}`}
             subTitle="Попробуйте перезагрузить страницу!"
         />
     }

@@ -12,8 +12,6 @@ import useFileList from "./useFileList";
 // @ts-ignore
 import { useSelection } from "../../contexts/SelectionContext";
 // @ts-ignore
-import FilesHeader from "./FilesHeader";
-// @ts-ignore
 import { useTranslation } from "../../contexts/TranslationProvider";
 import "./FileList.scss";
 // @ts-ignore
@@ -92,7 +90,9 @@ const FileList = ({
       for (let entry of entries) {
         if (activeLayout) {
           const { width, height } = entry.contentRect;
-          setSize({ x: width, y: height });
+          if (height !== size.y) {
+            setSize({ x: width, y: height });
+          }
         }
       }
     });
@@ -246,8 +246,10 @@ const FileList = ({
   const handleRowClick = (record: File, e: any) => {
     const selectedRowKeys: string[] = selectedFiles.map(item => item.path);
     const key = record.path;
-    let rowKeys = [];
-
+    let rowKeys: string[] = [];
+    if (e.target.tagName === 'LABEL' || e.target.tagName === 'TD' && e.target.cellIndex === 0) {
+      return;
+    }
     if (e.ctrlKey) {
       // Ctrl — переключение текущей строки
       if (selectedRowKeys.includes(key)) {
@@ -286,7 +288,10 @@ const FileList = ({
     setLastSelectedKey(key);
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = (file: File, e: any) => {
+    if (e.target.tagName === 'LABEL' || e.target.tagName === 'TD' && e.target.cellIndex === 0) {
+      return;
+    }
     onFileOpen(file);
     if (file.isDirectory) {
       setLastSelectedKey(null);
@@ -321,14 +326,14 @@ const FileList = ({
         rowSelection={rowSelection}
         rowKey={'path'}
         pagination={false}
-        virtual
+        virtual={currentPathFiles.length > 300}
         size="small"
         columns={columns}
         dataSource={currentPathFiles}
         scroll={{ y: size.y - 40 }}
         onRow={(record) => ({
           onClick: (e) => handleRowClick(record, e),
-          onDoubleClick: () => handleFile(record),
+          onDoubleClick: (e) => handleFile(record, e),
           onContextMenu: () => handleLeftClick(record),
         })}
       // rowClassName={(record) =>

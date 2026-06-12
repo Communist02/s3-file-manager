@@ -37,7 +37,7 @@ class ErrorResponse implements AxiosResponse {
 
 export class ApiClient {
     private api;
-    private token: string = '';
+    public token: string = '';
 
     constructor() {
         this.api = axios.create({

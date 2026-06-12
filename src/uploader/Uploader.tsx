@@ -256,8 +256,10 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
     return (
         <Drawer
             id='drawer-upload'
-            size='large'
+            defaultSize={700}
+            styles={{ body: { padding: 0 } }}
             title='Загрузки'
+            resizable
             onClose={
                 () => {
                     setOpen(false);
@@ -305,16 +307,16 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
                 onChange={(info) => onChange(info, collection_id)}
                 onCreateXhr={(uid, xhr) => { uploadRequestsRef.current.set(uid, xhr) }}
                 onError={onError}
-                // onProgress={() => { }}
-                // onSuccess={() => { }}
+            // onProgress={() => { }}
+            // onSuccess={() => { }}
             >
-                <p style={{ fontSize: 80, margin: 0 }} className="ant-upload-drag-icon">
+                <p style={{ fontSize: 80, margin: -10 }} className="ant-upload-drag-icon">
                     <InboxOutlined />
                 </p>
-                <p className="ant-upload-text">
+                <p className="ant-upload-text" style={{ margin: 0 }}>
                     Нажмите или перетащите файлы в эту область для загрузки
                 </p>
-                <p className="ant-upload-hint">
+                <p className="ant-upload-hint" style={{ margin: 10 }}>
                     Поддерживается один или несколько файлов.
                     Включите режим директории, чтобы загрузить папку.
                     Включите режим архива, если хотите чтобы архив (.tar, .tar.gz, .tar.zst, .tar.lz4, .tar.bz2) распаковался после загрузки.
@@ -325,7 +327,7 @@ function Uploader({ open, setOpen, url, token, collection_id, path, updateCollec
             {uploadingFiles.length > 0 && (
                 <div style={{ marginTop: 10 }}>
                     <Table
-                        scroll={{ y: 'calc(100vh - 505px)' }}
+                        scroll={{ y: 'calc(100vh - 430px)' }}
                         rowKey="uid"
                         size="small"
                         dataSource={uploadingFiles}

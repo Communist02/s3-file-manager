@@ -73,7 +73,7 @@ const FileManager = ({
   );
 
   return (
-    <main className="file-explorer" onContextMenu={(e) => e.preventDefault()} style={customStyles}>
+    <main className="file-explorer"  style={customStyles}>
       <Loader loading={isLoading} />
       <TranslationProvider language={language}>
         <FilesProvider filesData={files} onError={onError}>

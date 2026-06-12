@@ -1,4 +1,3 @@
-import { BsScissors } from "react-icons/bs";
 // @ts-ignore
 import { useClipBoard } from "../../contexts/ClipboardContext";
 import { useEffect, useState } from "react";
@@ -183,13 +182,13 @@ const useFileList = (onRefresh: () => void, enableFilePreview: boolean, triggerA
       onClick: handleFileOpen,
       divider: true,
     },
-    {
-      title: t("cut"),
-      icon: <BsScissors size={19} />,
-      onClick: () => handleMoveOrCopyItems(true),
-      divider: !lastSelectedFile?.isDirectory && !permissions.copy,
-      hidden: !permissions.move,
-    },
+    // {
+    //   title: t("cut"),
+    //   icon: <BsScissors size={19} />,
+    //   onClick: () => handleMoveOrCopyItems(true),
+    //   divider: !lastSelectedFile?.isDirectory && !permissions.copy,
+    //   hidden: !permissions.move,
+    // },
     {
       title: t("copy"),
       icon: <CopyOutlined />,

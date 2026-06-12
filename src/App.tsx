@@ -4,7 +4,7 @@ import './App.css'
 import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import Groups from './groups/Groups';
-import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Modal, Input, FloatButton, Tooltip, Spin } from 'antd';
+import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Modal, Input, FloatButton, Tooltip, Spin, message as Message } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
@@ -58,24 +58,38 @@ function App() {
     const [isLoadingCollections, setIsLoadingCollections] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-    const { message } = AntApp.useApp();
+    const [message, messageContextHolder] = Message.useMessage();
     const [modal, contextHolder] = Modal.useModal();
+    const isMounted = useRef<boolean>(false);
+
+    const refreshToken = async () => {
+        const renewedUser = await auth.signinSilent();
+        if (renewedUser) {
+            console.log('Refresh token');
+            await setTokenAuth(renewedUser.access_token);
+            await apiClient.updateToken(renewedUser.access_token);
+        } else {
+            await auth.removeUser();
+            modal.info({
+                title: "Сессия завершена",
+                centered: true,
+                content: 'Сессия устарела или недействительна. Авторизуйтесь заново!',
+                onOk: () => auth.signinRedirect(),
+            });
+        }
+    }
+
+    if (!isMounted.current) {
+        auth.events.addAccessTokenExpired(refreshToken);
+        auth.events.addAccessTokenExpiring(refreshToken);
+        isMounted.current = true;
+    }
 
     useEffect(() => {
-        const authUser = async () => {
-            if (auth.user) {
-                if (auth.user.expired) {
-                    const renewedUser = await auth.signinSilent();
-                    if (renewedUser) {
-                        login(renewedUser.access_token);
-                    }
-                } else {
-                    login(auth.user.access_token);
-                }
-            }
-        };
-        authUser();
-    }, [auth.isAuthenticated, auth.user]);
+        if (auth.user && !auth.user.expired) {
+            login(auth.user.access_token);
+        }
+    }, [auth.isAuthenticated]);
 
     const getFiles = async (collection: Collection) => {
         setIsLoading(true);
@@ -151,9 +165,12 @@ function App() {
                 content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
             });
         } else if (response.status === 401) {
-            outAccount();
+            modal.error({
+                title: "Неавторизован",
+                centered: true,
+                content: 'Попробуйте авторизоваться заново или обратитесь в службу поддержки!'
+            });
         } else if (response.status === 0) {
-            console.log(response)
             modal.error({
                 title: "Нет ответа от сервера",
                 centered: true,
@@ -493,21 +510,16 @@ function App() {
     }
 
     async function login(token: string) {
-        if (tokenAuth === null) {
-            setTokenAuth(token);
-            apiClient.updateToken(token);
-            const segments = decodeURIComponent(location.pathname).split('/').filter(Boolean);
-            const collections = await getCollections(true);
-            setIsLoadingCollections(true);
-            await changeCollection(Number(segments[0]), collections);
+        setTokenAuth(token);
+        apiClient.updateToken(token);
+        const segments = decodeURIComponent(location.pathname).split('/').filter(Boolean);
+        const collections = await getCollections(true);
+        setIsLoadingCollections(true);
+        await changeCollection(Number(segments[0]), collections);
 
-            const folder = segments.slice(1).join('/');
-            await setCurrentPath('/' + folder);
-            setIsLoadingCollections(false);
-        } else {
-            setTokenAuth(token);
-            apiClient.updateToken(token);
-        }
+        const folder = segments.slice(1).join('/');
+        await setCurrentPath('/' + folder);
+        setIsLoadingCollections(false);
     }
 
     const permissions = [
@@ -583,6 +595,7 @@ function App() {
     }}>
         <AntApp>
             {contextHolder}
+            {messageContextHolder}
             <Layout>
                 {tokenAuth && <Layout.Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0px 10px 0px 0px' }}>
                     <Button type='text' style={{ height: 60, padding: 10, }} className='header-right' onClick={() => onClickLogin({ key: 'fileManager' })}>

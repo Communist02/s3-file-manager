@@ -176,7 +176,8 @@ export default function CustomUploader({
                 style={{
                     // border: "2px dashed #999",
                     // borderRadius: 8,
-                    padding: 40,
+                    padding: 10,
+                    margin: 10,
                     textAlign: "center",
                     // // background: dragActive ? "#white" : "white",
                     cursor: "pointer"

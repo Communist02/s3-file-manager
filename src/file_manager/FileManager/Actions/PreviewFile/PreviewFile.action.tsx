@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { getFileExtension } from "../../../utils/getFileExtension";
 // @ts-ignore
 import { useSelection } from "../../../contexts/SelectionContext";
@@ -8,10 +8,15 @@ import { useTranslation } from "../../../contexts/TranslationProvider";
 // @ts-ignore
 import { validateApiCallback } from "../../../utils/validateApiCallback";
 import { Image, Modal, Button, Tag, Space, Spin } from "antd";
-const { Prism: SyntaxHighlighter } = await import('react-syntax-highlighter');
 import { getIconForFile, } from 'vscode-icons-js';
 import { oneLight, oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './PreviewFile.css';
+
+const SyntaxHighlighter = lazy(() =>
+  import('react-syntax-highlighter').then(module => ({
+    default: module.Prism
+  }))
+);
 
 const imageExtensions = ["jpg", "jpeg", "png", 'gif', 'webp', 'avif'];
 const videoExtensions = ["mp4", "mov", "avi", 'webm', 'av1', '3gp'];
@@ -134,11 +139,13 @@ const PreviewFileAction = ({ filePreviewPath, onDownload, setShow, open }: Previ
       {open && [
         content !== '' ?
           <div key='code' style={{ overflow: 'auto', maxHeight: 'calc(80vh - 70px)', marginTop: 5, textAlign: 'left' }}>
-            <SyntaxHighlighter style={localStorage.getItem('darkTheme') === 'true' ? oneDark : oneLight} className={'code-block'} key='code' showLineNumbers language={extension}>
-              {content}
-            </SyntaxHighlighter>
+            <Suspense fallback={<div key="loading-spin" style={{ marginLeft: 20 }}><Spin size="large" /></div>}>
+              <SyntaxHighlighter style={localStorage.getItem('darkTheme') === 'true' ? oneDark : oneLight} className={'code-block'} key='code' showLineNumbers language={extension}>
+                {content}
+              </SyntaxHighlighter>
+            </Suspense>
           </div>
-          : <Spin key="loading-spin" description="Loading..." size="large" />
+          : <div key="loading-spin" style={{ marginLeft: 20 }}><Spin size="large" /></div>
       ]}
     </Modal>
   } else {
@@ -155,8 +162,10 @@ const PreviewFileAction = ({ filePreviewPath, onDownload, setShow, open }: Previ
     >
       {open && file && <Space align="start">
         <img src={'/icons/' + getIconForFile(file.name)} height={64} width={64} />
-        {file.name}
-        {file.size && <Tag>{getDataSize(file.size)}</Tag>}
+        <Space vertical>
+          {file.name}
+          {file.size && <Tag>{getDataSize(file.size)}</Tag>}
+        </Space>
       </Space>}
     </Modal>
   }

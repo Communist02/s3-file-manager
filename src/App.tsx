@@ -1,7 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, lazy, Suspense } from 'react'
 import './App.css'
-// @ts-ignore
-import FileManager from './file_manager/FileManager/FileManager'
 import AuthPage from './auth/AuthPage'
 import Groups from './groups/Groups';
 import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Modal, Input, FloatButton, Tooltip, Spin, message as Message } from 'antd';
@@ -18,6 +16,9 @@ import { useAuth } from 'react-oidc-context'
 import { apiClient } from './api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FileProperties from './file-properties/FileProperties';
+import type { User } from 'oidc-client-ts';
+// @ts-ignore
+const FileManager = lazy(() => import('./file_manager/FileManager/FileManager'));
 
 export interface Collection {
     id: number;
@@ -62,10 +63,10 @@ function App() {
     const [modal, contextHolder] = Modal.useModal();
     const isMounted = useRef<boolean>(false);
 
-    const refreshToken = async () => {
+    const onRefreshToken = async () => {
         const renewedUser = await auth.signinSilent();
         if (renewedUser) {
-            console.log('Refresh token');
+            console.log('Refresh expired token');
             await setTokenAuth(renewedUser.access_token);
             await apiClient.updateToken(renewedUser.access_token);
         } else {
@@ -79,9 +80,17 @@ function App() {
         }
     }
 
+    const onUserLoaded = async (user: User | null) => {
+        if (user && !user.expired) {
+            console.log('Refresh expiring token');
+            await setTokenAuth(user.access_token);
+            await apiClient.updateToken(user.access_token);
+        }
+    }
+
     if (!isMounted.current) {
-        auth.events.addAccessTokenExpired(refreshToken);
-        auth.events.addAccessTokenExpiring(refreshToken);
+        auth.events.addAccessTokenExpired(onRefreshToken);
+        auth.events.addUserLoaded(onUserLoaded);
         isMounted.current = true;
     }
 
@@ -550,31 +559,37 @@ function App() {
                 <Input placeholder="Имя" value={newCollectionName} count={{ show: true, max: 63 }} onChange={(e) => setNewCollectionName(e.target.value)} />
             </Modal>
             {buckets.length > 0 && currentPath !== null ?
-                <FileManager
-                    files={files}
-                    language='ru'
-                    isLoading={isLoading}
-                    layout={'list'}
-                    onRefresh={handleRefresh}
-                    onError={handleError}
-                    onDownload={handleDownload}
-                    onDelete={handleDelete}
-                    onCopy={handleCopy}
-                    onPaste={handlePaste}
-                    onRename={handleRename}
-                    onShowProperties={handleProperties}
-                    onFileUploading={handleFileUploading}
-                    onFileUploaded={handleFileUploaded}
-                    onCreateFolder={handleCreateFolder}
-                    fileUploadConfig={{ url: url, method: 'PUT' }}
-                    defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
-                    collapsibleNav={true}
-                    filePreviewPath={url + `/collections/${currentBucket?.id}/files/?preview=true&token=${tokenAuth}`}
-                    primaryColor='#1677ff'
-                    permissions={currentBucket !== null ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
-                    onFolderChange={handleFolderChange}
-                    initialPath={currentPath}
-                /> :
+                <Suspense fallback={
+                    <Flex className='not-collections' style={{ height: 'calc(100vh - 38px - 70px)' }} justify="center" align="center">
+                        <Spin size='large' />
+                    </Flex>
+                }>
+                    <FileManager
+                        files={files}
+                        language='ru'
+                        isLoading={isLoading}
+                        layout={'list'}
+                        onRefresh={handleRefresh}
+                        onError={handleError}
+                        onDownload={handleDownload}
+                        onDelete={handleDelete}
+                        onCopy={handleCopy}
+                        onPaste={handlePaste}
+                        onRename={handleRename}
+                        onShowProperties={handleProperties}
+                        onFileUploading={handleFileUploading}
+                        onFileUploaded={handleFileUploaded}
+                        onCreateFolder={handleCreateFolder}
+                        fileUploadConfig={{ url: url, method: 'PUT' }}
+                        defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
+                        collapsibleNav={true}
+                        filePreviewPath={url + `/collections/${currentBucket?.id}/files/?preview=true&token=${tokenAuth}`}
+                        primaryColor='#1677ff'
+                        permissions={currentBucket !== null ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
+                        onFolderChange={handleFolderChange}
+                        initialPath={currentPath}
+                    />
+                </Suspense> :
                 <Flex className='not-collections' style={{ height: 'calc(100vh - 38px - 70px)' }} justify="center" align="center">
                     {isLoadingCollections ? <Spin size='large' /> : <Result
                         title="У вас нет доступных коллекций, но вы можете их создать!"

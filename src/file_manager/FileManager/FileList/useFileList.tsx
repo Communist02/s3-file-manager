@@ -40,6 +40,7 @@ const useFileList = (onRefresh: () => void, enableFilePreview: boolean, triggerA
 
   // Context Menu
   const handleFileOpen = () => {
+    const lastSelectedFile = selectedFiles[0];
     onFileOpen(lastSelectedFile);
     if (lastSelectedFile && lastSelectedFile.isDirectory) {
       setCurrentPath(lastSelectedFile.path);
@@ -58,7 +59,7 @@ const useFileList = (onRefresh: () => void, enableFilePreview: boolean, triggerA
   };
 
   const handleFilePasting = () => {
-    handlePasting(lastSelectedFile);
+    handlePasting(selectedFiles[0]);
     setVisible(false);
   };
 
@@ -181,6 +182,7 @@ const useFileList = (onRefresh: () => void, enableFilePreview: boolean, triggerA
       icon: lastSelectedFile?.isDirectory ? <FolderOpenOutlined /> : <FileOutlined />,
       onClick: handleFileOpen,
       divider: true,
+      hidden: selectedFiles.length > 1,
     },
     // {
     //   title: t("cut"),

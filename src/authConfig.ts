@@ -18,7 +18,7 @@ export const oidcConfig: AuthProviderProps = {
   authority: urlAuth,
   client_id: "storage-web",
   redirect_uri: window.location.origin + window.location.pathname,
-  automaticSilentRenew: false,
+  automaticSilentRenew: true,
   onSigninCallback: onSigninCallback,
   stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
   userStore: new WebStorageStateStore({ store: window.localStorage })

@@ -41,14 +41,15 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
     async function showModalAddUser() {
         let response = await apiClient.getOtherUsers();
         if (response.status === 200) {
-            let usersOptions = [];
-            const usersList = response.data;
-            for (const user of usersList) {
-                usersOptions.push({
+            const usersList: any[] = response.data;
+
+            const memberIds = new Set(members.map(member => member.id));
+            const usersOptions = usersList
+                .filter(user => !memberIds.has(user.id))
+                .map(user => ({
                     label: user.username,
                     value: user.id,
-                });
-            }
+                }));
             setUsers(usersOptions);
         }
         setIsModalOpenAddUser(true);
@@ -282,7 +283,7 @@ function GroupPage({ index, groups, getCollections, updateGroups }: GroupsPagePr
                     <p>Кому</p>
                     <Select
                         showSearch={{ optionFilterProp: 'label' }}
-                        value={newOwnerUserId}
+                        value={newOwnerUserId !== -1 ? newOwnerUserId : null}
                         style={{ width: '100%' }}
                         placeholder="Выберите кому передать"
                         onChange={(value) => setNewOwnerUserId(value)}

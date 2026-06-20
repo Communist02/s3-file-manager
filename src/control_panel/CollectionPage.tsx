@@ -23,15 +23,23 @@ interface Option {
     value: number;
 }
 
+interface Access {
+    id: number;
+    target_id: number;
+    target_type: string;
+    type_id: number;
+    type_name: string;
+}
+
 function CollectionPage({ collection, getCollections, open, setOpen }: CollectionPageProps) {
     const [isModalOpenRemove, setIsModalOpenRemove] = useState(false);
     const [isModalOpenAccess, setIsModalOpenAccess] = useState(false);
     const [isModalOpenEditCollection, setIsModalOpenEditCollection] = useState(false);
-    const [users, setUsers] = useState<Array<Option>>([]);
-    const [access, setAccess] = useState([]);
+    const [users, setUsers] = useState<Option[]>([]);
+    const [access, setAccess] = useState<Access[]>([]);
     const [collectionInfo, setCollectionInfo] = useState<CollectionInfo | null>(null);
-    const [groups, setGroups] = useState<Array<Option>>([]);
-    const [accessTypes, setAccessTypes] = useState<Array<Option>>([]);
+    const [groups, setGroups] = useState<Option[]>([]);
+    const [accessTypes, setAccessTypes] = useState<Option[]>([]);
     const [accessTypeId, setAccessTypeId] = useState<number | null>(null);
     const [accessId, setAccessId] = useState<number | null>(null);
     const [isAccessToAll, setIsAccessAll] = useState(collection.is_access_all);
@@ -69,26 +77,28 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
         setIsUpdatingAccess(true)
         let response = await apiClient.getOtherUsers();
         if (response.status === 200) {
-            let usersOptions = [];
-            const usersList = response.data;
-            for (const user of usersList) {
-                usersOptions.push({
+            const usersList: any[] = response.data;
+
+            const usersIds: Set<string> = new Set(access.map(access => access.target_type + access.target_id));
+            const usersOptions = usersList
+                .filter(user => !usersIds.has('user' + user.id))
+                .map(user => ({
                     label: user.username,
                     value: user.id,
-                });
-            }
+                }));
             setUsers(usersOptions);
         }
         response = await apiClient.getGroups();
         if (response.status === 200) {
-            let groupsOptions = [];
-            const groupsList = response.data;
-            for (const group of groupsList) {
-                groupsOptions.push({
+            const groupsList: any[] = response.data;
+
+            const groupsIds: Set<string> = new Set(access.map(access => access.target_type + access.target_id));
+            const groupsOptions = groupsList
+                .filter(group => !groupsIds.has('group' + group.id))
+                .map(group => ({
                     label: group.title,
                     value: group.id,
-                });
-            }
+                }));
             setGroups(groupsOptions);
         }
         response = await apiClient.getAccessTypes();
@@ -310,7 +320,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
             itemsInfo.push({
                 key: 'collection-tags',
                 label: 'Ключевые слова',
-                children: <Space  size={5}>{tags}</Space>,
+                children: <Space size={5}>{tags}</Space>,
             });
         }
         if (types.length !== 0) {
@@ -328,7 +338,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
         // }
         return (
             <>
-                {isUpdatingAccess && <Spin size='large' fullscreen/>}
+                {isUpdatingAccess && <Spin size='large' fullscreen />}
                 <Flex vertical gap="small" style={{ width: '100%' }}>
                     <Descriptions
                         bordered
@@ -368,7 +378,7 @@ function CollectionPage({ collection, getCollections, open, setOpen }: Collectio
                     />
                     {
                         collectionInfo !== null &&
-                        <Descriptions size='small' style={{marginBottom: 10}} title='Информация' layout='vertical' items={itemsInfo} />
+                        <Descriptions size='small' style={{ marginBottom: 10 }} title='Информация' layout='vertical' items={itemsInfo} />
                     }
                     <Space>
                         {

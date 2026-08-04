@@ -105,8 +105,6 @@ export class ApiClient {
                 const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
                 new_url = `${this.api.defaults.baseURL}/collections/${collection_id}/archive?${fileQuery}`;
             }
-            console.log(window.location.hostname);
-            console.log(new URL(url).hostname)
             if (window.location.hostname != new URL(url).hostname) {
                 if (files.length === 1 && !files[0].isDirectory) {
                     new_url += `?token=${this.token}`

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Descriptions, Space, Input, Tag, Popconfirm, Table, Typography, App } from 'antd';
 import { apiClient } from '../api';
-import type { Collection } from '../App';
+import { filesEndpoint, type Collection } from '../App';
 
 interface CollectionsSearchProps {
     getCollections: (value?: boolean) => Promise<Collection[]>;
@@ -97,7 +97,7 @@ function CollectionsSearch({ getCollections }: CollectionsSearchProps) {
             title: 'Ссылка',
             width: '100px',
             render: (_: any, record: any) => {
-                const link = `/${record.collection_id}${record.path}`
+                const link = `/${filesEndpoint}/${record.collection_id}${record.path}`
                 return <a href={link}>Открыть</a>;
             }
         },

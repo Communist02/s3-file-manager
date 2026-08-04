@@ -1,7 +1,7 @@
-// export const url = "https://minio-s3-1.eco.dvo.ru:8000";
+export const url = "https://minio-s3-1.eco.dvo.ru:8000";
 // export const url = "http://localhost:8000";
 // export const url = "http://94.198.17.20:8000";
 // export const urlAuth = "http://localhost:8080";
-// export const urlAuth = "https://base.eco.dvo.ru:8080";
-export const url = "https://s3-1.climat.dvo.ru:8005";
-export const urlAuth = "https://s3-1.climat.dvo.ru:8080";
+export const urlAuth = "https://base.eco.dvo.ru:8080";
+// export const url = "https://s3-1.climat.dvo.ru:8005";
+// export const urlAuth = "https://s3-1.climat.dvo.ru:8080";

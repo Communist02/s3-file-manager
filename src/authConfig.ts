@@ -14,6 +14,11 @@ const onSigninCallback = (user: User | void): void => {
   )
 }
 
+let scope = 'openid';
+if (window.parent != window) {
+  scope += ' trust';
+}
+
 export const oidcConfig: AuthProviderProps = {
   authority: urlAuth,
   client_id: "storage-web",
@@ -21,5 +26,6 @@ export const oidcConfig: AuthProviderProps = {
   automaticSilentRenew: true,
   onSigninCallback: onSigninCallback,
   stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
-  userStore: new WebStorageStateStore({ store: window.localStorage })
+  userStore: new WebStorageStateStore({ store: window.localStorage }),
+  scope: scope
 };

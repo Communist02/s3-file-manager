@@ -33,6 +33,7 @@ function FileProperties({ properties }: FilePropertiesProps) {
         content = value;
 
         switch (key) {
+            case 'collection_name':
             case 'collection_id':
             case 'other':
                 continue;

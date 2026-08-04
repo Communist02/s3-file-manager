@@ -35,6 +35,8 @@ export interface File {
     size: number;
 }
 
+export const filesEndpoint = 'files';
+
 function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [files, setFiles] = useState<Collection[] | {}[]>([]);
@@ -160,7 +162,7 @@ function App() {
                     setCurrentBucket(result[0]);
 
                     if (currentPath !== null) {
-                        navigate(result.id + '/');
+                        navigate(`${filesEndpoint}/${result.id}/`);
                     }
                 }
                 if (isResetCurrentCollection) {
@@ -273,7 +275,7 @@ function App() {
 
     function handleFolderChange(path: string) {
         setCurrentPath(path);
-        navigate(currentBucket?.id + '/' + path + '/');
+        navigate(`${filesEndpoint}/${currentBucket?.id}/${path}/`);
     }
 
     const handlePaste = async (copiedItems: File[], destinationFolder: File, operationType: string) => {
@@ -334,7 +336,7 @@ function App() {
         if (collection) {
             setCurrentBucket(collection);
             if (currentPath !== null) {
-                navigate(collection.id + '/');
+                navigate(`${filesEndpoint}/${collection.id}/`);
             }
             await getFiles(collection);
         }
@@ -524,10 +526,14 @@ function App() {
         const segments = decodeURIComponent(location.pathname).split('/').filter(Boolean);
         const collections = await getCollections(true);
         setIsLoadingCollections(true);
-        await changeCollection(Number(segments[0]), collections);
-
-        const folder = segments.slice(1).join('/');
-        await setCurrentPath('/' + folder);
+        if (segments[0] === filesEndpoint) {
+            await changeCollection(Number(segments[1]), collections);
+            const folder = segments.slice(2).join('/');
+            await setCurrentPath('/' + folder);
+        } else {
+            await changeCollection(0, collections);
+            await setCurrentPath('/');
+        }
         setIsLoadingCollections(false);
     }
 

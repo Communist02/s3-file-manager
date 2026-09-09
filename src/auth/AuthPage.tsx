@@ -12,18 +12,40 @@ function AuthPage() {
         }
     }, [auth.error?.message, auth.signinRedirect]);
 
+    function getCookie(name: string) {
+        const cookies = document.cookie.split('; ');
+
+        for (let cookie of cookies) {
+            const [key, value] = cookie.split('=');
+            if (key === name) {
+                return decodeURIComponent(value);
+            }
+        }
+        return null;
+    }
+
     let body: React.JSX.Element;
-    if (auth.isLoading || auth.user && auth.user.expired) {
+    if (auth.isAuthenticated) {
+        body = <Spin description="Идет процесс входа" size='large' />;
+        const username = getCookie('username');
+        if (!username) {
+            auth.removeUser();
+        } else if (username !== auth.user?.profile.sub) {
+            auth.signinSilent();
+        }
+    } else if (auth.isLoading || auth.user && auth.user.expired) {
         body = <Spin description="Идет процесс входа" size='large' />;
     } else {
-        body = <Result
-            title="Требуется вход в учетную запись"
-            extra={
-                <Button style={{ width: '100%' }} type='primary' onClick={() => auth.signinRedirect()}>Войти</Button>
-            }
-        />;
-        if (window.parent != window) {
-            auth.signinRedirect();
+        if (getCookie('username')) {
+            body = <Spin description="Идет процесс входа" size='large' />;
+            auth.signinSilent();
+        } else {
+            body = <Result
+                title="Требуется вход в учетную запись"
+                extra={
+                    <Button style={{ width: '100%' }} type='primary' onClick={() => auth.signinRedirect()}>Войти</Button>
+                }
+            />;
         }
     }
 

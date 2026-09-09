@@ -95,8 +95,6 @@ export class ApiClient {
             return str;
         }
 
-        document.cookie = `token=${this.token}; path=/; max-age=15; SameSite=Lax`;
-
         try {
             let new_url;
             if (files.length === 1 && !files[0].isDirectory) {
@@ -105,7 +103,8 @@ export class ApiClient {
                 const fileQuery = 'files=' + encodeURIComponent(files.map((file) => `${file.isDirectory ? file.path + '/' : file.path}`).join('|'));
                 new_url = `${this.api.defaults.baseURL}/collections/${collection_id}/archive?${fileQuery}`;
             }
-            if (window.location.hostname != new URL(url).hostname) {
+            if (window.location.hostname !== new URL(url).hostname) {
+                document.cookie = `token=${this.token}; path=/; SameSite=Lax`;
                 if (files.length === 1 && !files[0].isDirectory) {
                     new_url += `?token=${this.token}`
                 } else {

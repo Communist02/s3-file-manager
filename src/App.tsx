@@ -1,18 +1,18 @@
-import { useState, useRef, useEffect, lazy, Suspense } from 'react'
-import './App.css'
-import AuthPage from './auth/AuthPage'
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import './App.css';
+import AuthPage from './auth/AuthPage';
 import Groups from './groups/Groups';
 import { Button, Dropdown, Select, Result, Flex, Space, Tag, ConfigProvider, App as AntApp, theme, Layout, Card, Drawer, Modal, Input, FloatButton, Tooltip, Spin, message as Message } from 'antd';
 import { LogoutOutlined, TeamOutlined, UserOutlined, HistoryOutlined, UploadOutlined, SunOutlined, SettingOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { url } from "./url";
 import ruRU from 'antd/locale/ru_RU';
-import Uploader from './uploader/Uploader'
-import Logs from './logs-view/Logs'
-import History from './history/History'
-import CollectionPage from './control_panel/CollectionPage'
-import ProfilePage from './control_panel/ProfilePage'
-import CollectionsSearch from './collections-search/CollectionsSearch'
-import { useAuth } from 'react-oidc-context'
+import Uploader from './uploader/Uploader';
+import Logs from './logs-view/Logs';
+import History from './history/History';
+import CollectionPage from './control_panel/CollectionPage';
+import ProfilePage from './control_panel/ProfilePage';
+import CollectionsSearch from './collections-search/CollectionsSearch';
+import { useAuth } from 'react-oidc-context';
 import { apiClient } from './api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FileProperties from './file-properties/FileProperties';
@@ -342,8 +342,8 @@ function App() {
         }
     }
 
-    const outAccount = () => {
-        auth.removeUser();
+    const outAccount = async () => {
+        await auth.signoutRedirect();
         setShowControlPanel(false);
         navigate('');
         setTokenAuth(null);
@@ -589,7 +589,7 @@ function App() {
                         fileUploadConfig={{ url: url, method: 'PUT' }}
                         defaultNavExpanded={!window.matchMedia('(pointer:coarse)').matches}
                         collapsibleNav={true}
-                        filePreviewPath={url + `/collections/${currentBucket?.id}/files/?preview=true&token=${tokenAuth}`}
+                        filePreviewPath={url + `/collections/${currentBucket?.id}/files/?token=${tokenAuth}`}
                         primaryColor='#1677ff'
                         permissions={currentBucket !== null ? permissions[currentBucket.access_type_id - 1] : permissions[0]}
                         onFolderChange={handleFolderChange}

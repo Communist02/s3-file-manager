@@ -58,11 +58,20 @@ const PreviewFileAction = ({ filePreviewPath, onDownload, setShow, open }: Previ
       setFile(selectedFiles[0]);
       const ext = getFileExtension(selectedFiles[0].name)?.toLowerCase()
       setExtension(ext);
-      const filePth = [filePreviewPath.slice(0, filePreviewPath.indexOf('?')), encodeURIComponent(selectedFiles[0].path), filePreviewPath.slice(filePreviewPath.indexOf('?'))].join('');
+      let filePth = '';
+      if (window.location.hostname !== new URL(filePreviewPath).hostname) {
+        filePth = [filePreviewPath.slice(0, filePreviewPath.indexOf('?')), encodeURIComponent(selectedFiles[0].path), filePreviewPath.slice(filePreviewPath.indexOf('?')), '&preview=true'].join('');
+      } else {
+        filePth = [filePreviewPath.slice(0, filePreviewPath.indexOf('?')), encodeURIComponent(selectedFiles[0].path), '?preview=true'].join('');
+        document.cookie = `${filePreviewPath.slice(filePreviewPath.indexOf('?') + 1)}; path=/; SameSite=Lax`;
+      }
       setFilePath(filePth);
 
       if (selectedFiles[0].size < 1048576) {
-        fetch(filePth)
+        fetch(
+          filePth,
+          { credentials: "include" }
+        )
           .then((res) => res.text())
           .then((data) => setContent(data))
           .catch((err) => console.error('Ошибка загрузки:', err));
